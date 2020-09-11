@@ -1,0 +1,3 @@
+[submodule "Assets/HPTK"]
+	path = Assets/HPTK
+	url = https://github.com/jorgejgnz/HPTK
