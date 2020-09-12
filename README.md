@@ -2,7 +2,7 @@
 This is a ready-to-go project using [HPTK](https://github.com/jorgejgnz/HPTK). Used only for educational purposes.
 
 ## Demo video
-[![Demo video](./Assets/HPTK/Media/hptk.gif)](https://twitter.com/jorgejgnz/status/1285514990619942912)
+[![Demo video](https://github.com/jorgejgnz/HPTK/blob/b9a457aaeb796906c7d8059c67d2951c75e9e1ba/Media/hptk.gif?raw=true)](https://twitter.com/jorgejgnz/status/1285514990619942912)
 
 # Getting started
 Clone this repository. To do this, open a command line terminal, rooted on the Assets folder of your Unity project. 
