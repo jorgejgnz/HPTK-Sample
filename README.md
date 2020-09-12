@@ -2,7 +2,7 @@
 This is a ready-to-go project using [HPTK](https://github.com/jorgejgnz/HPTK). Used only for educational purposes.
 
 ## Demo video
-[![Demo video](./Media/hptk.gif)](https://twitter.com/jorgejgnz/status/1285514990619942912)
+[![Demo video](./Assets/HPTK/Media/hptk.gif)](https://twitter.com/jorgejgnz/status/1285514990619942912)
 
 # Getting started
 Clone this repository. To do this, open a command line terminal, rooted on the Assets folder of your Unity project. 
@@ -18,11 +18,15 @@ Then clone using this command *git clone --recurse-submodules https://github.com
 - Unity 2019.4.4f1 LTS
 
 # Author
-**Jorge Juan González** - *HCI Researcher at I3A (UCLM)*
+**Jorge Juan González** - *HCI Researcher at I3A (University of Castilla-La Mancha)*
 
-[LinkedIn](https://www.linkedin.com/in/jorgejgnz/) - [Twitter](https://twitter.com/jorgejgnz) - [ResearchGate](https://www.researchgate.net/profile/Jorge_Juan_Gonzalez) - [GitHub](https://github.com/jorgejgnz)
+[LinkedIn](https://www.linkedin.com/in/jorgejgnz/) - [Twitter](https://twitter.com/jorgejgnz) - [GitHub](https://github.com/jorgejgnz)
 
 ## Acknowledgements
+
+**Oxters Wyzgowski** - [GitHub](https://github.com/oxters168) - [Twitter](https://twitter.com/OxGamesCo)
+
+**Michael Stevenson** - [GitHub](https://github.com/mstevenson)
 
 Nasim, K, Kim, YJ. Physics-based assistive grasping for robust object manipulation in virtual reality. Comput Anim Virtual Worlds. 2018; 29:e1820. [https://doi.org/10.1002/cav.1820](https://doi.org/10.1002/cav.1820)
 
