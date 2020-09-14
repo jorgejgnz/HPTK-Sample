@@ -13,7 +13,7 @@ Then clone using this command *git clone --recurse-submodules https://github.com
     This repository is using HPTK as a submodule. Submodules have to be cloned recursively with --recurse-submodules.
 
 # Current setup
-- [HPTK](https://github.com/jorgejgnz/HPTK/releases/tag/v1.0.0) V1.0.0
+- [HPTK](https://github.com/jorgejgnz/HPTK/releases/tag/v0.1.0) V0.1.0
 - [Oculus Integration](https://assetstore.unity.com/packages/tools/integration/oculus-integration-82022) v20.0
 - Unity 2019.4.4f1 LTS
 
