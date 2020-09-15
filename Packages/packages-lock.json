@@ -1,5 +1,12 @@
 {
   "dependencies": {
+    "com.jorgejgnz.hptk": {
+      "version": "https://github.com/jorgejgnz/HPTK.git",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "fe5d9bef9316c6a31b027141f99a1e90dcb2aa72"
+    },
     "com.unity.collab-proxy": {
       "version": "1.2.16",
       "depth": 0,
