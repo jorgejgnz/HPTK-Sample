@@ -8,12 +8,12 @@ This is a ready-to-go project using [HPTK](https://github.com/jorgejgnz/HPTK). U
 Clone this repository. To do this, open a command line terminal, rooted on the Assets folder of your Unity project. 
 (Hold shift + right click -> Select "Open Powershell Window Here")
 
-Then clone using this command *git clone --recurse-submodules https://github.com/jorgejgnz/HPTK-Sample*
+Then clone using this command *git clone https://github.com/jorgejgnz/HPTK-Sample*
 
-    This repository is using HPTK as a submodule. Submodules have to be cloned recursively with --recurse-submodules.
+    This repository is using HPTK as a UPM package.
 
 # Current setup
-- [HPTK](https://github.com/jorgejgnz/HPTK/releases/tag/v0.1.0) V0.1.0
+- [HPTK](https://github.com/jorgejgnz/HPTK) V0.1.0
 - [Oculus Integration](https://assetstore.unity.com/packages/tools/integration/oculus-integration-82022) v20.0
 - Unity 2019.4.4f1 LTS
 
