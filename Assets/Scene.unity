@@ -3163,6 +3163,11 @@ PrefabInstance:
       propertyPath: m_LocalRotation.w
       value: 0.9388544
       objectReference: {fileID: 0}
+    - target: {fileID: 1356800211450398286, guid: 428bb9f2a57259340905fa600d44f56c,
+        type: 3}
+      propertyPath: inputDataProvider
+      value: 
+      objectReference: {fileID: 1465674176}
     - target: {fileID: 1686544588135522558, guid: 428bb9f2a57259340905fa600d44f56c,
         type: 3}
       propertyPath: m_ConnectedAnchor.x
@@ -3463,6 +3468,11 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5050449462158305233, guid: 428bb9f2a57259340905fa600d44f56c,
+        type: 3}
+      propertyPath: inputDataProvider
+      value: 
+      objectReference: {fileID: 1842818614}
     - target: {fileID: 5432687932636076623, guid: 428bb9f2a57259340905fa600d44f56c,
         type: 3}
       propertyPath: handData
