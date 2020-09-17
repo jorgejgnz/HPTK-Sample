@@ -2030,6 +2030,109 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1363045844}
   m_Mesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &1465674174
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1465674175}
+  - component: {fileID: 1465674176}
+  m_Layer: 0
+  m_Name: OVRSkeletonTracker.R
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1465674175
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1465674174}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 8157941630322813966}
+  m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1465674176
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1465674174}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 899f50e77b819724baf91ad42d587304, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bones: []
+  wrist:
+    name: 
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 0}
+    space: 0
+    localScale: {x: 0, y: 0, z: 0}
+  forearm:
+    name: 
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 0}
+    space: 0
+    localScale: {x: 0, y: 0, z: 0}
+  thumb:
+    name: Thumb
+    bones: []
+    tip:
+      name: 
+      position: {x: 0, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0, w: 0}
+      space: 0
+      localScale: {x: 0, y: 0, z: 0}
+  index:
+    name: Index
+    bones: []
+    tip:
+      name: 
+      position: {x: 0, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0, w: 0}
+      space: 0
+      localScale: {x: 0, y: 0, z: 0}
+  middle:
+    name: Middle
+    bones: []
+    tip:
+      name: 
+      position: {x: 0, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0, w: 0}
+      space: 0
+      localScale: {x: 0, y: 0, z: 0}
+  ring:
+    name: Ring
+    bones: []
+    tip:
+      name: 
+      position: {x: 0, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0, w: 0}
+      space: 0
+      localScale: {x: 0, y: 0, z: 0}
+  pinky:
+    name: Pinky
+    bones: []
+    tip:
+      name: 
+      position: {x: 0, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0, w: 0}
+      space: 0
+      localScale: {x: 0, y: 0, z: 0}
+  handData: {fileID: 1570086435}
+  boneData: {fileID: 1570086429}
 --- !u!114 &1570086429 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 114567484643301796, guid: 835e735ca71bf78459fb2cababd74112,
@@ -2157,6 +2260,109 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cb7623a8f0b49cf4dbaa40aea4d4be64, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &1842818612
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1842818613}
+  - component: {fileID: 1842818614}
+  m_Layer: 0
+  m_Name: OVRSkeletonTracker.L
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1842818613
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1842818612}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 8157941630322813966}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1842818614
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1842818612}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 899f50e77b819724baf91ad42d587304, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bones: []
+  wrist:
+    name: 
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 0}
+    space: 0
+    localScale: {x: 0, y: 0, z: 0}
+  forearm:
+    name: 
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 0}
+    space: 0
+    localScale: {x: 0, y: 0, z: 0}
+  thumb:
+    name: Thumb
+    bones: []
+    tip:
+      name: 
+      position: {x: 0, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0, w: 0}
+      space: 0
+      localScale: {x: 0, y: 0, z: 0}
+  index:
+    name: Index
+    bones: []
+    tip:
+      name: 
+      position: {x: 0, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0, w: 0}
+      space: 0
+      localScale: {x: 0, y: 0, z: 0}
+  middle:
+    name: Middle
+    bones: []
+    tip:
+      name: 
+      position: {x: 0, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0, w: 0}
+      space: 0
+      localScale: {x: 0, y: 0, z: 0}
+  ring:
+    name: Ring
+    bones: []
+    tip:
+      name: 
+      position: {x: 0, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0, w: 0}
+      space: 0
+      localScale: {x: 0, y: 0, z: 0}
+  pinky:
+    name: Pinky
+    bones: []
+    tip:
+      name: 
+      position: {x: 0, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0, w: 0}
+      space: 0
+      localScale: {x: 0, y: 0, z: 0}
+  handData: {fileID: 1835344147}
+  boneData: {fileID: 1835344146}
 --- !u!1001 &1905542618
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3862,6 +4068,11 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 9029153518233987936, guid: 428bb9f2a57259340905fa600d44f56c,
+        type: 3}
+      propertyPath: m_RootOrder
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 9071103686995425136, guid: 428bb9f2a57259340905fa600d44f56c,
         type: 3}
       propertyPath: m_LocalRotation.y
@@ -3874,6 +4085,12 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 428bb9f2a57259340905fa600d44f56c, type: 3}
+--- !u!4 &8157941630322813966 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1377954592708480784, guid: 428bb9f2a57259340905fa600d44f56c,
+    type: 3}
+  m_PrefabInstance: {fileID: 8157941630322813965}
+  m_PrefabAsset: {fileID: 0}
 --- !u!137 &8157941630322813967 stripped
 SkinnedMeshRenderer:
   m_CorrespondingSourceObject: {fileID: 7135367836320152687, guid: 428bb9f2a57259340905fa600d44f56c,
