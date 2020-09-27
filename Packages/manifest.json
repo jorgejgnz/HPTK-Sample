@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "com.jorgejgnz.hptk": "https://github.com/jorgejgnz/HPTK.git",
+	"com.jorgejgnz.hptk": "https://github.com/jorgejgnz/HPTK.git",
     "com.unity.collab-proxy": "1.2.16",
     "com.unity.ide.rider": "1.1.4",
     "com.unity.ide.vscode": "1.2.1",
@@ -9,9 +9,8 @@
     "com.unity.textmeshpro": "2.0.1",
     "com.unity.timeline": "1.2.15",
     "com.unity.ugui": "1.0.0",
-    "com.unity.xr.oculus.android": "2.38.6",
-    "com.unity.xr.oculus.standalone": "2.38.4",
-    "com.unity.xr.openvr.standalone": "2.0.5",
+    "com.unity.xr.management": "3.2.15",
+    "com.unity.xr.oculus": "1.3.4",
     "com.unity.modules.ai": "1.0.0",
     "com.unity.modules.androidjni": "1.0.0",
     "com.unity.modules.animation": "1.0.0",
