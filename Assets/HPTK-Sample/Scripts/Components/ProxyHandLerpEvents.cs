@@ -9,14 +9,16 @@ public class ProxyHandLerpEvents : MonoBehaviour
 {
     public ProxyHandHandler proxyHand;
 
-    public FloatEvent onGraspLerpUpdate;
-    public FloatEvent onIndexPinchLerpUpdate;
     public FloatEvent onErrorLerpUpdate;
+
+    public HandStateEvent onMasterUpdate;
+    public HandStateEvent onSlaveUpdate;
 
     private void Update()
     {
-        onGraspLerpUpdate.Invoke(proxyHand.viewModel.graspLerp);
-        onIndexPinchLerpUpdate.Invoke(proxyHand.viewModel.indexPinchLerp);
         onErrorLerpUpdate.Invoke(proxyHand.viewModel.errorLerp);
+
+        onMasterUpdate.Invoke(proxyHand.viewModel.master);
+        onSlaveUpdate.Invoke(proxyHand.viewModel.slave);
     }
 }
