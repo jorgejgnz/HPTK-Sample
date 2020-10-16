@@ -85,6 +85,34 @@ public class OVRManager : MonoBehaviour
 		LMSHighTop = OVRPlugin.TiledMultiResLevel.LMSHighTop,
 	}
 
+	public enum SystemHeadsetType
+	{
+		None = OVRPlugin.SystemHeadset.None,
+
+		// Standalone headsets
+		Oculus_Quest = OVRPlugin.SystemHeadset.Oculus_Quest,
+		Oculus_Quest_2 = OVRPlugin.SystemHeadset.Oculus_Quest_2,
+		Placeholder_10 = OVRPlugin.SystemHeadset.Placeholder_10,
+		Placeholder_11 = OVRPlugin.SystemHeadset.Placeholder_11,
+		Placeholder_12 = OVRPlugin.SystemHeadset.Placeholder_12,
+		Placeholder_13 = OVRPlugin.SystemHeadset.Placeholder_13,
+		Placeholder_14 = OVRPlugin.SystemHeadset.Placeholder_14,
+
+		// PC headsets
+		Rift_DK1 = OVRPlugin.SystemHeadset.Rift_DK1,
+		Rift_DK2 = OVRPlugin.SystemHeadset.Rift_DK2,
+		Rift_CV1 = OVRPlugin.SystemHeadset.Rift_CV1,
+		Rift_CB = OVRPlugin.SystemHeadset.Rift_CB,
+		Rift_S = OVRPlugin.SystemHeadset.Rift_S,
+		Oculus_Link_Quest = OVRPlugin.SystemHeadset.Oculus_Link_Quest,
+		PC_Placeholder_4102 = OVRPlugin.SystemHeadset.PC_Placeholder_4102,
+		PC_Placeholder_4103 = OVRPlugin.SystemHeadset.PC_Placeholder_4103,
+		PC_Placeholder_4104 = OVRPlugin.SystemHeadset.PC_Placeholder_4104,
+		PC_Placeholder_4105 = OVRPlugin.SystemHeadset.PC_Placeholder_4105,
+		PC_Placeholder_4106 = OVRPlugin.SystemHeadset.PC_Placeholder_4106,
+		PC_Placeholder_4107 = OVRPlugin.SystemHeadset.PC_Placeholder_4107
+	}
+
 	public enum XRDevice
 	{
 		Unknown			= 0,
@@ -897,6 +925,17 @@ public class OVRManager : MonoBehaviour
 	}
 
 	/// <summary>
+	/// Get the system headset type
+	/// </summary>
+	public static SystemHeadsetType systemHeadsetType
+	{
+		get
+		{
+			return (SystemHeadsetType)OVRPlugin.GetSystemHeadsetType();
+		}
+	}
+
+	/// <summary>
 	/// Sets the Color Scale and Offset which is commonly used for effects like fade-to-black.
 	/// In our compositor, once a given frame is rendered, warped, and ready to be displayed, we then multiply
 	/// each pixel by colorScale and add it to colorOffset, whereby newPixel = oldPixel * colorScale + colorOffset.
@@ -1163,7 +1202,7 @@ public class OVRManager : MonoBehaviour
 				"OVRPlugin v" + OVRPlugin.version + ", " +
 				"SDK v" + OVRPlugin.nativeSDKVersion + ".");
 
-		Debug.Log("SystemHeadset " + OVRPlugin.GetSystemHeadsetType().ToString());
+		Debug.Log("SystemHeadset " + systemHeadsetType.ToString());
 
 #if !UNITY_EDITOR
 		if (IsUnityAlphaOrBetaVersion())

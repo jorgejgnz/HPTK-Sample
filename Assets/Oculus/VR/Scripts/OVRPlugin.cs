@@ -310,7 +310,7 @@ public static class OVRPlugin
 
 		// Standalone headsets
 		Oculus_Quest = 8,
-		Placeholder_9,
+		Oculus_Quest_2 = 9,
 		Placeholder_10,
 		Placeholder_11,
 		Placeholder_12,

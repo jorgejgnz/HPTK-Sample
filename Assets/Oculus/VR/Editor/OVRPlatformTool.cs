@@ -67,7 +67,7 @@ namespace Assets.Oculus.VR.Editor
 
 			// Populate initial target platform value based on OVRDeviceSelector
 #if UNITY_ANDROID
-			if (OVRDeviceSelector.isTargetDeviceQuest)
+			if (OVRDeviceSelector.isTargetDeviceQuestFamily)
 			{
 				OVRPlatformToolSettings.TargetPlatform = TargetPlatform.Quest;
 			}
@@ -353,9 +353,10 @@ namespace Assets.Oculus.VR.Editor
 #if UNITY_ANDROID
 			var targetDeviceTypes = new List<OVRProjectConfig.DeviceType>();
 
-			if (targetPlatform == TargetPlatform.Quest && !OVRDeviceSelector.isTargetDeviceQuest)
+			if (targetPlatform == TargetPlatform.Quest && !OVRDeviceSelector.isTargetDeviceQuestFamily)
 			{
 				targetDeviceTypes.Add(OVRProjectConfig.DeviceType.Quest);
+				targetDeviceTypes.Add(OVRProjectConfig.DeviceType.Quest2);
 			}
 
 			if (targetDeviceTypes.Count != 0)

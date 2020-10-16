@@ -3,12 +3,14 @@
 --- !u!134 &13400000
 PhysicMaterial:
   m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
   m_Name: RubberPhysMat
-  dynamicFriction: 0.6
-  staticFriction: 0.6
-  bounciness: 0.8
+  dynamicFriction: .600000024
+  staticFriction: .600000024
+  bounciness: .800000012
   frictionCombine: 0
   bounceCombine: 3
+  frictionDirection2: {x: 0, y: 0, z: 0}
+  dynamicFriction2: 0
+  staticFriction2: 0

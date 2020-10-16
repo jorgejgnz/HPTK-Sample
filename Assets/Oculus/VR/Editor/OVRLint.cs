@@ -608,14 +608,14 @@ public class OVRLint : EditorWindow
 #if UNITY_ANDROID
 	static void CheckStaticAndroidIssues()
 	{
-		if (OVRDeviceSelector.isTargetDeviceQuest && PlayerSettings.Android.targetArchitectures != AndroidArchitecture.ARM64)
+		if (OVRDeviceSelector.isTargetDeviceQuestFamily && PlayerSettings.Android.targetArchitectures != AndroidArchitecture.ARM64)
 		{
-				// Quest store is only accepting 64-bit apps as of November 25th 2019
-				AddFix("Set Target Architecture to ARM64", "32-bit Quest apps are no longer being accepted on the Oculus Store.",
-						delegate (UnityEngine.Object obj, bool last, int selected)
-						{
-							PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
-						}, null, false, "Fix");
+			// Quest store is only accepting 64-bit apps as of November 25th 2019
+			AddFix("Set Target Architecture to ARM64", "32-bit Quest apps are no longer being accepted on the Oculus Store.",
+				delegate (UnityEngine.Object obj, bool last, int selected)
+				{
+					PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
+				}, null, false, "Fix");
 		}
 
 		// Check that the minSDKVersion meets requirement, 23 for Quest
@@ -631,7 +631,7 @@ public class OVRLint : EditorWindow
 		// Check that compileSDKVersion meets minimal version 26 as required for Quest's headtracking feature
 		// Unity Sets compileSDKVersion in Gradle as the value used in targetSdkVersion
 		AndroidSdkVersions requiredAndroidTargetSdkVersion = AndroidSdkVersions.AndroidApiLevel26;
-		if (OVRDeviceSelector.isTargetDeviceQuest &&
+		if (OVRDeviceSelector.isTargetDeviceQuestFamily &&
 			(int)PlayerSettings.Android.targetSdkVersion < (int)requiredAndroidTargetSdkVersion)
 		{
 			AddFix("Set Android Target SDK Level", "Oculus Quest apps require at least target API level " +

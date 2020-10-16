@@ -99,7 +99,7 @@ LightmapSettings:
     m_LightProbeSampleCountMultiplier: 4
   m_LightingDataAsset: {fileID: 112000000, guid: b6d832005e62b3b4396b4d53605b044f,
     type: 2}
-  m_UseShadowmask: 1
+  m_UseShadowmask: 0
 --- !u!196 &4
 NavMeshSettings:
   serializedVersion: 2
@@ -25334,6 +25334,11 @@ PrefabInstance:
       propertyPath: m_LocalPosition.y
       value: -0.032359935
       objectReference: {fileID: 0}
+    - target: {fileID: 513086848173383069, guid: 428bb9f2a57259340905fa600d44f56c,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 513086848225078342, guid: 428bb9f2a57259340905fa600d44f56c,
         type: 3}
       propertyPath: m_IsActive
@@ -25388,6 +25393,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalRotation.w
       value: 0.7362234
+      objectReference: {fileID: 0}
+    - target: {fileID: 513086849027301347, guid: 428bb9f2a57259340905fa600d44f56c,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 513086849214224777, guid: 428bb9f2a57259340905fa600d44f56c,
         type: 3}
@@ -25829,6 +25839,11 @@ PrefabInstance:
       propertyPath: m_LocalPosition.y
       value: -0.067
       objectReference: {fileID: 0}
+    - target: {fileID: 4896013319167524906, guid: 428bb9f2a57259340905fa600d44f56c,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4953933249762099314, guid: 428bb9f2a57259340905fa600d44f56c,
         type: 3}
       propertyPath: m_IsActive
@@ -25888,6 +25903,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalRotation.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6462327263613783923, guid: 428bb9f2a57259340905fa600d44f56c,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6624386743751575451, guid: 428bb9f2a57259340905fa600d44f56c,
         type: 3}

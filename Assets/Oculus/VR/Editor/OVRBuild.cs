@@ -40,39 +40,39 @@ using System.Threading;
 /// </summary>
 partial class OculusBuildApp : EditorWindow
 {
-	static void SetPCTarget()
-	{
-		if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.StandaloneWindows)
-		{
-			EditorUserBuildSettings.SwitchActiveBuildTarget (BuildTargetGroup.Standalone, BuildTarget.StandaloneWindows);
-		}
+    static void SetPCTarget()
+    {
+        if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.StandaloneWindows)
+        {
+            EditorUserBuildSettings.SwitchActiveBuildTarget (BuildTargetGroup.Standalone, BuildTarget.StandaloneWindows);
+        }
 #if !USING_XR_SDK && !REQUIRES_XR_SDK
-		UnityEditorInternal.VR.VREditor.SetVREnabledOnTargetGroup(BuildTargetGroup.Standalone, true);
-		PlayerSettings.virtualRealitySupported = true;
+        UnityEditorInternal.VR.VREditor.SetVREnabledOnTargetGroup(BuildTargetGroup.Standalone, true);
+        PlayerSettings.virtualRealitySupported = true;
 #endif
-		AssetDatabase.SaveAssets();
-	}
+        AssetDatabase.SaveAssets();
+    }
 
-	static void SetAndroidTarget()
-	{
-		EditorUserBuildSettings.androidBuildSubtarget = MobileTextureSubtarget.ASTC;
-		EditorUserBuildSettings.androidBuildSystem = AndroidBuildSystem.Gradle;
+    static void SetAndroidTarget()
+    {
+        EditorUserBuildSettings.androidBuildSubtarget = MobileTextureSubtarget.ASTC;
+        EditorUserBuildSettings.androidBuildSystem = AndroidBuildSystem.Gradle;
 
-		if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.Android)
-		{
-			EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Android, BuildTarget.Android);
-		}
+        if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.Android)
+        {
+            EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Android, BuildTarget.Android);
+        }
 
 #if !USING_XR_SDK && !REQUIRES_XR_SDK
-		UnityEditorInternal.VR.VREditor.SetVREnabledOnTargetGroup(BuildTargetGroup.Standalone, true);
-		PlayerSettings.virtualRealitySupported = true;
+        UnityEditorInternal.VR.VREditor.SetVREnabledOnTargetGroup(BuildTargetGroup.Standalone, true);
+        PlayerSettings.virtualRealitySupported = true;
 #endif
-		AssetDatabase.SaveAssets();
-	}
+        AssetDatabase.SaveAssets();
+    }
 
 #if UNITY_EDITOR_WIN && UNITY_ANDROID
 	// Build setting constants
-	const string REMOTE_APK_PATH = "/sdcard/Oculus/Temp";
+	const string REMOTE_APK_PATH = "/data/local/tmp";
 	const float USB_TRANSFER_SPEED_THRES = 25.0f;
 	const float USB_3_TRANSFER_SPEED = 32.0f;
 	const int NUM_BUILD_AND_RUN_STEPS = 9;
@@ -470,7 +470,7 @@ partial class OculusBuildApp : EditorWindow
 		try
 		{
 			var ps = System.Text.RegularExpressions.Regex.Escape("" + Path.DirectorySeparatorChar);
-			// ignore files .gradle/** build/** foo/.gradle/** and bar/build/**   
+			// ignore files .gradle/** build/** foo/.gradle/** and bar/build/**
 			var ignorePattern = string.Format("^([^{0}]+{0})?(\\.gradle|build){0}", ps);
 
 			var syncer = new DirectorySyncer(gradleTempExport,
@@ -482,7 +482,7 @@ partial class OculusBuildApp : EditorWindow
 		}
 		catch (Exception e)
 		{
-			UnityEngine.Debug.Log("OVRBuild: Processing gradle project failed with exception: " + 
+			UnityEngine.Debug.Log("OVRBuild: Processing gradle project failed with exception: " +
 				e.Message);
 			return false;
 		}
@@ -666,4 +666,4 @@ partial class OculusBuildApp : EditorWindow
 		UnityEngine.Debug.Log("OVRBuild: " + message);
 	}
 #endif //UNITY_EDITOR_WIN && UNITY_ANDROID
-		}
+}

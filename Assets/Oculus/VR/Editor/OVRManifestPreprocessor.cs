@@ -199,7 +199,7 @@ public class OVRManifestPreprocessor
                 "/manifest",
                 "uses-feature",
                 "android.hardware.vr.headtracking",
-                OVRDeviceSelector.isTargetDeviceQuest,
+                OVRDeviceSelector.isTargetDeviceQuestFamily,
                 true,
                 "version", "1",
                 "required", "true");
@@ -210,7 +210,7 @@ public class OVRManifestPreprocessor
             // OVRProjectConfig.HandTrackingSupport.ControllersAndHands => manifest entry present and required=false
             // OVRProjectConfig.HandTrackingSupport.HandsOnly => manifest entry present and required=true
             OVRProjectConfig.HandTrackingSupport targetHandTrackingSupport = OVRProjectConfig.GetProjectConfig().handTrackingSupport;
-            bool handTrackingEntryNeeded = OVRDeviceSelector.isTargetDeviceQuest && (targetHandTrackingSupport != OVRProjectConfig.HandTrackingSupport.ControllersOnly);
+            bool handTrackingEntryNeeded = OVRDeviceSelector.isTargetDeviceQuestFamily && (targetHandTrackingSupport != OVRProjectConfig.HandTrackingSupport.ControllersOnly);
 
             AddOrRemoveTag(doc,
                 androidNamepsaceURI,
@@ -228,15 +228,45 @@ public class OVRManifestPreprocessor
                 handTrackingEntryNeeded,
                 modifyIfFound);
 
-            // Add focus aware tag if this app is targeting Quest
+            // Add focus aware tag if this app is targeting Quest Family
             AddOrRemoveTag(doc,
                 androidNamepsaceURI,
                 "/manifest/application/activity",
                 "meta-data",
                 "com.oculus.vr.focusaware",
-                OVRDeviceSelector.isTargetDeviceQuest,
+                OVRDeviceSelector.isTargetDeviceQuestFamily,
                 modifyIfFound,
                 "value", projectConfig.focusAware ? "true" : "false");
+
+            // Add support devices manifest according to the target devices
+            if (OVRDeviceSelector.isTargetDeviceQuestFamily)
+            {
+                string targetDeviceValue = "quest";
+                if (OVRDeviceSelector.isTargetDeviceQuest && OVRDeviceSelector.isTargetDeviceQuest2)
+                {
+                    targetDeviceValue = "quest|delmar";
+                }
+                else if (OVRDeviceSelector.isTargetDeviceQuest2)
+                {
+                    targetDeviceValue = "delmar";
+                }
+                else if (OVRDeviceSelector.isTargetDeviceQuest)
+                {
+                    targetDeviceValue = "quest";
+                }
+                else
+                {
+                    Debug.LogError("Unexpected target devices");
+                }
+                AddOrRemoveTag(doc,
+                    androidNamepsaceURI,
+                    "/manifest/application",
+                    "meta-data",
+                    "com.oculus.supportedDevices",
+                    true,
+                    modifyIfFound,
+                    "value", targetDeviceValue);
+            }
 
             // Add system keyboard tag
             AddOrRemoveTag(doc,
@@ -274,7 +304,6 @@ public class OVRManifestPreprocessor
                 );
 
             doc.Save(destinationFile);
-
         }
         catch (System.Exception e)
         {
