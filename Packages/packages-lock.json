@@ -1,11 +1,18 @@
 {
   "dependencies": {
+    "com.autodesk.fbx": {
+      "version": "3.1.0-preview.2",
+      "depth": 1,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://packages.unity.com"
+    },
     "com.jorgejgnz.hptk": {
       "version": "https://github.com/jorgejgnz/HPTK.git",
       "depth": 0,
       "source": "git",
       "dependencies": {},
-      "hash": "b4bdac0643f45eca9544b74cd67cf48715a184b2"
+      "hash": "6425d1f7e63595c710b701bba5dc0386eadb23e8"
     },
     "com.unity.collab-proxy": {
       "version": "1.2.16",
@@ -19,6 +26,17 @@
       "depth": 1,
       "source": "registry",
       "dependencies": {},
+      "url": "https://packages.unity.com"
+    },
+    "com.unity.formats.fbx": {
+      "version": "3.2.1-preview.2",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.recorder": "2.2.0-preview.4",
+        "com.unity.timeline": "1.0.0",
+        "com.autodesk.fbx": "3.1.0-preview.2"
+      },
       "url": "https://packages.unity.com"
     },
     "com.unity.ide.rider": {
@@ -35,6 +53,15 @@
       "depth": 0,
       "source": "registry",
       "dependencies": {},
+      "url": "https://packages.unity.com"
+    },
+    "com.unity.recorder": {
+      "version": "2.2.0-preview.4",
+      "depth": 1,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.timeline": "1.0.0"
+      },
       "url": "https://packages.unity.com"
     },
     "com.unity.render-pipelines.core": {

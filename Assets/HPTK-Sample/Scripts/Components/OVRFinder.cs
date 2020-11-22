@@ -104,7 +104,14 @@ public class OVRFinder : MonoBehaviour
 
                         // Copy materials from origin
                         if (copyDefaultSMRMaterial)
+                        {
+                            Debug.Log("-------------");
+                            Debug.Log(smr.name);
+                            Debug.Log(avatar.viewModel.leftHand.name);
+                            Debug.Log(avatar.viewModel.leftHand.viewModel.slave.skinnedMR.name);
+                            Debug.Log("-------------");
                             avatar.viewModel.leftHand.viewModel.slave.skinnedMR.material = defaultSMR_L.material;
+                        }
 
                         break;
 
