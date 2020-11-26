@@ -12,7 +12,7 @@
       "depth": 0,
       "source": "git",
       "dependencies": {},
-      "hash": "6425d1f7e63595c710b701bba5dc0386eadb23e8"
+      "hash": "eb128ef37b0cc66a2351cd4b92b6f978bfe93971"
     },
     "com.unity.collab-proxy": {
       "version": "1.2.16",
@@ -111,7 +111,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.textmeshpro": {
-      "version": "2.0.1",
+      "version": "2.1.3",
       "depth": 0,
       "source": "registry",
       "dependencies": {

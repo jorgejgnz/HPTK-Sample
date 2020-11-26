@@ -6,12 +6,27 @@ public class ColorLerper : MonoBehaviour
 {
     public SkinnedMeshRenderer smr;
 
-    public Color mincolor;
-    public Color maxColor;
-    public string shaderColorParamName;
+    public Color color;
 
-    public void UpdateColor(float lerp)
+    public string applyToShaderParam;
+    public string readFromShaderParam;
+
+    Color newColor;
+
+    public void UpdateAlpha(float lerp)
     {
-        smr.material.SetColor(shaderColorParamName,Color.Lerp(mincolor,maxColor,lerp));
+        newColor = color;
+        newColor.a = lerp;
+        smr.material.SetColor(applyToShaderParam, newColor);
+    }
+
+    public void SetColor(Color color)
+    {
+        this.color = color;
+    }
+
+    public void SetColorFromMaterial(Material material)
+    {
+        this.color = material.GetColor(readFromShaderParam);
     }
 }
