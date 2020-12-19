@@ -13,6 +13,9 @@ namespace HPTK.Input
 
         public bool toLocalSpace = false;
 
+        [Range(-0.25f,0.25f)]
+        public float scaleOffset = 0.0f;
+
         int parent;
 
         public override void InitData()
@@ -65,6 +68,9 @@ namespace HPTK.Input
 
                 // Confidence estimation
                 confidence = (OVRConfidenceToLerp(handData.HandConfidence) + GetMeanFingerConfidence()) / 2.0f;
+
+                // Hand scaling
+                scale = handData.HandScale + scaleOffset;
             }
             else
             {
