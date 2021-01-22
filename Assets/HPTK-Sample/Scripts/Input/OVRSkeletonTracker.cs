@@ -28,7 +28,12 @@ namespace HPTK.Input
             base.UpdateData();
 
             if (!handData || !boneData)
+            {
+                log = "No hand/bone data!";
                 return;
+            }
+
+            log = "Updating from hand tracking...";
 
             if (handData.IsTracked)
             {
@@ -64,7 +69,7 @@ namespace HPTK.Input
                     }
                 }
 
-                UpdateFingers();
+                UpdateFingerPosesFromBones();
 
                 // Confidence estimation
                 confidence = (OVRConfidenceToLerp(handData.HandConfidence) + GetMeanFingerConfidence()) / 2.0f;
@@ -76,6 +81,8 @@ namespace HPTK.Input
             {
                 confidence = 0.0f;
             }
+
+            log = "Updated from hand tracking!";
         }
 
         float GetMeanFingerConfidence()
