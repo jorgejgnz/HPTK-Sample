@@ -11,9 +11,7 @@ using UnityEngine.Events;
 public class OVRFinder : MonoBehaviour
 {
     public AvatarHandler avatar;
-
-    [Range(0.0f,5.0f)]
-    public float waitFor = 3.0f;
+    public OVRCameraRig cameraRig;
 
     [Header("InputDataProviders")]
     public bool findOVRHandsForIdps = false;
@@ -44,15 +42,30 @@ public class OVRFinder : MonoBehaviour
     SkinnedMeshRenderer defaultSMR_L;
     SkinnedMeshRenderer defaultSMR_R;
 
-    private void Start()
+    OVRCameraRig searchResult;
+
+    private void Update()
     {
-        StartCoroutine(PhysHelpers.DoAfter(waitFor,() => { Find(); }));
+        // Avatar
+        if (!avatar && HPTKCore.core.model.avatars.Count > 0)
+            avatar = HPTKCore.core.model.avatars[0].handler;
+
+        // Camera rig
+        if (!cameraRig)
+        {
+            searchResult = GameObject.FindObjectOfType<OVRCameraRig>();
+
+            if (searchResult != null)
+            {
+                cameraRig = searchResult;
+                Apply();
+            }
+        }
     }
 
-    void Find()
+    void Apply()
     {
         // Camera
-        OVRCameraRig cameraRig = GameObject.FindObjectOfType<OVRCameraRig>();
         HPTKCore.core.model.trackedCamera = cameraRig.trackingSpace.Find("CenterEyeAnchor").transform;
 
         // Reparenting
@@ -81,11 +94,6 @@ public class OVRFinder : MonoBehaviour
             {
                 continue;
             }
-
-            // Fix for static hands in Unity Editor
-#if UNITY_EDITOR
-            ovrSkelton.ShouldUpdateBonePoses = true;
-#endif
 
             // IDPs
             if (findOVRHandsForIdps)

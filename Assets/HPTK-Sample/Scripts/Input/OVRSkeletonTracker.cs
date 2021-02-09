@@ -13,7 +13,9 @@ namespace HPTK.Input
 
         public bool toLocalSpace = false;
 
-        [Range(-0.25f,0.25f)]
+        [Header("Scale estimation")]
+        public bool autoScale = true;
+        [Range(-1.5f,1.5f)]
         public float scaleOffset = 0.0f;
 
         int parent;
@@ -74,8 +76,9 @@ namespace HPTK.Input
                 // Confidence estimation
                 confidence = (OVRConfidenceToLerp(handData.HandConfidence) + GetMeanFingerConfidence()) / 2.0f;
 
-                // Hand scaling
-                scale = handData.HandScale + scaleOffset;
+                // Hand scale estimation
+                if (autoScale)
+                    scale = handData.HandScale + scaleOffset;
             }
             else
             {
