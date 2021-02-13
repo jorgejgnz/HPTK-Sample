@@ -64,7 +64,7 @@ namespace HPTK.Components
             rb.transform.position = respawnable.initialPosition;
             rb.transform.rotation = respawnable.initialRotation;
 
-            StartCoroutine(PhysHelpers.DoAfterFixedUpdate(() =>
+            StartCoroutine(AsyncHelpers.DoAfterFixedUpdate(() =>
             {
                 for (int i = 0; i < respawnable.attachedRbs.Length; i++)
                 {
