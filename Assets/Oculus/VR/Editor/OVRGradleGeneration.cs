@@ -103,6 +103,32 @@ public class OVRGradleGeneration
 		}
 #endif
 
+#if UNITY_ANDROID
+		bool useOpenXR = OVRPluginUpdater.IsOVRPluginOpenXRActivated();
+#if USING_XR_SDK
+		if (useOpenXR)
+		{
+			UnityEngine.Debug.LogWarning("Oculus Utilities Plugin with OpenXR is being used, which is under experimental status");
+
+			if (PlayerSettings.colorSpace != ColorSpace.Linear)
+			{
+				throw new BuildFailedException("Oculus Utilities Plugin with OpenXR only supports linear lighting. Please set 'Rendering/Color Space' to 'Linear' in Player Settings");
+			}
+		}
+#else
+		if (useOpenXR)
+		{
+			throw new BuildFailedException("Oculus Utilities Plugin with OpenXR only supports XR Plug-in Managmenent with Oculus XR Plugin.");
+		}
+#endif
+#endif
+
+#if UNITY_ANDROID && USING_XR_SDK && !USING_COMPATIBLE_OCULUS_XR_PLUGIN_VERSION
+		if (PlayerSettings.Android.targetArchitectures != AndroidArchitecture.ARM64)
+			throw new BuildFailedException("Your project is using an Oculus XR Plugin version with known issues. Please navigate to the Package Manager and upgrade the Oculus XR Plugin to the latest verified version. When performing the upgrade" +
+				", you must first \"Remove\" the Oculus XR Plugin package, and then \"Install\" the package at the verified version. Be sure to remove, then install, not just upgrade.");
+#endif
+
 		buildStartTime = System.DateTime.Now;
 		buildGuid = System.Guid.NewGuid();
 
@@ -191,6 +217,35 @@ public class OVRGradleGeneration
 		else
 		{
 			UnityEngine.Debug.LogWarning("Unable to locate build.gradle");
+		}
+
+		OVRProjectConfig projectConfig = OVRProjectConfig.GetProjectConfig();
+		if (projectConfig != null && projectConfig.systemSplashScreen != null)
+		{
+			if (PlayerSettings.virtualRealitySplashScreen != null)
+			{
+				UnityEngine.Debug.LogWarning("Virtual Reality Splash Screen (in Player Settings) is active. It would be displayed after the system splash screen, before the first game frame be rendered.");
+			}
+			string splashScreenAssetPath = AssetDatabase.GetAssetPath(projectConfig.systemSplashScreen);
+			if (Path.GetExtension(splashScreenAssetPath).ToLower() != ".png")
+			{
+				throw new BuildFailedException("Invalid file format of System Splash Screen. It has to be a PNG file to be used by the Quest OS. The asset path: " + splashScreenAssetPath);
+			}
+			else
+			{
+				string sourcePath = splashScreenAssetPath;
+				string targetFolder = Path.Combine(path, "src/main/assets");
+				string targetPath = targetFolder + "/vr_splash.png";
+				UnityEngine.Debug.LogFormat("Copy splash screen asset from {0} to {1}", sourcePath, targetPath);
+				try
+				{
+					File.Copy(sourcePath, targetPath);
+				}
+				catch(Exception e)
+				{
+					throw new BuildFailedException(e.Message);
+				}
+			}
 		}
 
 		PatchAndroidManifest(path);

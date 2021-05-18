@@ -41,6 +41,8 @@ public class DebugUIBuilder : MonoBehaviour
   private RectTransform togglePrefab = null;
   [SerializeField]
   private RectTransform radioPrefab = null;
+  [SerializeField]
+  private RectTransform textPrefab = null;
 
   [SerializeField]
   private GameObject uiHelpersToInstantiate = null;
@@ -306,6 +308,15 @@ public class DebugUIBuilder : MonoBehaviour
     tb.isOn = isFirst;
     tb.onValueChanged.AddListener(delegate { handler(tb); });
     return rt;
+  }
+
+  public RectTransform AddTextField(string label, int targetCanvas = 0)
+  {
+      RectTransform textRT = GameObject.Instantiate(textPrefab).GetComponent<RectTransform>();
+      InputField inputField = textRT.GetComponentInChildren<InputField>();
+      inputField.text = label;
+      AddRect(textRT, targetCanvas);
+      return textRT;
   }
 
   public void ToggleLaserPointer(bool isOn)

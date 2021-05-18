@@ -10,9 +10,11 @@ namespace Oculus.Platform
     [Description("UNKNOWN")]
     Unknown,
 
+    /// A report for something besides a user, like a world.
     [Description("OBJECT")]
     Object,
 
+    /// A report for a user's behavior or profile.
     [Description("USER")]
     User,
 

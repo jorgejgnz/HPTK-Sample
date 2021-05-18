@@ -125,6 +125,7 @@ class ONSPPropagation
         public const uint OVRA_CLIENT_TYPE_WWISE_UNKNOWN = 12;
         public const uint OVRA_CLIENT_TYPE_WWISE_2019_1 = 13;
         public const uint OVRA_CLIENT_TYPE_WWISE_2019_2 = 14;
+        public const uint OVRA_CLIENT_TYPE_WWISE_2021_1 = 15;
     }
 
     public interface PropagationInterface

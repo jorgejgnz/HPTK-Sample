@@ -112,7 +112,9 @@ class OVREngineConfigurationUpdater
 		}
 
 #if !USING_XR_SDK && !REQUIRES_XR_SDK
+#pragma warning disable 618
 		if (!PlayerSettings.virtualRealitySupported)
+#pragma warning restore 618
 		{
 			// NOTE: This value should not affect the main window surface
 			// when Built-in VR support is enabled.
@@ -141,7 +143,9 @@ class OVREngineConfigurationUpdater
 	static void EnforceVRSupport()
 	{
 #if !USING_XR_SDK && !REQUIRES_XR_SDK
+#pragma warning disable 618
 		if (PlayerSettings.virtualRealitySupported)
+#pragma warning restore 618
 			return;
 		
 		var mgrs = GameObject.FindObjectsOfType<OVRManager>();
@@ -150,7 +154,9 @@ class OVREngineConfigurationUpdater
 			if (mgrs [i].isActiveAndEnabled)
 			{
 				Debug.Log ("Enabling Unity VR support");
+#pragma warning disable 618
 				PlayerSettings.virtualRealitySupported = true;
+#pragma warning restore 618
 
 				bool oculusFound = false;
 				foreach (var device in UnityEngine.XR.XRSettings.supportedDevices)
@@ -167,23 +173,23 @@ class OVREngineConfigurationUpdater
 
 	private static void EnforceBundleId()
 	{
-		bool shouldEnforceBundleId = false;
-#if USING_XR_SDK
-		shouldEnforceBundleId = true;
-#elif !REQUIRES_XR_SDK
-		if (PlayerSettings.virtualRealitySupported)
-			shouldEnforceBundleId = true;
-#endif
-
-		if (shouldEnforceBundleId)
+#if !USING_XR_SDK && !REQUIRES_XR_SDK
+#pragma warning disable 618
+		if (!PlayerSettings.virtualRealitySupported)
 		{
-			if (PlayerSettings.applicationIdentifier == "" || PlayerSettings.applicationIdentifier == "com.Company.ProductName")
-			{
-				string defaultBundleId = "com.oculus.UnitySample";
-				Debug.LogWarning("\"" + PlayerSettings.applicationIdentifier + "\" is not a valid bundle identifier. Defaulting to \"" + defaultBundleId + "\".");
-				PlayerSettings.applicationIdentifier = defaultBundleId;
-			}
+			return;
 		}
+#pragma warning restore 618
+#endif
+		
+#if USING_XR_SDK || !REQUIRES_XR_SDK
+		if (PlayerSettings.applicationIdentifier == "" || PlayerSettings.applicationIdentifier == "com.Company.ProductName")
+		{
+			string defaultBundleId = "com.oculus.UnitySample";
+			Debug.LogWarning("\"" + PlayerSettings.applicationIdentifier + "\" is not a valid bundle identifier. Defaulting to \"" + defaultBundleId + "\".");
+			PlayerSettings.applicationIdentifier = defaultBundleId;
+		}
+#endif
 	}
 
 	private static void EnforceInstallLocation()

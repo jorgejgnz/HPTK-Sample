@@ -1,12 +1,8 @@
 /************************************************************************************
 Copyright : Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
-Licensed under the Oculus Master SDK License Version 1.0 (the "License"); you may not use
-the Utilities SDK except in compliance with the License, which is provided at the time of installation
-or download, or which otherwise accompanies this software in either electronic or hard copy form.
-
-You may obtain a copy of the License at
-https://developer.oculus.com/licenses/oculusmastersdk-1.0/
+Your use of this SDK or tool is subject to the Oculus SDK License Agreement, available at
+https://developer.oculus.com/licenses/oculussdk/
 
 Unless required by applicable law or agreed to in writing, the Utilities SDK distributed
 under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
@@ -394,12 +390,15 @@ public static class OVRInput
 	/// </summary>
 	public static void FixedUpdate()
 	{
-		stepType = OVRPlugin.Step.Physics;
+		if (OVRPlugin.nativeXrApi != OVRPlugin.XrApi.OpenXR)
+		{
+			stepType = OVRPlugin.Step.Physics;
 
-		double predictionSeconds = (double)fixedUpdateCount * Time.fixedDeltaTime / Mathf.Max(Time.timeScale, 1e-6f);
-		fixedUpdateCount++;
+			double predictionSeconds = (double)fixedUpdateCount * Time.fixedDeltaTime / Mathf.Max(Time.timeScale, 1e-6f);
+			fixedUpdateCount++;
 
-		OVRPlugin.UpdateNodePhysicsPoses(0, predictionSeconds);
+			OVRPlugin.UpdateNodePhysicsPoses(0, predictionSeconds);
+		}
 	}
 
 	/// <summary>

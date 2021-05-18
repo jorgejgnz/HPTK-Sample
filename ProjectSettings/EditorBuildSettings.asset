@@ -6,11 +6,11 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 0
-    path: 
-    guid: 00000000000000000000000000000000
+    path: Assets/HPTK/Integrations/Oculus/Scenes/Demo.Oculus.unity
+    guid: c1a5c09701b77a644a6e3c1177717a36
   - enabled: 1
-    path: Assets/Scene.unity
-    guid: 1e6b2c18e08bbe64b8b13985a2b26463
+    path: Assets/HPTK-Sample/Scenes/Scene.unity
+    guid: 34ce03112ae417945aa17765c54378a6
   m_configObjects:
     Unity.XR.Oculus.Settings: {fileID: 11400000, guid: aaf0139069c61ff49a246b83fe786033,
       type: 2}

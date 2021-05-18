@@ -46,7 +46,6 @@ public class OVRProjectConfigEditor : Editor
 	public static void DrawProjectConfigInspector(OVRProjectConfig projectConfig)
 	{
 		bool hasModified = false;
-		EditorGUI.BeginDisabledGroup(!projectConfig.targetDeviceTypes.Contains(OVRProjectConfig.DeviceType.Quest));
 		EditorGUILayout.LabelField("Quest Features", EditorStyles.boldLabel);
 
 		// Show overlay support option
@@ -63,10 +62,25 @@ public class OVRProjectConfigEditor : Editor
 		// Hand Tracking Support
 		OVREditorUtil.SetupEnumField(projectConfig, "Hand Tracking Support", ref projectConfig.handTrackingSupport, ref hasModified);
 
+		OVREditorUtil.SetupEnumField(projectConfig, new GUIContent("Hand Tracking Frequency",
+			"Note that a higher tracking frequency will reserve some performance headroom from the application's budget."),
+			ref projectConfig.handTrackingFrequency, ref hasModified, "https://developer.intern.oculus.com/documentation/unity/unity-handtracking/#enable-hand-tracking");
+
+
 		// System Keyboard Support
 		OVREditorUtil.SetupBoolField(projectConfig, new GUIContent("Requires System Keyboard",
 			"*Requires Focus Awareness* If checked, the Oculus System keyboard will be enabled for Unity input fields and any calls to open/close the Unity TouchScreenKeyboard."),
 			ref projectConfig.requiresSystemKeyboard, ref hasModified);
+
+		// System Splash Screen
+		OVREditorUtil.SetupTexture2DField(projectConfig, new GUIContent("System Splash Screen",
+			"*System Splash Screen* If set, the Splash Screen will be presented by the Operating System as a high quality composition layer at launch time."),
+			ref projectConfig.systemSplashScreen, ref hasModified);
+
+		// Allow optional 3-dof head-tracking
+		OVREditorUtil.SetupBoolField(projectConfig, new GUIContent("Allow Optional 3DoF Head Tracking",
+			"If checked, application can work in both 6DoF and 3DoF modes. It's highly recommended to keep it unchecked unless your project strongly needs the 3DoF head tracking."),
+			ref projectConfig.allowOptional3DofHeadTracking, ref hasModified);
 
 		if (projectConfig.requiresSystemKeyboard && !projectConfig.focusAware)
 		{
@@ -77,7 +91,6 @@ public class OVRProjectConfigEditor : Editor
 		EditorGUI.EndDisabledGroup();
 		EditorGUILayout.Space();
 
-		EditorGUI.BeginDisabledGroup(false);
 		EditorGUILayout.LabelField("Android Build Settings", EditorStyles.boldLabel);
 
 		// Show overlay support option

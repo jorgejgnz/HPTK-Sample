@@ -12,7 +12,7 @@ namespace Oculus.Platform.Models
   {
     public readonly DateTime ExpirationTime;
     public readonly DateTime GrantTime;
-    public readonly UInt64 ID;
+    public readonly string ID;
     public readonly string Sku;
 
 
@@ -20,7 +20,7 @@ namespace Oculus.Platform.Models
     {
       ExpirationTime = CAPI.ovr_Purchase_GetExpirationTime(o);
       GrantTime = CAPI.ovr_Purchase_GetGrantTime(o);
-      ID = CAPI.ovr_Purchase_GetPurchaseID(o);
+      ID = CAPI.ovr_Purchase_GetPurchaseStrID(o);
       Sku = CAPI.ovr_Purchase_GetSKU(o);
     }
   }

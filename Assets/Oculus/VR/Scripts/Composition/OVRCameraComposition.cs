@@ -1,12 +1,8 @@
 /************************************************************************************
 Copyright : Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
-Licensed under the Oculus Master SDK License Version 1.0 (the "License"); you may not use
-the Utilities SDK except in compliance with the License, which is provided at the time of installation
-or download, or which otherwise accompanies this software in either electronic or hard copy form.
-
-You may obtain a copy of the License at
-https://developer.oculus.com/licenses/oculusmastersdk-1.0/
+Your use of this SDK or tool is subject to the Oculus SDK License Agreement, available at
+https://developer.oculus.com/licenses/oculussdk/
 
 Unless required by applicable law or agreed to in writing, the Utilities SDK distributed
 under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
@@ -15,6 +11,7 @@ permissions and limitations under the License.
 ************************************************************************************/
 
 using UnityEngine;
+using UnityEngine.Rendering;
 using System.Collections;
 
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
@@ -24,7 +21,6 @@ public abstract class OVRCameraComposition : OVRComposition {
 	protected float cameraFramePlaneDistance;
 
 	protected readonly bool hasCameraDeviceOpened = false;
-	protected readonly bool useDynamicLighting = false;
 
 	internal readonly OVRPlugin.CameraDevice cameraDevice = OVRPlugin.CameraDevice.WebCamera0;
 
@@ -32,19 +28,19 @@ public abstract class OVRCameraComposition : OVRComposition {
 	private float boundaryMeshTopY = 0.0f;
 	private float boundaryMeshBottomY = 0.0f;
 	private OVRManager.VirtualGreenScreenType boundaryMeshType = OVRManager.VirtualGreenScreenType.Off;
+	private OVRCameraFrameCompositionManager cameraFrameCompositionManager = null;
 
-	protected OVRCameraComposition(GameObject parentObject, Camera mainCamera, OVRManager.CameraDevice inCameraDevice, bool inUseDynamicLighting, OVRManager.DepthQuality depthQuality)
-		: base(parentObject, mainCamera)
+	protected OVRCameraComposition(GameObject parentObject, Camera mainCamera, OVRMixedRealityCaptureConfiguration configuration)
+		: base(parentObject, mainCamera, configuration)
 	{
-		cameraDevice = OVRCompositionUtil.ConvertCameraDevice(inCameraDevice);
+		cameraDevice = OVRCompositionUtil.ConvertCameraDevice(configuration.capturingCameraDevice);
 
 		Debug.Assert(!hasCameraDeviceOpened);
 		Debug.Assert(!OVRPlugin.IsCameraDeviceAvailable(cameraDevice) || !OVRPlugin.HasCameraDeviceOpened(cameraDevice));
 		hasCameraDeviceOpened = false;
-		useDynamicLighting = inUseDynamicLighting;
 
 		bool cameraSupportsDepth = OVRPlugin.DoesCameraDeviceSupportDepth(cameraDevice);
-		if (useDynamicLighting && !cameraSupportsDepth)
+		if (configuration.useDynamicLighting && !cameraSupportsDepth)
 		{
 			Debug.LogWarning("The camera device doesn't support depth. The result of dynamic lighting might not be correct");
 		}
@@ -58,19 +54,19 @@ public abstract class OVRCameraComposition : OVRComposition {
 				OVRPlugin.SetCameraDevicePreferredColorFrameSize(cameraDevice, intrinsics.ImageSensorPixelResolution.w, intrinsics.ImageSensorPixelResolution.h);
 			}
 
-			if (useDynamicLighting)
+			if (configuration.useDynamicLighting)
 			{
 				OVRPlugin.SetCameraDeviceDepthSensingMode(cameraDevice, OVRPlugin.CameraDeviceDepthSensingMode.Fill);
 				OVRPlugin.CameraDeviceDepthQuality quality = OVRPlugin.CameraDeviceDepthQuality.Medium;
-				if (depthQuality == OVRManager.DepthQuality.Low)
+				if (configuration.depthQuality == OVRManager.DepthQuality.Low)
 				{
 					quality = OVRPlugin.CameraDeviceDepthQuality.Low;
 				}
-				else if (depthQuality == OVRManager.DepthQuality.Medium)
+				else if (configuration.depthQuality == OVRManager.DepthQuality.Medium)
 				{
 					quality = OVRPlugin.CameraDeviceDepthQuality.Medium;
 				}
-				else if (depthQuality == OVRManager.DepthQuality.High)
+				else if (configuration.depthQuality == OVRManager.DepthQuality.High)
 				{
 					quality = OVRPlugin.CameraDeviceDepthQuality.High;
 				}
@@ -106,7 +102,7 @@ public abstract class OVRCameraComposition : OVRComposition {
 		boundaryMesh = null;
 	}
 
-	protected void RefreshCameraFramePlaneObject(GameObject parentObject, Camera mixedRealityCamera, bool useDynamicLighting)
+	protected void RefreshCameraFramePlaneObject(GameObject parentObject, Camera mixedRealityCamera, OVRMixedRealityCaptureConfiguration configuration)
 	{
 		OVRCompositionUtil.SafeDestroy(ref cameraFramePlaneObject);
 
@@ -116,20 +112,22 @@ public abstract class OVRCameraComposition : OVRComposition {
 		cameraFramePlaneObject.transform.parent = cameraInTrackingSpace ? cameraRig.trackingSpace : parentObject.transform;
 		cameraFramePlaneObject.GetComponent<Collider>().enabled = false;
 		cameraFramePlaneObject.GetComponent<MeshRenderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-		Material cameraFrameMaterial = new Material(Shader.Find(useDynamicLighting ? "Oculus/OVRMRCameraFrameLit" : "Oculus/OVRMRCameraFrame"));
+		Material cameraFrameMaterial = new Material(Shader.Find(configuration.useDynamicLighting ? "Oculus/OVRMRCameraFrameLit" : "Oculus/OVRMRCameraFrame"));
 		cameraFramePlaneObject.GetComponent<MeshRenderer>().material = cameraFrameMaterial;
 		cameraFrameMaterial.SetColor("_Color", Color.white);
 		cameraFrameMaterial.SetFloat("_Visible", 0.0f);
 		cameraFramePlaneObject.transform.localScale = new Vector3(4, 4, 4);
 		cameraFramePlaneObject.SetActive(true);
-		OVRCameraFrameCompositionManager cameraFrameCompositionManager = mixedRealityCamera.gameObject.AddComponent<OVRCameraFrameCompositionManager>();
+		cameraFrameCompositionManager = mixedRealityCamera.gameObject.AddComponent<OVRCameraFrameCompositionManager>();
+		cameraFrameCompositionManager.configuration = configuration;
 		cameraFrameCompositionManager.cameraFrameGameObj = cameraFramePlaneObject;
 		cameraFrameCompositionManager.composition = this;
 	}
 
 	private bool nullcameraRigWarningDisplayed = false;
-	protected void UpdateCameraFramePlaneObject(Camera mainCamera, Camera mixedRealityCamera, RenderTexture boundaryMeshMaskTexture)
+	protected void UpdateCameraFramePlaneObject(Camera mainCamera, Camera mixedRealityCamera, OVRMixedRealityCaptureConfiguration configuration, RenderTexture boundaryMeshMaskTexture)
 	{
+		cameraFrameCompositionManager.configuration = configuration;
 		bool hasError = false;
 		Material cameraFrameMaterial = cameraFramePlaneObject.GetComponent<MeshRenderer>().material;
 		Texture2D colorTexture = Texture2D.blackTexture;
@@ -144,7 +142,7 @@ public abstract class OVRCameraComposition : OVRComposition {
 			hasError = true;
 		}
 		bool cameraSupportsDepth = OVRPlugin.DoesCameraDeviceSupportDepth(cameraDevice);
-		if (useDynamicLighting && cameraSupportsDepth)
+		if (configuration.useDynamicLighting && cameraSupportsDepth)
 		{
 			if (OVRPlugin.IsCameraDeviceDepthFrameAvailable(cameraDevice))
 			{
@@ -175,22 +173,22 @@ public abstract class OVRCameraComposition : OVRComposition {
 
 			if (OVRManager.instance.virtualGreenScreenType != OVRManager.VirtualGreenScreenType.Off)
 			{
-				RefreshBoundaryMesh(mixedRealityCamera, out cullingDistance);
+				RefreshBoundaryMesh(mixedRealityCamera, configuration, out cullingDistance);
 			}
 
 			cameraFrameMaterial.mainTexture = colorTexture;
 			cameraFrameMaterial.SetTexture("_DepthTex", depthTexture);
-			cameraFrameMaterial.SetVector("_FlipParams", new Vector4((OVRManager.instance.flipCameraFrameHorizontally ? 1.0f : 0.0f), (OVRManager.instance.flipCameraFrameVertically ? 1.0f : 0.0f), 0.0f, 0.0f));
-			cameraFrameMaterial.SetColor("_ChromaKeyColor", OVRManager.instance.chromaKeyColor);
-			cameraFrameMaterial.SetFloat("_ChromaKeySimilarity", OVRManager.instance.chromaKeySimilarity);
-			cameraFrameMaterial.SetFloat("_ChromaKeySmoothRange", OVRManager.instance.chromaKeySmoothRange);
-			cameraFrameMaterial.SetFloat("_ChromaKeySpillRange", OVRManager.instance.chromaKeySpillRange);
+			cameraFrameMaterial.SetVector("_FlipParams", new Vector4((configuration.flipCameraFrameHorizontally ? 1.0f : 0.0f), (configuration.flipCameraFrameVertically ? 1.0f : 0.0f), 0.0f, 0.0f));
+			cameraFrameMaterial.SetColor("_ChromaKeyColor", configuration.chromaKeyColor);
+			cameraFrameMaterial.SetFloat("_ChromaKeySimilarity", configuration.chromaKeySimilarity);
+			cameraFrameMaterial.SetFloat("_ChromaKeySmoothRange", configuration.chromaKeySmoothRange);
+			cameraFrameMaterial.SetFloat("_ChromaKeySpillRange", configuration.chromaKeySpillRange);
 			cameraFrameMaterial.SetVector("_TextureDimension", new Vector4(colorTexture.width, colorTexture.height, 1.0f / colorTexture.width, 1.0f / colorTexture.height));
 			cameraFrameMaterial.SetVector("_TextureWorldSize", new Vector4(worldWidth, worldHeight, 0, 0));
-			cameraFrameMaterial.SetFloat("_SmoothFactor", OVRManager.instance.dynamicLightingSmoothFactor);
-			cameraFrameMaterial.SetFloat("_DepthVariationClamp", OVRManager.instance.dynamicLightingDepthVariationClampingValue);
+			cameraFrameMaterial.SetFloat("_SmoothFactor", configuration.dynamicLightingSmoothFactor);
+			cameraFrameMaterial.SetFloat("_DepthVariationClamp", configuration.dynamicLightingDepthVariationClampingValue);
 			cameraFrameMaterial.SetFloat("_CullingDistance", cullingDistance);
-			if (OVRManager.instance.virtualGreenScreenType == OVRManager.VirtualGreenScreenType.Off || boundaryMesh == null || boundaryMeshMaskTexture == null)
+			if (configuration.virtualGreenScreenType == OVRManager.VirtualGreenScreenType.Off || boundaryMesh == null || boundaryMeshMaskTexture == null)
 			{
 				cameraFrameMaterial.SetTexture("_MaskTex", Texture2D.whiteTexture);
 			}
@@ -220,16 +218,16 @@ public abstract class OVRCameraComposition : OVRComposition {
 		}
 	}
 
-	protected void RefreshBoundaryMesh(Camera camera, out float cullingDistance)
+	protected void RefreshBoundaryMesh(Camera camera, OVRMixedRealityCaptureConfiguration configuration, out float cullingDistance)
 	{
-		float depthTolerance = OVRManager.instance.virtualGreenScreenApplyDepthCulling ? OVRManager.instance.virtualGreenScreenDepthTolerance : float.PositiveInfinity;
-		cullingDistance = OVRCompositionUtil.GetMaximumBoundaryDistance(camera, OVRCompositionUtil.ToBoundaryType(OVRManager.instance.virtualGreenScreenType)) + depthTolerance;
-		if (boundaryMesh == null || boundaryMeshType != OVRManager.instance.virtualGreenScreenType || boundaryMeshTopY != OVRManager.instance.virtualGreenScreenTopY || boundaryMeshBottomY != OVRManager.instance.virtualGreenScreenBottomY)
+		float depthTolerance = configuration.virtualGreenScreenApplyDepthCulling ? configuration.virtualGreenScreenDepthTolerance : float.PositiveInfinity;
+		cullingDistance = OVRCompositionUtil.GetMaximumBoundaryDistance(camera, OVRCompositionUtil.ToBoundaryType(configuration.virtualGreenScreenType)) + depthTolerance;
+		if (boundaryMesh == null || boundaryMeshType != configuration.virtualGreenScreenType || boundaryMeshTopY != configuration.virtualGreenScreenTopY || boundaryMeshBottomY != configuration.virtualGreenScreenBottomY)
 		{
-			boundaryMeshTopY = OVRManager.instance.virtualGreenScreenTopY;
-			boundaryMeshBottomY = OVRManager.instance.virtualGreenScreenBottomY;
-			boundaryMesh = OVRCompositionUtil.BuildBoundaryMesh(OVRCompositionUtil.ToBoundaryType(OVRManager.instance.virtualGreenScreenType), boundaryMeshTopY, boundaryMeshBottomY);
-			boundaryMeshType = OVRManager.instance.virtualGreenScreenType;
+			boundaryMeshTopY = configuration.virtualGreenScreenTopY;
+			boundaryMeshBottomY = configuration.virtualGreenScreenBottomY;
+			boundaryMesh = OVRCompositionUtil.BuildBoundaryMesh(OVRCompositionUtil.ToBoundaryType(configuration.virtualGreenScreenType), boundaryMeshTopY, boundaryMeshBottomY);
+			boundaryMeshType = configuration.virtualGreenScreenType;
 
 			// Creating GameObject for testing purpose only
 			//GameObject boundaryMeshObject = new GameObject("BoundaryMeshObject");
@@ -238,13 +236,17 @@ public abstract class OVRCameraComposition : OVRComposition {
 		}
 	}
 
-	public class OVRCameraFrameCompositionManager : MonoBehaviour
-	{
+	public class OVRCameraFrameCompositionManager : MonoBehaviour {
+
+		public OVRMixedRealityCaptureConfiguration configuration;
 		public GameObject cameraFrameGameObj;
 		public OVRCameraComposition composition;
 		public RenderTexture boundaryMeshMaskTexture;
 		private Material cameraFrameMaterial;
 		private Material whiteMaterial;
+#if UNITY_2019_1_OR_NEWER
+		private Camera mixedRealityCamera;
+#endif
 
 		void Start()
 		{
@@ -256,11 +258,20 @@ public abstract class OVRCameraComposition : OVRComposition {
 			}
 			whiteMaterial = new Material(shader);
 			whiteMaterial.color = Color.white;
+#if UNITY_2019_1_OR_NEWER
+			// Attach to render pipeline callbacks when on URP
+			if(GraphicsSettings.renderPipelineAsset != null)
+			{
+				RenderPipelineManager.beginCameraRendering += OnCameraBeginRendering;
+				RenderPipelineManager.endCameraRendering += OnCameraEndRendering;
+				mixedRealityCamera = GetComponent<Camera>();
+			}
+#endif
 		}
 
 		void OnPreRender()
 		{
-			if (OVRManager.instance.virtualGreenScreenType != OVRManager.VirtualGreenScreenType.Off && boundaryMeshMaskTexture != null && composition.boundaryMesh != null)
+			if (configuration != null && configuration.virtualGreenScreenType != OVRManager.VirtualGreenScreenType.Off && boundaryMeshMaskTexture != null && composition.boundaryMesh != null)
 			{
 				RenderTexture oldRT = RenderTexture.active;
 				RenderTexture.active = boundaryMeshMaskTexture;
@@ -298,6 +309,20 @@ public abstract class OVRCameraComposition : OVRComposition {
 				cameraFrameMaterial.SetFloat("_Visible", 0.0f);
 			}
 		}
+
+#if UNITY_2019_1_OR_NEWER
+		private void OnCameraBeginRendering(ScriptableRenderContext renderContext, Camera camera)
+		{
+			if (mixedRealityCamera != null && mixedRealityCamera == camera)
+				OnPreRender();
+		}
+
+		private void OnCameraEndRendering(ScriptableRenderContext renderContext, Camera camera)
+		{
+			if (mixedRealityCamera != null && mixedRealityCamera == camera)
+				OnPostRender();
+		}
+#endif
 	}
 
 }

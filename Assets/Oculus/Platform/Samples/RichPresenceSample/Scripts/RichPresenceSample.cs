@@ -25,10 +25,14 @@ public class RichPresenceSample : MonoBehaviour
   // A boolean to indicate whether the destination is joinable. You can check
   // the current capacity against the max capacity to determine whether the room
   // is joinable.
-  public bool IsJoinable;
+  public bool IsJoinable = true;
 
   // A boolean to indicate whether the current user is idling in the app.
   public bool IsIdle;
+
+  // Users with the same destination + instance ID are considered together by Oculus
+  // Users with the same destination and different instance IDs are not 
+  public string InstanceID;
 
   // The current capacity at that destination. Used for displaying with the
   // extra context when it's set to RichPresenceExtraContext.CurrentCapacity
@@ -58,6 +62,8 @@ public class RichPresenceSample : MonoBehaviour
 
   private List<string> DestinationAPINames = new List<string>();
   private ulong LoggedInUserID = 0;
+
+  private string TrackingID;
 
   // Start is called before the first frame update
   void Start()
@@ -110,6 +116,11 @@ public class RichPresenceSample : MonoBehaviour
       options.SetDeeplinkMessageOverride(DeeplinkMessageOverride);
     }
 
+    if (!string.IsNullOrEmpty(InstanceID))
+    {
+      options.SetInstanceId(InstanceID);
+    }
+
     // Set is Joinable to let other players deeplink and join this user via the presence
     options.SetIsJoinable(IsJoinable);
 
@@ -133,9 +144,11 @@ public class RichPresenceSample : MonoBehaviour
       if (message.IsError)
       {
         UpdateConsole(message.GetError().Message);
+        ApplicationLifecycle.LogDeeplinkResult(TrackingID, LaunchResult.FailedOtherReason);
       }
       else
       {
+        ApplicationLifecycle.LogDeeplinkResult(TrackingID, LaunchResult.Success);
         // Note that Users.GetLoggedInUser() does not do a server fetch and will
         // not get an updated presence status
         Users.Get(LoggedInUserID).OnComplete(message2 =>
@@ -207,6 +220,8 @@ public class RichPresenceSample : MonoBehaviour
     // The API Name of the destination. You can set the user to this after
     // navigating to the app
     var destinationApiName = launchDetails.DestinationApiName;
+
+    TrackingID = !string.IsNullOrEmpty(launchDetails.TrackingID) ? launchDetails.TrackingID : "FakeTrackingID";
 
     var detailsString = "-Deeplink Message:\n" + deeplinkMessage + "\n-Api Name:\n" + destinationApiName + "\n-Users:\n";
     if (usersCount > 0)

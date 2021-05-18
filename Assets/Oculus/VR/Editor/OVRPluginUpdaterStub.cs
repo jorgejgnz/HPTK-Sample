@@ -20,10 +20,22 @@ limitations under the License.
 ************************************************************************************/
 
 using UnityEngine;
-using System.Collections;
+using UnityEditor;
+using System;
 
 public class OVRPluginUpdaterStub : ScriptableObject
 {
 	// Stub helper class to locate OVR Utilities Path through Unity Editor API.
 	// Required to be a standalone class in a separate file or else MonoScript.FromScriptableObject() returns an empty string path.
+
+	public static bool IsInsidePackageDistribution()
+	{
+		var so = ScriptableObject.CreateInstance(typeof(OVRPluginUpdaterStub));
+		var script = MonoScript.FromScriptableObject(so);
+		string assetPath = AssetDatabase.GetAssetPath(script);
+		if (assetPath.StartsWith("Packages\\", StringComparison.InvariantCultureIgnoreCase) ||
+			assetPath.StartsWith("Packages/", StringComparison.InvariantCultureIgnoreCase))
+			return true;
+		return false;
+	}
 }

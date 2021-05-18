@@ -15,6 +15,11 @@
             "name": "com.unity.xr.oculus",
             "expression": "",
             "define": "USING_XR_SDK_OCULUS"
+        },
+        {
+            "name": "com.unity.xr.oculus",
+            "expression": "1.4.0",
+            "define": "USING_COMPATIBLE_OCULUS_XR_PLUGIN_VERSION"
         }
     ]
 }

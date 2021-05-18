@@ -1,5 +1,7 @@
 // This file was @generated with LibOVRPlatform/codegen/main. Do not modify it!
 
+#pragma warning disable 0618
+
 namespace Oculus.Platform.Models
 {
   using System;
@@ -10,18 +12,33 @@ namespace Oculus.Platform.Models
 
   public class LeaderboardEntry
   {
+    public readonly string DisplayScore;
     public readonly byte[] ExtraData;
     public readonly int Rank;
     public readonly long Score;
+    // May be null. Check before using.
+    public readonly SupplementaryMetric SupplementaryMetricOptional;
+    [Obsolete("Deprecated in favor of SupplementaryMetricOptional")]
+    public readonly SupplementaryMetric SupplementaryMetric;
     public readonly DateTime Timestamp;
     public readonly User User;
 
 
     public LeaderboardEntry(IntPtr o)
     {
+      DisplayScore = CAPI.ovr_LeaderboardEntry_GetDisplayScore(o);
       ExtraData = CAPI.ovr_LeaderboardEntry_GetExtraData(o);
       Rank = CAPI.ovr_LeaderboardEntry_GetRank(o);
       Score = CAPI.ovr_LeaderboardEntry_GetScore(o);
+      {
+        var pointer = CAPI.ovr_LeaderboardEntry_GetSupplementaryMetric(o);
+        SupplementaryMetric = new SupplementaryMetric(pointer);
+        if (pointer == IntPtr.Zero) {
+          SupplementaryMetricOptional = null;
+        } else {
+          SupplementaryMetricOptional = SupplementaryMetric;
+        }
+      }
       Timestamp = CAPI.ovr_LeaderboardEntry_GetTimestamp(o);
       User = new User(CAPI.ovr_LeaderboardEntry_GetUser(o));
     }

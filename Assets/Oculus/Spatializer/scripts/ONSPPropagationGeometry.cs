@@ -234,42 +234,6 @@ public class ONSPPropagationGeometry : MonoBehaviour
         List<TerrainMaterial> terrains = new List<TerrainMaterial>();
         traverseMeshHierarchy(meshObject, null, includeChildMeshes, meshes, terrains, ignoreStatic, ref ignoredMeshCount);
 
-#if INCLUDE_TERRAIN_TREES
-        // TODO: expose tree material
-        ONSPPropagationMaterial[] treeMaterials = new ONSPPropagationMaterial[1];
-        treeMaterials[0] = gameObject.AddComponent<ONSPPropagationMaterial>();
-
-#if true
-        treeMaterials[0].SetPreset(ONSPPropagationMaterial.Preset.Foliage);
-#else
-        // Custom material that is highly transmissive
-        treeMaterials[0].absorption.points = new List<ONSPPropagationMaterial.Point>{
-			new ONSPPropagationMaterial.Point(125f,  .03f), 
-            new ONSPPropagationMaterial.Point(250f,  .06f), 
-            new ONSPPropagationMaterial.Point(500f,  .11f), 
-            new ONSPPropagationMaterial.Point(1000f, .17f), 
-            new ONSPPropagationMaterial.Point(2000f, .27f), 
-            new ONSPPropagationMaterial.Point(4000f, .31f) };
-
-        treeMaterials[0].scattering.points = new List<ONSPPropagationMaterial.Point>{
-			new ONSPPropagationMaterial.Point(125f,  .20f), 
-            new ONSPPropagationMaterial.Point(250f,  .3f), 
-            new ONSPPropagationMaterial.Point(500f,  .4f), 
-            new ONSPPropagationMaterial.Point(1000f, .5f), 
-            new ONSPPropagationMaterial.Point(2000f, .7f), 
-            new ONSPPropagationMaterial.Point(4000f, .8f) };
-
-        treeMaterials[0].transmission.points = new List<ONSPPropagationMaterial.Point>(){
-			new ONSPPropagationMaterial.Point(125f,  .95f), 
-            new ONSPPropagationMaterial.Point(250f,  .92f), 
-            new ONSPPropagationMaterial.Point(500f,  .87f), 
-            new ONSPPropagationMaterial.Point(1000f, .81f), 
-            new ONSPPropagationMaterial.Point(2000f, .71f), 
-            new ONSPPropagationMaterial.Point(4000f, .67f) };
-#endif
-
-#endif
-
         //***********************************************************************
         // Count the number of vertices and indices.
 
@@ -283,6 +247,9 @@ public class ONSPPropagationGeometry : MonoBehaviour
             updateCountsForMesh(ref totalVertexCount, ref totalIndexCount, ref totalFaceCount, ref totalMaterialCount, m.meshFilter.sharedMesh);
         }
 
+        // TODO: expose tree material
+        ONSPPropagationMaterial[] treeMaterials = new ONSPPropagationMaterial[1];
+        
         for (int i = 0; i < terrains.Count; ++i)
         {
             TerrainMaterial t = terrains[i];
@@ -307,35 +274,74 @@ public class ONSPPropagationGeometry : MonoBehaviour
 
 #if INCLUDE_TERRAIN_TREES
             TreePrototype[] treePrototypes = terrain.treePrototypes;
-            t.treePrototypeMeshes = new Mesh[treePrototypes.Length];
 
-            // assume the sharedMesh with the lowest vertex is the lowest LOD
-            for (int j = 0; j < treePrototypes.Length; ++j)
+            if (treePrototypes.Length != 0)
             {
-                GameObject prefab = treePrototypes[j].prefab;
-                MeshFilter[] meshFilters = prefab.GetComponentsInChildren<MeshFilter>();
-                int minVertexCount = int.MaxValue;
-                int index = -1;
-                for (int k = 0; k < meshFilters.Length; ++k)
+                if (treeMaterials[0] == null)
                 {
-                    int count = meshFilters[k].sharedMesh.vertexCount;
-                    if (count < minVertexCount)
-                    {
-                        minVertexCount = count;
-                        index = k;
-                    }
+                    // Create the tree material
+                    treeMaterials[0] = gameObject.AddComponent<ONSPPropagationMaterial>();
+#if true
+                    treeMaterials[0].SetPreset(ONSPPropagationMaterial.Preset.Foliage);
+#else
+                    // Custom material that is highly transmissive
+                    treeMaterials[0].absorption.points = new List<ONSPPropagationMaterial.Point>{
+			            new ONSPPropagationMaterial.Point(125f,  .03f), 
+                        new ONSPPropagationMaterial.Point(250f,  .06f), 
+                        new ONSPPropagationMaterial.Point(500f,  .11f), 
+                        new ONSPPropagationMaterial.Point(1000f, .17f), 
+                        new ONSPPropagationMaterial.Point(2000f, .27f), 
+                        new ONSPPropagationMaterial.Point(4000f, .31f) };
+
+                    treeMaterials[0].scattering.points = new List<ONSPPropagationMaterial.Point>{
+			            new ONSPPropagationMaterial.Point(125f,  .20f), 
+                        new ONSPPropagationMaterial.Point(250f,  .3f), 
+                        new ONSPPropagationMaterial.Point(500f,  .4f), 
+                        new ONSPPropagationMaterial.Point(1000f, .5f), 
+                        new ONSPPropagationMaterial.Point(2000f, .7f), 
+                        new ONSPPropagationMaterial.Point(4000f, .8f) };
+
+                    treeMaterials[0].transmission.points = new List<ONSPPropagationMaterial.Point>(){
+			            new ONSPPropagationMaterial.Point(125f,  .95f), 
+                        new ONSPPropagationMaterial.Point(250f,  .92f), 
+                        new ONSPPropagationMaterial.Point(500f,  .87f), 
+                        new ONSPPropagationMaterial.Point(1000f, .81f), 
+                        new ONSPPropagationMaterial.Point(2000f, .71f), 
+                        new ONSPPropagationMaterial.Point(4000f, .67f) };
+#endif
                 }
 
-                t.treePrototypeMeshes[j] = meshFilters[index].sharedMesh;
-            }
+                t.treePrototypeMeshes = new Mesh[treePrototypes.Length];
 
-            TreeInstance[] trees = terrain.treeInstances;
-            foreach (TreeInstance tree in trees)
-            {
-                updateCountsForMesh(ref totalVertexCount, ref totalIndexCount, ref totalFaceCount, ref totalMaterialCount, t.treePrototypeMeshes[tree.prototypeIndex]);
-            }
+                // assume the sharedMesh with the lowest vertex is the lowest LOD
+                for (int j = 0; j < treePrototypes.Length; ++j)
+                {
+                    GameObject prefab = treePrototypes[j].prefab;
+                    MeshFilter[] meshFilters = prefab.GetComponentsInChildren<MeshFilter>();
+                    int minVertexCount = int.MaxValue;
+                    int index = -1;
+                    for (int k = 0; k < meshFilters.Length; ++k)
+                    {
+                        int count = meshFilters[k].sharedMesh.vertexCount;
+                        if (count < minVertexCount)
+                        {
+                            minVertexCount = count;
+                            index = k;
+                        }
+                    }
 
-            terrains[i] = t;
+                    t.treePrototypeMeshes[j] = meshFilters[index].sharedMesh;
+                }
+
+                TreeInstance[] trees = terrain.treeInstances;
+                foreach (TreeInstance tree in trees)
+                {
+                    updateCountsForMesh(ref totalVertexCount, ref totalIndexCount, ref totalFaceCount,
+                        ref totalMaterialCount, t.treePrototypeMeshes[tree.prototypeIndex]);
+                }
+
+                terrains[i] = t;
+            }
 #endif
         }
 
@@ -419,12 +425,12 @@ public class ONSPPropagationGeometry : MonoBehaviour
                 {
                     // For each grid cell output two triangles
                     indices[indexOffset + 0] = (vertexOffset + (y * wRes) + x);
-                    indices[indexOffset + 1] = (vertexOffset + (y * wRes) + x + 1);
-                    indices[indexOffset + 2] = (vertexOffset + ((y + 1) * wRes) + x);
+                    indices[indexOffset + 1] = (vertexOffset + ((y + 1) * wRes) + x);
+                    indices[indexOffset + 2] = (vertexOffset + (y * wRes) + x + 1);
 
                     indices[indexOffset + 3] = (vertexOffset + ((y + 1) * wRes) + x);
-                    indices[indexOffset + 4] = (vertexOffset + (y * wRes) + x + 1);
-                    indices[indexOffset + 5] = (vertexOffset + ((y + 1) * wRes) + x + 1);
+                    indices[indexOffset + 4] = (vertexOffset + ((y + 1) * wRes) + x + 1);
+                    indices[indexOffset + 5] = (vertexOffset + (y * wRes) + x + 1);
                     indexOffset += 6;
                 }
             }

@@ -24,6 +24,7 @@ import com.google.android.exoplayer2.DefaultRenderersFactory;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.ExoPlayerFactory;
+import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.PlaybackPreparer;
 import com.google.android.exoplayer2.Player;
@@ -125,6 +126,9 @@ public class NativeVideoPlayer
 
     static volatile boolean isPlaying;
     static volatile int currentPlaybackState;
+    static volatile int stereoMode = -1;
+    static volatile int width;
+    static volatile int height;
 
     static volatile long duration;
 
@@ -137,6 +141,17 @@ public class NativeVideoPlayer
         lastPlaybackPosition = exoPlayer.getCurrentPosition();
         lastPlaybackSpeed = isPlaying ? exoPlayer.getPlaybackParameters().speed : 0;
         lastPlaybackUpdateTime = System.currentTimeMillis();
+        Format format = exoPlayer.getVideoFormat();
+        if (format != null) {
+            stereoMode = format.stereoMode;
+            width = format.width;
+            height = format.height;
+        }
+        else {
+            stereoMode = -1;
+            width = 0;
+            height = 0;
+        }
     }
 
     private static Handler getHandler()
@@ -515,6 +530,21 @@ public class NativeVideoPlayer
     public static long getDuration()
     {
         return duration;
+    }
+
+    public static int getStereoMode()
+    {
+        return stereoMode;
+    }
+
+    public static int getWidth() 
+    {
+        return width;
+    }
+
+    public static int getHeight()
+    {
+        return height;
     }
 
     public static long getPlaybackPosition()

@@ -47,7 +47,7 @@ namespace Oculus.Platform
     }
 
 
-    // For passing to native C
+    /// For passing to native C
     public static explicit operator IntPtr(RoomOptions options) {
       return options != null ? options.Handle : IntPtr.Zero;
     }

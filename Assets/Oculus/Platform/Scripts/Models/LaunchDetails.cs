@@ -17,6 +17,7 @@ namespace Oculus.Platform.Models
     public readonly string LaunchSource;
     public readonly LaunchType LaunchType;
     public readonly UInt64 RoomID;
+    public readonly string TrackingID;
     // May be null. Check before using.
     public readonly UserList UsersOptional;
     [Obsolete("Deprecated in favor of UsersOptional")]
@@ -30,6 +31,7 @@ namespace Oculus.Platform.Models
       LaunchSource = CAPI.ovr_LaunchDetails_GetLaunchSource(o);
       LaunchType = CAPI.ovr_LaunchDetails_GetLaunchType(o);
       RoomID = CAPI.ovr_LaunchDetails_GetRoomID(o);
+      TrackingID = CAPI.ovr_LaunchDetails_GetTrackingID(o);
       {
         var pointer = CAPI.ovr_LaunchDetails_GetUsers(o);
         Users = new UserList(pointer);

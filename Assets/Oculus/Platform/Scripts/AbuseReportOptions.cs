@@ -23,7 +23,7 @@ namespace Oculus.Platform
     }
 
 
-    // For passing to native C
+    /// For passing to native C
     public static explicit operator IntPtr(AbuseReportOptions options) {
       return options != null ? options.Handle : IntPtr.Zero;
     }

@@ -14,6 +14,7 @@ namespace Oculus.Platform
   {
     // Keep this enum in sync with ovrMessageTypeInternal in OVR_Platform_Internal.h
     public enum MessageTypeInternal : uint { //TODO - rename this to type; it's already in Message class
+      AbuseReport_LaunchAdvancedReportFlow          = 0x4CB13A6E,
       Application_ExecuteCoordinatedLaunch          = 0x267DB4F4,
       Application_GetInstalledApplications          = 0x520F744C,
       Avatar_UpdateMetaData                         = 0x7BCFD98E,
@@ -25,6 +26,7 @@ namespace Oculus.Platform
       Colocation_ShareMap                           = 0x186DC4DD,
       GraphAPI_Get                                  = 0x30FF006E,
       GraphAPI_Post                                 = 0x76A5A7C4,
+      GroupPresence_LaunchInvitePanel               = 0x0F9ECF9F,
       HTTP_Get                                      = 0x6FB63223,
       HTTP_GetToFile                                = 0x4E81DC59,
       HTTP_MultiPartPost                            = 0x5842D210,
@@ -57,6 +59,10 @@ namespace Oculus.Platform
       Party_Invite                                  = 0x35B5C4E3,
       Party_Join                                    = 0x68027C73,
       Party_Leave                                   = 0x329206D1,
+      RichPresence_SetDestination                   = 0x4F32E10D,
+      RichPresence_SetIsJoinable                    = 0x3E9B1F61,
+      RichPresence_SetLobbySession                  = 0x71010917,
+      RichPresence_SetMatchSession                  = 0x63DFFC8E,
       Room_CreateOrUpdateAndJoinNamed               = 0x7C8E0A91,
       Room_GetNamedRooms                            = 0x077D6E8C,
       Room_GetSocialRooms                           = 0x61881D76,
@@ -112,6 +118,10 @@ namespace Oculus.Platform
         case MessageTypeInternal.NetSync_SetVoipMicSource:
         case MessageTypeInternal.NetSync_SetVoipSpeaktoChannels:
         case MessageTypeInternal.Party_Leave:
+        case MessageTypeInternal.RichPresence_SetDestination:
+        case MessageTypeInternal.RichPresence_SetIsJoinable:
+        case MessageTypeInternal.RichPresence_SetLobbySession:
+        case MessageTypeInternal.RichPresence_SetMatchSession:
         case MessageTypeInternal.User_CancelRecordingForReportFlow:
         case MessageTypeInternal.User_TestUserCreateDeviceManifest:
           message = new Message(messageHandle);
@@ -121,10 +131,15 @@ namespace Oculus.Platform
           message = new MessageWithInstalledApplicationList(messageHandle);
           break;
 
+        case MessageTypeInternal.GroupPresence_LaunchInvitePanel:
+          message = new MessageWithInvitePanelResultInfo(messageHandle);
+          break;
+
         case MessageTypeInternal.User_LaunchBlockFlow:
           message = new MessageWithLaunchBlockFlowResult(messageHandle);
           break;
 
+        case MessageTypeInternal.AbuseReport_LaunchAdvancedReportFlow:
         case MessageTypeInternal.User_LaunchReportFlow2:
           message = new MessageWithLaunchReportFlowResult(messageHandle);
           break;

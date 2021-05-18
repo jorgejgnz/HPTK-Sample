@@ -2197,7 +2197,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 857707721}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Dynamic
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4921,7 +4921,6 @@ MonoBehaviour:
   useIPDInPositionTracking: 1
   resetTrackerOnLoad: 0
   AllowRecenter: 1
-  _reorientHMDOnControllerRecenter: 1
   LateControllerUpdate: 0
 --- !u!114 &3680607433035253863
 MonoBehaviour:
@@ -4990,7 +4989,7 @@ Rigidbody:
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 112
-  m_CollisionDetection: 0
+  m_CollisionDetection: 2
 --- !u!114 &3680607433127796664
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5004,14 +5003,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CameraRig: {fileID: 3680607433035253863}
-  EnableCollision: 0
   CollideLayers:
     serializedVersion: 2
-    m_Bits: 256
-  MaxFade: 1
-  FadeMinDistance: 0.25
-  PreferredHeight: -1
-  FadeMaxDistance: 0.35
+    m_Bits: 1
+  HeightOffset: 1
+  MinimumHeight: 1
+  MaximumHeight: 2.5
 --- !u!114 &3680607433127796665
 MonoBehaviour:
   m_ObjectHideFlags: 0

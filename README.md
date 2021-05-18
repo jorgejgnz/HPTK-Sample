@@ -1,8 +1,7 @@
 # HPTK - Sample
 This is a ready-to-go project using [HPTK](https://github.com/jorgejgnz/HPTK). Used only for educational purposes.
 
-## Demo video
-[![Demo video](https://github.com/jorgejgnz/HPTK/blob/372787a8d8eaf2f8df1a7cd0f42c0082bf51884c/Media/hptk.gif?raw=true)](https://twitter.com/jorgejgnz/status/1285514990619942912)
+[![Screenshot](https://imgur.com/iH35YoZ.jpg)
 
 # Getting started
 Clone this repository. To do this, open a command line terminal, rooted on the Assets folder of your Unity project. 
@@ -13,9 +12,9 @@ Then clone using this command *git clone https://github.com/jorgejgnz/HPTK-Sampl
     This repository is using HPTK as a UPM package.
 
 # Current setup
-- [HPTK](https://github.com/jorgejgnz/HPTK) V0.2.2
-- [Oculus Integration](https://assetstore.unity.com/packages/tools/integration/oculus-integration-82022) v20.1
-- Unity 2019.4.4f1 LTS
+- [HPTK](https://github.com/jorgejgnz/HPTK) V0.6.0
+- [Oculus Integration](https://assetstore.unity.com/packages/tools/integration/oculus-integration-82022) v28.0
+- Unity 2020.3.7f1 LTS
 
 # Author
 **Jorge Juan González** - *HCI Researcher at I3A (University of Castilla-La Mancha)*

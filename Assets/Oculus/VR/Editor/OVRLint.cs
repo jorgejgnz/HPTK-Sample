@@ -206,8 +206,10 @@ public class OVRLint : EditorWindow
 			{
 				GUILayout.Label(record.message);
 			}
+
 			if (record.buttonNames != null)
 			{
+				EditorGUILayout.BeginVertical(GUILayout.Width(200.0f));
 				for (int y = 0; y < record.buttonNames.Length; y++)
 				{
 					if (GUILayout.Button(record.buttonNames[y], EditorStyles.toolbarButton, GUILayout.Width(200)))
@@ -237,7 +239,7 @@ public class OVRLint : EditorWindow
 						}
 					}
 				}
-
+				EditorGUILayout.EndVertical();
 			}
 			GUI.enabled = true;
 			EditorGUILayout.EndHorizontal();
@@ -339,6 +341,7 @@ public class OVRLint : EditorWindow
 #endif
 
 #if !UNITY_ANDROID && !USING_XR_SDK && !REQUIRES_XR_SDK
+#pragma warning disable 618
 		if (!PlayerSettings.VROculus.dashSupport)
 		{
 			AddFix("Enable Dash Integration", "We recommend to enable Dash Integration for better user experience.", delegate (UnityEngine.Object obj, bool last, int selected)
@@ -354,6 +357,7 @@ public class OVRLint : EditorWindow
 				PlayerSettings.VROculus.sharedDepthBuffer = true;
 			}, null, false, "Fix");
 		}
+#pragma warning restore 618
 #endif
 
 		BuildTargetGroup target = EditorUserBuildSettings.selectedBuildTargetGroup;

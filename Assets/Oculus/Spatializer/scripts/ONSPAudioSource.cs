@@ -3,16 +3,16 @@ Filename    :   ONSPAudioSource.cs
 Content     :   Interface into the Oculus Native Spatializer Plugin
 Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
-Licensed under the Oculus SDK Version 3.5 (the "License"); 
-you may not use the Oculus SDK except in compliance with the License, 
-which is provided at the time of installation or download, or which 
+Licensed under the Oculus SDK Version 3.5 (the "License");
+you may not use the Oculus SDK except in compliance with the License,
+which is provided at the time of installation or download, or which
 otherwise accompanies this software in either electronic or hard copy form.
 
 You may obtain a copy of the License at
 
 https://developer.oculus.com/licenses/sdk-3.5/
 
-Unless required by applicable law or agreed to in writing, the Oculus SDK 
+Unless required by applicable law or agreed to in writing, the Oculus SDK
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
@@ -31,8 +31,8 @@ public class ONSPAudioSource : MonoBehaviour
 {
 #if TEST_READONLY_PARAMETERS
     // Spatializer read-only system parameters (global)
-    static int readOnly_GlobalRelectionOn = 8;
-    static int readOnly_NumberOfUsedSpatializedVoices = 9;
+    static int readOnly_GlobalRelectionOn = 7;
+    static int readOnly_NumberOfUsedSpatializedVoices = 8;
 #endif
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -45,7 +45,7 @@ public class ONSPAudioSource : MonoBehaviour
     public const string strONSPS = "AudioPluginOculusSpatializer";
 
     [DllImport(strONSPS)]
-    private static extern void ONSP_GetGlobalRoomReflectionValues(ref bool reflOn, ref bool reverbOn, 
+    private static extern void ONSP_GetGlobalRoomReflectionValues(ref bool reflOn, ref bool reverbOn,
                                                                   ref float width, ref float height, ref float length);
 
     // Public
@@ -77,7 +77,7 @@ public class ONSPAudioSource : MonoBehaviour
 			gain = Mathf.Clamp(value, 0.0f, 24.0f);
 		}
 	}
-	
+
 	[SerializeField]
 	private bool useInvSqr = false;
 	public  bool UseInvSqr
@@ -88,7 +88,7 @@ public class ONSPAudioSource : MonoBehaviour
 		}
 		set
 		{
-			useInvSqr = value;		
+			useInvSqr = value;
 		}
 	}
 
@@ -188,7 +188,7 @@ public class ONSPAudioSource : MonoBehaviour
 		// We might iterate through multiple sources / game object
 		var source = GetComponent<AudioSource>();
 
-        // READ-ONLY PARAMETER TEST      
+        // READ-ONLY PARAMETER TEST
 #if TEST_READONLY_PARAMETERS
         float rfl_enabled = 0.0f;
         source.GetSpatializerFloat(readOnly_GlobalRelectionOn, out rfl_enabled);
@@ -201,8 +201,8 @@ public class ONSPAudioSource : MonoBehaviour
 #endif
 
         // Check to see if we should disable spatializion
-        if ((Application.isPlaying == false) || 
-            (AudioListener.pause == true) || 
+        if ((Application.isPlaying == false) ||
+            (AudioListener.pause == true) ||
             (source.isPlaying == false) ||
             (source.isActiveAndEnabled == false)
            )
@@ -212,7 +212,7 @@ public class ONSPAudioSource : MonoBehaviour
         }
         else
         {
-            SetParameters(ref source);	
+            SetParameters(ref source);
         }
     }
 
@@ -224,7 +224,6 @@ public class ONSPAudioSource : MonoBehaviour
         P_FAR,
         P_RADIUS,
         P_DISABLE_RFL,
-        P_VSPEAKERMODE,
         P_AMBISTAT,
         P_READONLY_GLOBAL_RFL_ENABLED, // READ-ONLY
         P_READONLY_NUM_VOICES, // READ-ONLY
@@ -240,7 +239,7 @@ public class ONSPAudioSource : MonoBehaviour
 	{
         // See if we should enable spatialization
         source.spatialize = enableSpatialization;
-		
+
         source.SetSpatializerFloat((int)Parameters.P_GAIN, gain);
 		// All inputs are floats; convert bool to 0.0 and 1.0
 		if(useInvSqr == true)
@@ -261,10 +260,10 @@ public class ONSPAudioSource : MonoBehaviour
         source.SetSpatializerFloat((int)Parameters.P_SENDLEVEL, reverbSend);
 	}
 
-    private static ONSPAudioSource RoomReflectionGizmoAS = null; 
+    private static ONSPAudioSource RoomReflectionGizmoAS = null;
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     void OnDrawGizmos()
     {
@@ -301,7 +300,7 @@ public class ONSPAudioSource : MonoBehaviour
         c.a = colorSolidAlpha;
         Gizmos.color = c;
         Gizmos.DrawSphere(transform.position, Far);
-        
+
         // VolumetricRadius (purple)
         c.r = 1.0f;
         c.g = 0.0f;
@@ -345,9 +344,9 @@ public class ONSPAudioSource : MonoBehaviour
     }
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
-    void OnDestroy() 
+    void OnDestroy()
     {
         // We will null out single pointer instance
         // of the room reflection gizmo since we are being destroyed.
@@ -358,7 +357,7 @@ public class ONSPAudioSource : MonoBehaviour
             RoomReflectionGizmoAS = null;
         }
     }
-    
+
     [System.Runtime.InteropServices.DllImport("AudioPluginOculusSpatializer")]
     private static extern int OSP_SetGlobalVoiceLimit(int VoiceLimit);
 }

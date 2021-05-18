@@ -14,12 +14,14 @@ namespace Oculus.Platform
       Handle = CAPI.ovr_ApplicationOptions_Create();
     }
 
+    /// A message to be passed to a launched app, which can be retrieved with
+    /// LaunchDetails.GetDeeplinkMessage()
     public void SetDeeplinkMessage(string value) {
       CAPI.ovr_ApplicationOptions_SetDeeplinkMessage(Handle, value);
     }
 
 
-    // For passing to native C
+    /// For passing to native C
     public static explicit operator IntPtr(ApplicationOptions options) {
       return options != null ? options.Handle : IntPtr.Zero;
     }

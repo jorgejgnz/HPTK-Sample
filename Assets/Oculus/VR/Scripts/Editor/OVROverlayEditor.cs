@@ -23,7 +23,7 @@ public class OVROverlayEditor : Editor
 	{
 		Custom = 0,
 		Full = 1,
-		Half = 2
+		Half = 2,
 	}
 
 	private bool sourceRectsVisible = false;
@@ -166,7 +166,7 @@ public class OVROverlayEditor : Editor
 			overlay.isProtectedContent = EditorGUILayout.Toggle(new GUIContent("Is Protected Content", "The texture has copy protection, e.g., HDCP"), overlay.isProtectedContent);
 #endif
 		}
-		if (overlay.currentOverlayShape == OVROverlay.OverlayShape.Cylinder || overlay.currentOverlayShape == OVROverlay.OverlayShape.Equirect || overlay.currentOverlayShape == OVROverlay.OverlayShape.Quad)
+		if (overlay.currentOverlayShape == OVROverlay.OverlayShape.Cylinder || overlay.currentOverlayShape == OVROverlay.OverlayShape.Equirect || overlay.currentOverlayShape == OVROverlay.OverlayShape.Quad || overlay.currentOverlayShape == OVROverlay.OverlayShape.Fisheye)
 		{
 
 			EditorGUILayout.Separator();
@@ -319,22 +319,26 @@ public class OVROverlayEditor : Editor
 				overlay.invertTextureRects = EditorGUILayout.Toggle(new GUIContent("Invert Rect Coordinates", "Check this box to use the top left corner of the texture as the origin"), overlay.invertTextureRects);
 			}
 		}
-		EditorGUILayout.Separator();
-		EditorGUILayout.LabelField("Color Scale", EditorStyles.boldLabel);
-		EditorGUILayout.Space();
-		overlay.overridePerLayerColorScaleAndOffset = EditorGUILayout.Toggle(new GUIContent("Override Color Scale", "Manually set color scale and offset of this layer, regardless of what the global values are from OVRManager.SetColorScaleAndOffset()."), overlay.overridePerLayerColorScaleAndOffset);
-		if (overlay.overridePerLayerColorScaleAndOffset)
-		{
-			Vector4 colorScale = EditorGUILayout.Vector4Field(new GUIContent("Color Scale", "Scale that the color values for this overlay will be multiplied by."), overlay.colorScale);
-			Vector4 colorOffset = EditorGUILayout.Vector4Field(new GUIContent("Color Offset", "Offset that the color values for this overlay will be added to."), overlay.colorOffset);
-			overlay.SetPerLayerColorScaleAndOffset(colorScale, colorOffset);
-		}
 
-		EditorGUILayout.Separator();
-		EditorGUILayout.LabelField("Preview", EditorStyles.boldLabel);
-		overlay.previewInEditor = EditorGUILayout.Toggle(new GUIContent("Preview in Editor (Experimental)", "Preview the overlay in the editor using a mesh renderer."), overlay.previewInEditor);
 
-		EditorUtility.SetDirty(overlay);
+
+            EditorGUILayout.Separator();
+		    EditorGUILayout.LabelField("Color Scale", EditorStyles.boldLabel);
+		    EditorGUILayout.Space();
+		    overlay.overridePerLayerColorScaleAndOffset = EditorGUILayout.Toggle(new GUIContent("Override Color Scale", "Manually set color scale and offset of this layer, regardless of what the global values are from OVRManager.SetColorScaleAndOffset()."), overlay.overridePerLayerColorScaleAndOffset);
+		    if (overlay.overridePerLayerColorScaleAndOffset)
+		    {
+			    Vector4 colorScale = EditorGUILayout.Vector4Field(new GUIContent("Color Scale", "Scale that the color values for this overlay will be multiplied by."), overlay.colorScale);
+			    Vector4 colorOffset = EditorGUILayout.Vector4Field(new GUIContent("Color Offset", "Offset that the color values for this overlay will be added to."), overlay.colorOffset);
+			    overlay.SetPerLayerColorScaleAndOffset(colorScale, colorOffset);
+		    }
+
+		    EditorGUILayout.Separator();
+		    EditorGUILayout.LabelField("Preview", EditorStyles.boldLabel);
+		    overlay.previewInEditor = EditorGUILayout.Toggle(new GUIContent("Preview in Editor (Experimental)", "Preview the overlay in the editor using a mesh renderer."), overlay.previewInEditor);
+
+
+        EditorUtility.SetDirty(overlay);
 	}
 
 	private Rect Clamp01(Rect rect)
@@ -411,6 +415,7 @@ public class OVROverlayEditor : Editor
 			case DisplayType.Half:
 				destRectLeft = destRectRight = new Rect(0.25f, 0, 0.5f, 1);
 				break;
+
 			default:
 				destRectLeft = overlay.destRectLeft;
 				destRectRight = overlay.destRectRight;

@@ -10,6 +10,7 @@ namespace Oculus.Platform.Models
 
   public class ChallengeEntry
   {
+    public readonly string DisplayScore;
     public readonly byte[] ExtraData;
     public readonly int Rank;
     public readonly long Score;
@@ -19,6 +20,7 @@ namespace Oculus.Platform.Models
 
     public ChallengeEntry(IntPtr o)
     {
+      DisplayScore = CAPI.ovr_ChallengeEntry_GetDisplayScore(o);
       ExtraData = CAPI.ovr_ChallengeEntry_GetExtraData(o);
       Rank = CAPI.ovr_ChallengeEntry_GetRank(o);
       Score = CAPI.ovr_ChallengeEntry_GetScore(o);

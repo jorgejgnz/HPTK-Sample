@@ -1,12 +1,8 @@
 /************************************************************************************
 Copyright : Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
-Licensed under the Oculus Master SDK License Version 1.0 (the "License"); you may not use
-the Utilities SDK except in compliance with the License, which is provided at the time of installation
-or download, or which otherwise accompanies this software in either electronic or hard copy form.
-
-You may obtain a copy of the License at
-https://developer.oculus.com/licenses/oculusmastersdk-1.0/
+Your use of this SDK or tool is subject to the Oculus SDK License Agreement, available at
+https://developer.oculus.com/licenses/oculussdk/
 
 Unless required by applicable law or agreed to in writing, the Utilities SDK distributed
 under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
@@ -22,11 +18,13 @@ using UnityEngine;
 using System;
 using System.IO;
 
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || OVR_ANDROID_MRC
-public class OVRMixedRealityCaptureSettings : ScriptableObject
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_ANDROID
+public class OVRMixedRealityCaptureSettings : ScriptableObject, OVRMixedRealityCaptureConfiguration
 {
 	public bool enableMixedReality = false;
 	public LayerMask extraHiddenLayers;
+	public LayerMask extraVisibleLayers;
+	public bool dynamicCullingMask = true;
 	public OVRManager.CompositionMethod compositionMethod = OVRManager.CompositionMethod.External;
 	public Color externalCompositionBackdropColorRift = Color.green;
 	public Color externalCompositionBackdropColorQuest = Color.clear;
@@ -49,61 +47,38 @@ public class OVRMixedRealityCaptureSettings : ScriptableObject
 	public float virtualGreenScreenBottomY;
 	public bool virtualGreenScreenApplyDepthCulling = false;
 	public float virtualGreenScreenDepthTolerance = 0.2f;
+	public OVRManager.MrcActivationMode mrcActivationMode;
+	
+	// OVRMixedRealityCaptureConfiguration Interface implementation
+	bool OVRMixedRealityCaptureConfiguration.enableMixedReality { get { return enableMixedReality; } set { enableMixedReality = value; } }
+	LayerMask OVRMixedRealityCaptureConfiguration.extraHiddenLayers { get { return extraHiddenLayers; } set { extraHiddenLayers = value; } }
+	LayerMask OVRMixedRealityCaptureConfiguration.extraVisibleLayers { get { return extraVisibleLayers; } set { extraVisibleLayers = value; } }
+	bool OVRMixedRealityCaptureConfiguration.dynamicCullingMask { get { return dynamicCullingMask; } set { dynamicCullingMask = value; } }
+	OVRManager.CompositionMethod OVRMixedRealityCaptureConfiguration.compositionMethod { get { return compositionMethod; } set { compositionMethod = value; } }
+	Color OVRMixedRealityCaptureConfiguration.externalCompositionBackdropColorRift { get { return externalCompositionBackdropColorRift; } set { externalCompositionBackdropColorRift = value; } }
+	Color OVRMixedRealityCaptureConfiguration.externalCompositionBackdropColorQuest { get { return externalCompositionBackdropColorQuest; } set { externalCompositionBackdropColorQuest = value; } }
+	OVRManager.CameraDevice OVRMixedRealityCaptureConfiguration.capturingCameraDevice { get { return capturingCameraDevice; } set { capturingCameraDevice = value; } }
+	bool OVRMixedRealityCaptureConfiguration.flipCameraFrameHorizontally { get { return flipCameraFrameHorizontally; } set { flipCameraFrameHorizontally = value; } }
+	bool OVRMixedRealityCaptureConfiguration.flipCameraFrameVertically { get { return flipCameraFrameVertically; } set { flipCameraFrameVertically = value; } }
+	float OVRMixedRealityCaptureConfiguration.handPoseStateLatency { get { return handPoseStateLatency; } set { handPoseStateLatency = value; } }
+	float OVRMixedRealityCaptureConfiguration.sandwichCompositionRenderLatency { get { return sandwichCompositionRenderLatency; } set { sandwichCompositionRenderLatency = value; } }
+	int OVRMixedRealityCaptureConfiguration.sandwichCompositionBufferedFrames { get { return sandwichCompositionBufferedFrames; } set { sandwichCompositionBufferedFrames = value; } }
+	Color OVRMixedRealityCaptureConfiguration.chromaKeyColor { get { return chromaKeyColor; } set { chromaKeyColor = value; } }
+	float OVRMixedRealityCaptureConfiguration.chromaKeySimilarity { get { return chromaKeySimilarity; } set { chromaKeySimilarity = value; } }
+	float OVRMixedRealityCaptureConfiguration.chromaKeySmoothRange { get { return chromaKeySmoothRange; } set { chromaKeySmoothRange = value; } }
+	float OVRMixedRealityCaptureConfiguration.chromaKeySpillRange { get { return chromaKeySpillRange; } set { chromaKeySpillRange = value; } }
+	bool OVRMixedRealityCaptureConfiguration.useDynamicLighting { get { return useDynamicLighting; } set { useDynamicLighting = value; } }
+	OVRManager.DepthQuality OVRMixedRealityCaptureConfiguration.depthQuality { get { return depthQuality; } set { depthQuality = value; } }
+	float OVRMixedRealityCaptureConfiguration.dynamicLightingSmoothFactor { get { return dynamicLightingSmoothFactor; } set { dynamicLightingSmoothFactor = value; } }
+	float OVRMixedRealityCaptureConfiguration.dynamicLightingDepthVariationClampingValue { get { return dynamicLightingDepthVariationClampingValue; } set { dynamicLightingDepthVariationClampingValue = value; } }
+	OVRManager.VirtualGreenScreenType OVRMixedRealityCaptureConfiguration.virtualGreenScreenType { get { return virtualGreenScreenType; } set { virtualGreenScreenType = value; } }
+	float OVRMixedRealityCaptureConfiguration.virtualGreenScreenTopY { get { return virtualGreenScreenTopY; } set { virtualGreenScreenTopY = value; } }
+	float OVRMixedRealityCaptureConfiguration.virtualGreenScreenBottomY { get { return virtualGreenScreenBottomY; } set { virtualGreenScreenBottomY = value; } }
+	bool OVRMixedRealityCaptureConfiguration.virtualGreenScreenApplyDepthCulling { get { return virtualGreenScreenApplyDepthCulling; } set { virtualGreenScreenApplyDepthCulling = value; } }
+	float OVRMixedRealityCaptureConfiguration.virtualGreenScreenDepthTolerance { get { return virtualGreenScreenDepthTolerance; } set { virtualGreenScreenDepthTolerance = value; } }
+	OVRManager.MrcActivationMode OVRMixedRealityCaptureConfiguration.mrcActivationMode { get { return mrcActivationMode; } set { mrcActivationMode = value; } }
+	OVRManager.InstantiateMrcCameraDelegate OVRMixedRealityCaptureConfiguration.instantiateMixedRealityCameraGameObject { get; set; }
 
-	public void ReadFrom(OVRManager manager)
-	{
-		enableMixedReality = manager.enableMixedReality;
-		compositionMethod = manager.compositionMethod;
-		extraHiddenLayers = manager.extraHiddenLayers;
-		externalCompositionBackdropColorRift = manager.externalCompositionBackdropColorRift;
-		externalCompositionBackdropColorQuest = manager.externalCompositionBackdropColorQuest;
-		capturingCameraDevice = manager.capturingCameraDevice;
-		flipCameraFrameHorizontally = manager.flipCameraFrameHorizontally;
-		flipCameraFrameVertically = manager.flipCameraFrameVertically;
-		handPoseStateLatency = manager.handPoseStateLatency;
-		sandwichCompositionRenderLatency = manager.sandwichCompositionRenderLatency;
-		sandwichCompositionBufferedFrames = manager.sandwichCompositionBufferedFrames;
-		chromaKeyColor = manager.chromaKeyColor;
-		chromaKeySimilarity = manager.chromaKeySimilarity;
-		chromaKeySmoothRange = manager.chromaKeySmoothRange;
-		chromaKeySpillRange = manager.chromaKeySpillRange;
-		useDynamicLighting = manager.useDynamicLighting;
-		depthQuality = manager.depthQuality;
-		dynamicLightingSmoothFactor = manager.dynamicLightingSmoothFactor;
-		dynamicLightingDepthVariationClampingValue = manager.dynamicLightingDepthVariationClampingValue;
-		virtualGreenScreenType = manager.virtualGreenScreenType;
-		virtualGreenScreenTopY = manager.virtualGreenScreenTopY;
-		virtualGreenScreenBottomY = manager.virtualGreenScreenBottomY;
-		virtualGreenScreenApplyDepthCulling = manager.virtualGreenScreenApplyDepthCulling;
-		virtualGreenScreenDepthTolerance = manager.virtualGreenScreenDepthTolerance;
-	}
-	public void ApplyTo(OVRManager manager)
-	{
-		manager.enableMixedReality = enableMixedReality;
-		manager.compositionMethod = compositionMethod;
-		manager.extraHiddenLayers = extraHiddenLayers;
-		manager.externalCompositionBackdropColorRift = externalCompositionBackdropColorRift;
-		manager.externalCompositionBackdropColorQuest = externalCompositionBackdropColorQuest;
-		manager.capturingCameraDevice = capturingCameraDevice;
-		manager.flipCameraFrameHorizontally = flipCameraFrameHorizontally;
-		manager.flipCameraFrameVertically = flipCameraFrameVertically;
-		manager.handPoseStateLatency = handPoseStateLatency;
-		manager.sandwichCompositionRenderLatency = sandwichCompositionRenderLatency;
-		manager.sandwichCompositionBufferedFrames = sandwichCompositionBufferedFrames;
-		manager.chromaKeyColor = chromaKeyColor;
-		manager.chromaKeySimilarity = chromaKeySimilarity;
-		manager.chromaKeySmoothRange = chromaKeySmoothRange;
-		manager.chromaKeySpillRange = chromaKeySpillRange;
-		manager.useDynamicLighting = useDynamicLighting;
-		manager.depthQuality = depthQuality;
-		manager.dynamicLightingSmoothFactor = dynamicLightingSmoothFactor;
-		manager.dynamicLightingDepthVariationClampingValue = dynamicLightingDepthVariationClampingValue;
-		manager.virtualGreenScreenType = virtualGreenScreenType;
-		manager.virtualGreenScreenTopY = virtualGreenScreenTopY;
-		manager.virtualGreenScreenBottomY = virtualGreenScreenBottomY;
-		manager.virtualGreenScreenApplyDepthCulling = virtualGreenScreenApplyDepthCulling;
-		manager.virtualGreenScreenDepthTolerance = virtualGreenScreenDepthTolerance;
-	}
 
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN        // Rift MRC only
     const string configFileName = "mrc.config";

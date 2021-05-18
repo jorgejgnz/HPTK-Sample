@@ -53,6 +53,17 @@ public partial class AudioManager : MonoBehaviour {
 	static public bool				SoundEnabled { get { return soundEnabled; } }
 
 	static readonly AnimationCurve	defaultReverbZoneMix = new AnimationCurve( new Keyframe[2] { new Keyframe( 0f, 1.0f ), new Keyframe( 1f, 1f ) } );
+ 
+	// Calculate the maximum number of emitters that can be running at one time.
+	static private int CalculateMaxEmittersSize() {
+		return theAudioManager.maxSoundEmitters + (int)EmitterChannel.Any;
+	}
+
+	// Verify if this index is valid
+	static private bool ValidateEmitterIndex(int index) {
+		return index > -1 && index < CalculateMaxEmittersSize();
+	} 
+	
 
 	/*
 	-----------------------
@@ -79,7 +90,7 @@ public partial class AudioManager : MonoBehaviour {
 		}
 
 		// we allocate maxSoundEmitters + reserved channels
-		soundEmitters = new SoundEmitter[maxSoundEmitters+(int)EmitterChannel.Any];
+		soundEmitters = new SoundEmitter[CalculateMaxEmittersSize()];
 		
 		// see if the sound emitters have already been created, if so, nuke it, it shouldn't exist in the scene upon load
 		soundEmitterParent = GameObject.Find( "__SoundEmitters__" );
@@ -90,7 +101,7 @@ public partial class AudioManager : MonoBehaviour {
 
 		// create them all															
 		soundEmitterParent = new GameObject( "__SoundEmitters__" );
-		for ( int i = 0; i < maxSoundEmitters + (int)EmitterChannel.Any; i++ ) {
+		for ( int i = 0; i < CalculateMaxEmittersSize(); i++ ) {
 			GameObject emitterObject = new GameObject( "SoundEmitter_" + i ); 
 			emitterObject.transform.parent = soundEmitterParent.transform;
 			emitterObject.transform.position = Vector3.zero;
@@ -640,7 +651,7 @@ public partial class AudioManager : MonoBehaviour {
 	-----------------------
 	*/
 	public static void SetOnFinished( int emitterIdx, System.Action onFinished ) {
-		if ( emitterIdx >= 0 && emitterIdx < theAudioManager.maxSoundEmitters ) {
+		if ( ValidateEmitterIndex(emitterIdx) ) {
 			theAudioManager.soundEmitters[emitterIdx].SetOnFinished( onFinished );
 		}
 	}
@@ -651,7 +662,7 @@ public partial class AudioManager : MonoBehaviour {
 	-----------------------
 	*/
 	public static void SetOnFinished( int emitterIdx, System.Action<object> onFinished, object obj ) {
-		if ( emitterIdx >= 0 && emitterIdx < theAudioManager.maxSoundEmitters ) {
+		if ( ValidateEmitterIndex(emitterIdx) ) {
 			theAudioManager.soundEmitters[emitterIdx].SetOnFinished( onFinished, obj );
 		}
 	}

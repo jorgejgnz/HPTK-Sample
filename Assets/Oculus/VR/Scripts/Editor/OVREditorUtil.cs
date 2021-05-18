@@ -6,6 +6,8 @@ using System.Diagnostics;
 
 public static class OVREditorUtil {
 
+	private static GUIContent tooltipLink = new GUIContent("[?]");
+
     [Conditional("UNITY_EDITOR_WIN"), Conditional("UNITY_STANDALONE_WIN"), Conditional("UNITY_ANDROID")]
     public static void SetupBoolField(Object target, string name, ref bool member, ref bool modified)
     {
@@ -15,7 +17,7 @@ public static class OVREditorUtil {
     [Conditional("UNITY_EDITOR_WIN"), Conditional("UNITY_STANDALONE_WIN"), Conditional("UNITY_ANDROID")]
     public static void SetupBoolField(Object target, GUIContent name, ref bool member, ref bool modified)
     {
-        EditorGUI.BeginChangeCheck();
+		EditorGUI.BeginChangeCheck();
         bool value = EditorGUILayout.Toggle(name, member);
         if (EditorGUI.EndChangeCheck())
         {
@@ -34,7 +36,7 @@ public static class OVREditorUtil {
     [Conditional("UNITY_EDITOR_WIN"), Conditional("UNITY_STANDALONE_WIN"), Conditional("UNITY_ANDROID")]
     public static void SetupIntField(Object target, GUIContent name, ref int member, ref bool modified)
     {
-        EditorGUI.BeginChangeCheck();
+		EditorGUI.BeginChangeCheck();
         int value = EditorGUILayout.IntField(name, member);
         if (EditorGUI.EndChangeCheck())
         {
@@ -53,7 +55,7 @@ public static class OVREditorUtil {
     [Conditional("UNITY_EDITOR_WIN"), Conditional("UNITY_STANDALONE_WIN"), Conditional("UNITY_ANDROID")]
     public static void SetupFloatField(Object target, GUIContent name, ref float member, ref bool modified)
     {
-        EditorGUI.BeginChangeCheck();
+		EditorGUI.BeginChangeCheck();
         float value = EditorGUILayout.FloatField(name, member);
         if (EditorGUI.EndChangeCheck())
         {
@@ -120,22 +122,39 @@ public static class OVREditorUtil {
     }
 
     [Conditional("UNITY_EDITOR_WIN"), Conditional("UNITY_STANDALONE_WIN"), Conditional("UNITY_ANDROID")]
-    public static void SetupEnumField<T>(Object target, string name, ref T member, ref bool modified) where T : struct
+    public static void SetupEnumField<T>(Object target, string name, ref T member, ref bool modified, string docLink = "") where T : struct
     {
-        SetupEnumField(target, new GUIContent(name), ref member, ref modified);
+        SetupEnumField(target, new GUIContent(name), ref member, ref modified, docLink);
     }
 
     [Conditional("UNITY_EDITOR_WIN"), Conditional("UNITY_STANDALONE_WIN"), Conditional("UNITY_ANDROID")]
-    public static void SetupEnumField<T>(Object target, GUIContent name, ref T member, ref bool modified) where T : struct
+    public static void SetupEnumField<T>(Object target, GUIContent name, ref T member, ref bool modified, string docLink = "") where T : struct
     {
-        EditorGUI.BeginChangeCheck();
-        T value = (T)(object)EditorGUILayout.EnumPopup(name, member as System.Enum);
+		GUILayout.BeginHorizontal();
+		if (!string.IsNullOrEmpty(docLink))
+		{
+#if UNITY_2021_1_OR_NEWER
+			if (EditorGUILayout.LinkButton(tooltipLink))
+			{
+				Application.OpenURL(docLink);
+			}
+#else
+			if (GUILayout.Button(tooltipLink, GUILayout.ExpandWidth(false)))
+			{
+				Application.OpenURL(docLink);
+			}
+#endif
+		}
+
+		EditorGUI.BeginChangeCheck();
+		T value = (T)(object)EditorGUILayout.EnumPopup(name, member as System.Enum);
         if (EditorGUI.EndChangeCheck())
         {
             Undo.RecordObject(target, "Changed " + name);
             member = value;
             modified = true;
         }
+		GUILayout.EndHorizontal();
     }
 
 	[Conditional("UNITY_EDITOR_WIN"), Conditional("UNITY_STANDALONE_WIN"), Conditional("UNITY_ANDROID")]
@@ -149,6 +168,25 @@ public static class OVREditorUtil {
 	{
 		EditorGUI.BeginChangeCheck();
 		string value = EditorGUILayout.TextField(name, member);
+		if (EditorGUI.EndChangeCheck())
+		{
+			Undo.RecordObject(target, "Changed " + name);
+			member = value;
+			modified = true;
+		}
+	}
+
+	[Conditional("UNITY_EDITOR_WIN"), Conditional("UNITY_STANDALONE_WIN"), Conditional("UNITY_ANDROID")]
+	public static void SetupTexture2DField(Object target, string name, ref Texture2D member, ref bool modified)
+	{
+		SetupTexture2DField(target, new GUIContent(name), ref member, ref modified);
+	}
+
+	[Conditional("UNITY_EDITOR_WIN"), Conditional("UNITY_STANDALONE_WIN"), Conditional("UNITY_ANDROID")]
+	public static void SetupTexture2DField(Object target, GUIContent name, ref Texture2D member, ref bool modified)
+	{
+		EditorGUI.BeginChangeCheck();
+		Texture2D value = (Texture2D)EditorGUILayout.ObjectField(name, member, typeof(Texture2D), false);
 		if (EditorGUI.EndChangeCheck())
 		{
 			Undo.RecordObject(target, "Changed " + name);

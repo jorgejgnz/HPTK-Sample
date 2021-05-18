@@ -1,12 +1,8 @@
 /************************************************************************************
 Copyright : Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
-Licensed under the Oculus Master SDK License Version 1.0 (the "License"); you may not use
-the Utilities SDK except in compliance with the License, which is provided at the time of installation
-or download, or which otherwise accompanies this software in either electronic or hard copy form.
-
-You may obtain a copy of the License at
-https://developer.oculus.com/licenses/oculusmastersdk-1.0/
+Your use of this SDK or tool is subject to the Oculus SDK License Agreement, available at
+https://developer.oculus.com/licenses/oculussdk/
 
 Unless required by applicable law or agreed to in writing, the Utilities SDK distributed
 under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
@@ -40,14 +36,11 @@ public class OVRManagerEditor : Editor
 
 		EditorGUILayout.Space();
 		EditorGUILayout.LabelField("Display", EditorStyles.boldLabel);
-		OVREditorUtil.SetupBoolField(target, new GUIContent("Enable Specific Color Gamut",
-			"If checked, the target HMD will perform a color space transformation"), ref manager.enableColorGamut, ref modified);
 
-		if (manager.enableColorGamut)
-		{
-			OVREditorUtil.SetupEnumField(target, new GUIContent("Color Gamut",
-			"The target color gamut when displayed on the HMD"), ref manager.colorGamut, ref modified);
-		}
+		OVRManager.ColorSpace colorGamut = manager.colorGamut;
+		OVREditorUtil.SetupEnumField(target, new GUIContent("Color Gamut",
+			"The target color gamut when displayed on the HMD"), ref colorGamut, ref modified);
+		manager.colorGamut = colorGamut;
 #endif
 
 #if UNITY_ANDROID
@@ -83,6 +76,8 @@ public class OVRManagerEditor : Editor
 			OVREditorUtil.SetupBoolField(target, "enableMixedReality", ref manager.enableMixedReality, ref modified);
 			OVREditorUtil.SetupEnumField(target, "compositionMethod", ref manager.compositionMethod, ref modified);
 			OVREditorUtil.SetupLayerMaskField(target, "extraHiddenLayers", ref manager.extraHiddenLayers, layerMaskOptions, ref modified);
+			OVREditorUtil.SetupLayerMaskField(target, "extraVisibleLayers", ref manager.extraVisibleLayers, layerMaskOptions, ref modified);
+			OVREditorUtil.SetupBoolField(target, "dynamicCullingMask", ref manager.dynamicCullingMask, ref modified);
 
 			if (manager.compositionMethod == OVRManager.CompositionMethod.External)
 			{
@@ -137,6 +132,7 @@ public class OVRManagerEditor : Editor
 			EditorGUI.indentLevel--;
 		}
 #endif
+
         if (modified)
         {
             EditorUtility.SetDirty(target);

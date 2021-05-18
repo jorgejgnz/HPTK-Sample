@@ -1,0 +1,304 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &3521329644217248875
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3521329644217248874}
+  - component: {fileID: 3521329644217248873}
+  m_Layer: 0
+  m_Name: OVRInputSwitcher.L
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3521329644217248874
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3521329644217248875}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 3521329644496356548}
+  - {fileID: 5008018095128915673}
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3521329644217248873
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3521329644217248875}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a7d7d121538a474458ef5e7b57c6edaa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bones: []
+  wrist:
+    name: 
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 0}
+    space: 0
+    localScale: {x: 0, y: 0, z: 0}
+  forearm:
+    name: 
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 0}
+    space: 0
+    localScale: {x: 0, y: 0, z: 0}
+  thumb:
+    finger: 1
+    bones: []
+  index:
+    finger: 2
+    bones: []
+  middle:
+    finger: 3
+    bones: []
+  ring:
+    finger: 4
+    bones: []
+  pinky:
+    finger: 5
+    bones: []
+  confidence: 0
+  scale: 1
+  log: 
+  idpForHands: {fileID: 3521329644496356547}
+  idpForControllers: {fileID: 2045882562511105033}
+  onHands:
+    m_PersistentCalls:
+      m_Calls: []
+  onControllers:
+    m_PersistentCalls:
+      m_Calls: []
+  currentConnectedController: 0
+  currentIdp: {fileID: 0}
+--- !u!1 &3521329644496356549
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3521329644496356548}
+  - component: {fileID: 3521329644496356547}
+  m_Layer: 0
+  m_Name: OVRSkeletonTracker.L
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3521329644496356548
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3521329644496356549}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 3521329644217248874}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3521329644496356547
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3521329644496356549}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 899f50e77b819724baf91ad42d587304, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bones: []
+  wrist:
+    name: 
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 0}
+    space: 0
+    localScale: {x: 0, y: 0, z: 0}
+  forearm:
+    name: 
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 0}
+    space: 0
+    localScale: {x: 0, y: 0, z: 0}
+  thumb:
+    finger: 1
+    bones: []
+  index:
+    finger: 2
+    bones: []
+  middle:
+    finger: 3
+    bones: []
+  ring:
+    finger: 4
+    bones: []
+  pinky:
+    finger: 5
+    bones: []
+  confidence: 0
+  scale: 1
+  log: 
+  handData: {fileID: 0}
+  boneData: {fileID: 0}
+  toLocalSpace: 1
+  autoScale: 1
+  scaleOffset: 0
+--- !u!1001 &3521329645880081842
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 3521329644217248874}
+    m_Modifications:
+    - target: {fileID: 3222934654924886459, guid: e4a0447dfd556464c84807eec4ad48a5,
+        type: 3}
+      propertyPath: playspace
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 3222934654924886459, guid: e4a0447dfd556464c84807eec4ad48a5,
+        type: 3}
+      propertyPath: compatibleDevices.Array.data[1].deviceName
+      value: Vive Controller
+      objectReference: {fileID: 0}
+    - target: {fileID: 3222934654924886459, guid: e4a0447dfd556464c84807eec4ad48a5,
+        type: 3}
+      propertyPath: compatibleDevices.Array.data[1].deviceManufacturer
+      value: HTC
+      objectReference: {fileID: 0}
+    - target: {fileID: 3222934654924886459, guid: e4a0447dfd556464c84807eec4ad48a5,
+        type: 3}
+      propertyPath: compatibleDevices.Array.data[1].wristOffset
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 3222934654924886459, guid: e4a0447dfd556464c84807eec4ad48a5,
+        type: 3}
+      propertyPath: compatibleDevices.Array.data[2].deviceName
+      value: ...
+      objectReference: {fileID: 0}
+    - target: {fileID: 3222934654924886459, guid: e4a0447dfd556464c84807eec4ad48a5,
+        type: 3}
+      propertyPath: compatibleDevices.Array.data[2].deviceManufacturer
+      value: ...
+      objectReference: {fileID: 0}
+    - target: {fileID: 3222934654924886459, guid: e4a0447dfd556464c84807eec4ad48a5,
+        type: 3}
+      propertyPath: compatibleDevices.Array.data[2].wristOffset
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 3322253275892109027, guid: e4a0447dfd556464c84807eec4ad48a5,
+        type: 3}
+      propertyPath: m_Layer
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6354844845377706568, guid: e4a0447dfd556464c84807eec4ad48a5,
+        type: 3}
+      propertyPath: m_Name
+      value: UnityXRControllerTracker.L
+      objectReference: {fileID: 0}
+    - target: {fileID: 6354844845377706568, guid: e4a0447dfd556464c84807eec4ad48a5,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6354844845377706568, guid: e4a0447dfd556464c84807eec4ad48a5,
+        type: 3}
+      propertyPath: m_Layer
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8457279937678201707, guid: e4a0447dfd556464c84807eec4ad48a5,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8457279937678201707, guid: e4a0447dfd556464c84807eec4ad48a5,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8457279937678201707, guid: e4a0447dfd556464c84807eec4ad48a5,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8457279937678201707, guid: e4a0447dfd556464c84807eec4ad48a5,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8457279937678201707, guid: e4a0447dfd556464c84807eec4ad48a5,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8457279937678201707, guid: e4a0447dfd556464c84807eec4ad48a5,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8457279937678201707, guid: e4a0447dfd556464c84807eec4ad48a5,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8457279937678201707, guid: e4a0447dfd556464c84807eec4ad48a5,
+        type: 3}
+      propertyPath: m_RootOrder
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8457279937678201707, guid: e4a0447dfd556464c84807eec4ad48a5,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8457279937678201707, guid: e4a0447dfd556464c84807eec4ad48a5,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8457279937678201707, guid: e4a0447dfd556464c84807eec4ad48a5,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: e4a0447dfd556464c84807eec4ad48a5, type: 3}
+--- !u!4 &5008018095128915673 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 8457279937678201707, guid: e4a0447dfd556464c84807eec4ad48a5,
+    type: 3}
+  m_PrefabInstance: {fileID: 3521329645880081842}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &2045882562511105033 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3222934654924886459, guid: e4a0447dfd556464c84807eec4ad48a5,
+    type: 3}
+  m_PrefabInstance: {fileID: 3521329645880081842}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 28951864902866a409e9ac3ac2e73fe6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

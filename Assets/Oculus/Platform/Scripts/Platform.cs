@@ -148,6 +148,9 @@ namespace Oculus.Platform
     public static Models.LaunchDetails GetLaunchDetails() {
       return new Models.LaunchDetails(CAPI.ovr_ApplicationLifecycle_GetLaunchDetails());
     }
+    public static void LogDeeplinkResult(string trackingID, LaunchResult result) {
+      CAPI.ovr_ApplicationLifecycle_LogDeeplinkResult(trackingID, result);
+    }
   }
 
   public static partial class Rooms
@@ -538,6 +541,22 @@ namespace Oculus.Platform
     }
   }
 
+  public static partial class Users
+  {
+    public static string GetLoggedInUserLocale()
+    {
+      if (Core.IsInitialized())
+      {
+        return CAPI.ovr_GetLoggedInUserLocale();
+      }
+      return "";
+    }
+  }
+
+  public static partial class AbuseReport
+  {
+  }
+
   public static partial class Achievements
   {
     /// Add 'count' to the achievement with the given name. This must be a COUNT
@@ -884,7 +903,7 @@ namespace Oculus.Platform
 
   public static partial class Challenges
   {
-    /// Creates a new user challenge
+    /// DEPRECATED. Use server-to-server API call instead.
     ///
     public static Request<Models.Challenge> Create(string leaderboardName, ChallengeOptions challengeOptions)
     {
@@ -908,7 +927,7 @@ namespace Oculus.Platform
       return null;
     }
 
-    /// If the current user has permission, deletes a challenge
+    /// DEPRECATED. Use server-to-server API call instead.
     ///
     public static Request Delete(UInt64 challengeID)
     {
@@ -1017,7 +1036,7 @@ namespace Oculus.Platform
       return null;
     }
 
-    /// If the current user has permission, updates a challenge information
+    /// DEPRECATED. Use server-to-server API call instead.
     ///
     public static Request<Models.Challenge> UpdateInfo(UInt64 challengeID, ChallengeOptions challengeOptions)
     {
@@ -1218,6 +1237,10 @@ namespace Oculus.Platform
   {
   }
 
+  public static partial class GroupPresence
+  {
+  }
+
   public static partial class HTTP
   {
   }
@@ -1339,6 +1362,19 @@ namespace Oculus.Platform
 
   public static partial class Leaderboards
   {
+    /// Gets the information for a single leaderboard
+    /// \param leaderboardName The name of the leaderboard to return.
+    ///
+    public static Request<Models.LeaderboardList> Get(string leaderboardName)
+    {
+      if (Core.IsInitialized())
+      {
+        return new Request<Models.LeaderboardList>(CAPI.ovr_Leaderboard_Get(leaderboardName));
+      }
+
+      return null;
+    }
+
     /// Requests a block of leaderboard entries.
     /// \param leaderboardName The name of the leaderboard whose entries to return.
     /// \param limit Defines the maximum number of entries to return.
@@ -1346,6 +1382,8 @@ namespace Oculus.Platform
     /// \param startAt Defines whether to center the query on the user or start at the top of the leaderboard.
     ///
     /// <b>Error codes</b>
+    /// - \b 100: Parameter {parameter}: invalid user id: {user_id}
+    /// - \b 100: Something went wrong.
     /// - \b 12074: You're not yet ranked on this leaderboard.
     ///
     public static Request<Models.LeaderboardEntryList> GetEntries(string leaderboardName, int limit, LeaderboardFilterType filter, LeaderboardStartAt startAt)
@@ -1398,12 +1436,36 @@ namespace Oculus.Platform
     ///
     /// <b>Error codes</b>
     /// - \b 100: Parameter {parameter}: invalid user id: {user_id}
+    /// - \b 100: Something went wrong.
+    /// - \b 100: This leaderboard entry is too late for the leaderboard's allowed time window.
     ///
     public static Request<bool> WriteEntry(string leaderboardName, long score, byte[] extraData = null, bool forceUpdate = false)
     {
       if (Core.IsInitialized())
       {
         return new Request<bool>(CAPI.ovr_Leaderboard_WriteEntry(leaderboardName, score, extraData, (uint)(extraData != null ? extraData.Length : 0), forceUpdate));
+      }
+
+      return null;
+    }
+
+    /// Writes a single entry to a leaderboard, can include supplementary metrics
+    /// \param leaderboardName The leaderboard for which to write the entry.
+    /// \param score The score to write.
+    /// \param supplementaryMetric A metric that can be used for tiebreakers.
+    /// \param extraData A 2KB custom data field that is associated with the leaderboard entry. This can be a game replay or anything that provides more detail about the entry to the viewer.
+    /// \param forceUpdate If true, the score always updates. This happens ecen if it is not the user's best score.
+    ///
+    /// <b>Error codes</b>
+    /// - \b 100: Parameter {parameter}: invalid user id: {user_id}
+    /// - \b 100: Something went wrong.
+    /// - \b 100: This leaderboard entry is too late for the leaderboard's allowed time window.
+    ///
+    public static Request<bool> WriteEntryWithSupplementaryMetric(string leaderboardName, long score, long supplementaryMetric, byte[] extraData = null, bool forceUpdate = false)
+    {
+      if (Core.IsInitialized())
+      {
+        return new Request<bool>(CAPI.ovr_Leaderboard_WriteEntryWithSupplementaryMetric(leaderboardName, score, supplementaryMetric, extraData, (uint)(extraData != null ? extraData.Length : 0), forceUpdate));
       }
 
       return null;
@@ -1420,6 +1482,18 @@ namespace Oculus.Platform
       if (Core.IsInitialized())
       {
         return new Request<Models.LivestreamingStatus>(CAPI.ovr_Livestreaming_GetStatus());
+      }
+
+      return null;
+    }
+
+    /// Launch the Livestreaming Flow.
+    ///
+    public static Request LaunchLivestreamingFlow()
+    {
+      if (Core.IsInitialized())
+      {
+        return new Request(CAPI.ovr_Livestreaming_LaunchLivestreamingFlow());
       }
 
       return null;
@@ -2007,6 +2081,10 @@ namespace Oculus.Platform
     /// \param maxUsers The maximum number of users allowed in the room, including the creator.
     /// \param subscribeToUpdates If true, sends a message with type MessageType.Notification_Room_RoomUpdate when room data changes, such as when users join or leave.
     ///
+    /// <b>Error codes</b>
+    /// - \b 100: Something went wrong.
+    /// - \b 12037: Rooms cannot allow more than {limit} users to join. Please set the max users to a lower amount.
+    ///
     public static Request<Models.Room> CreateAndJoinPrivate(RoomJoinPolicy joinPolicy, uint maxUsers, bool subscribeToUpdates = false)
     {
       if (Core.IsInitialized())
@@ -2024,6 +2102,10 @@ namespace Oculus.Platform
     /// \param joinPolicy Specifies who can join the room without an invite.
     /// \param maxUsers The maximum number of users allowed in the room, including the creator.
     /// \param roomOptions Additional room configuration for this request. Optional.
+    ///
+    /// <b>Error codes</b>
+    /// - \b 100: Something went wrong.
+    /// - \b 12037: Rooms cannot allow more than {limit} users to join. Please set the max users to a lower amount.
     ///
     public static Request<Models.Room> CreateAndJoinPrivate2(RoomJoinPolicy joinPolicy, uint maxUsers, RoomOptions roomOptions)
     {
@@ -2253,6 +2335,9 @@ namespace Oculus.Platform
     /// it succeeds
     /// \param roomID The room you're currently in.
     ///
+    /// <b>Error codes</b>
+    /// - \b 100: Something went wrong.
+    ///
     public static Request<Models.Room> Leave(UInt64 roomID)
     {
       if (Core.IsInitialized())
@@ -2292,6 +2377,7 @@ namespace Oculus.Platform
     /// - \b 10: Room {room_id}: The user does not have permission to {cannot_action} because the user is currently in another room (perhaps on another device), and thus is no longer in this room. Users can only be in one room at a time. If they are active on two different devices at once, there will be undefined behavior.
     /// - \b 10: Room {room_id}: The user does not have permission to {cannot_action} because the user is not in the room (or any room). Perhaps they already left, or they stopped heartbeating. If this is a test environment, make sure you are not using the deprecated initialization methods ovr_PlatformInitializeStandaloneAccessToken (C++)/StandalonePlatform.Initialize(accessToken) (C#).
     /// - \b 10: Room {room_id}: The user does not have permission to {cannot_action} because the user is not the owner of the room.
+    /// - \b 100: Invalid room_id: {room_id}. Either the ID is not a valid room or the user does not have permission to see or act on the room.
     ///
     public static Request<Models.Room> UpdateMembershipLockStatus(UInt64 roomID, RoomMembershipLockStatus membershipLockStatus)
     {
@@ -2307,6 +2393,12 @@ namespace Oculus.Platform
     /// \param roomID The room that the user owns (check Room.GetOwner()).
     /// \param userID The new user to make an owner; the user must be in the room.
     ///
+    /// <b>Error codes</b>
+    /// - \b 10: Room {room_id}: The user does not have permission to {cannot_action} because the user is currently in another room (perhaps on another device), and thus is no longer in this room. Users can only be in one room at a time. If they are active on two different devices at once, there will be undefined behavior.
+    /// - \b 10: Room {room_id}: The user does not have permission to {cannot_action} because the user is not in the room (or any room). Perhaps they already left, or they stopped heartbeating. If this is a test environment, make sure you are not using the deprecated initialization methods ovr_PlatformInitializeStandaloneAccessToken (C++)/StandalonePlatform.Initialize(accessToken) (C#).
+    /// - \b 10: Room {room_id}: The user does not have permission to {cannot_action} because the user is not the owner of the room.
+    /// - \b 100: Parameter {parameter}: invalid user id: {user_id}
+    ///
     public static Request UpdateOwner(UInt64 roomID, UInt64 userID)
     {
       if (Core.IsInitialized())
@@ -2320,6 +2412,10 @@ namespace Oculus.Platform
     /// Sets the join policy of the user's private room.
     /// \param roomID The room ID that the user owns (check Room.GetOwner()).
     /// \param newJoinPolicy The new join policy for the room.
+    ///
+    /// <b>Error codes</b>
+    /// - \b 10: Room {room_id}: The user does not have permission to {cannot_action} because the user is currently in another room (perhaps on another device), and thus is no longer in this room. Users can only be in one room at a time. If they are active on two different devices at once, there will be undefined behavior.
+    /// - \b 10: Room {room_id}: The user does not have permission to {cannot_action} because the user is not in the room (or any room). Perhaps they already left, or they stopped heartbeating. If this is a test environment, make sure you are not using the deprecated initialization methods ovr_PlatformInitializeStandaloneAccessToken (C++)/StandalonePlatform.Initialize(accessToken) (C#).
     ///
     public static Request<Models.Room> UpdatePrivateRoomJoinPolicy(UInt64 roomID, RoomJoinPolicy newJoinPolicy)
     {
@@ -2372,6 +2468,10 @@ namespace Oculus.Platform
 
   }
 
+  public static partial class Session
+  {
+  }
+
   public static partial class Users
   {
     /// Retrieve the user with the given ID. This might fail if the ID is invalid
@@ -2409,6 +2509,9 @@ namespace Oculus.Platform
     /// 'online' in your application.
     ///
     /// NOTE: Users will have a unique ID per application.
+    ///
+    /// <b>Error codes</b>
+    /// - \b 100: Something went wrong.
     ///
     public static Request<Models.User> GetLoggedInUser()
     {
@@ -2547,6 +2650,122 @@ namespace Oculus.Platform
 
   }
 
+  public static partial class UserDataStore
+  {
+    /// Delete an entry by a key from a private user data store.
+    /// \param userID The ID of the user who owns this private user data store.
+    /// \param key The key of entry.
+    ///
+    public static Request<Models.UserDataStoreUpdateResponse> PrivateDeleteEntryByKey(UInt64 userID, string key)
+    {
+      if (Core.IsInitialized())
+      {
+        return new Request<Models.UserDataStoreUpdateResponse>(CAPI.ovr_UserDataStore_PrivateDeleteEntryByKey(userID, key));
+      }
+
+      return null;
+    }
+
+    /// Get entries from a private user data store.
+    /// \param userID The ID of the user who owns this private user data store.
+    ///
+    public static Request<Dictionary<string, string>> PrivateGetEntries(UInt64 userID)
+    {
+      if (Core.IsInitialized())
+      {
+        return new Request<Dictionary<string, string>>(CAPI.ovr_UserDataStore_PrivateGetEntries(userID));
+      }
+
+      return null;
+    }
+
+    /// Get an entry by a key from a private user data store.
+    /// \param userID The ID of the user who owns this private user data store.
+    /// \param key The key of entry.
+    ///
+    public static Request<Dictionary<string, string>> PrivateGetEntryByKey(UInt64 userID, string key)
+    {
+      if (Core.IsInitialized())
+      {
+        return new Request<Dictionary<string, string>>(CAPI.ovr_UserDataStore_PrivateGetEntryByKey(userID, key));
+      }
+
+      return null;
+    }
+
+    /// Write a single entry to a private user data store.
+    /// \param userID The ID of the user who owns this private user data store.
+    /// \param key The key of entry.
+    /// \param value The value of entry.
+    ///
+    public static Request<Models.UserDataStoreUpdateResponse> PrivateWriteEntry(UInt64 userID, string key, string value)
+    {
+      if (Core.IsInitialized())
+      {
+        return new Request<Models.UserDataStoreUpdateResponse>(CAPI.ovr_UserDataStore_PrivateWriteEntry(userID, key, value));
+      }
+
+      return null;
+    }
+
+    /// Delete an entry by a key from a public user data store.
+    /// \param userID The ID of the user who owns this public user data store.
+    /// \param key The key of entry.
+    ///
+    public static Request<Models.UserDataStoreUpdateResponse> PublicDeleteEntryByKey(UInt64 userID, string key)
+    {
+      if (Core.IsInitialized())
+      {
+        return new Request<Models.UserDataStoreUpdateResponse>(CAPI.ovr_UserDataStore_PublicDeleteEntryByKey(userID, key));
+      }
+
+      return null;
+    }
+
+    /// Get entries from a public user data store.
+    /// \param userID The ID of the user who owns this public user data store.
+    ///
+    public static Request<Dictionary<string, string>> PublicGetEntries(UInt64 userID)
+    {
+      if (Core.IsInitialized())
+      {
+        return new Request<Dictionary<string, string>>(CAPI.ovr_UserDataStore_PublicGetEntries(userID));
+      }
+
+      return null;
+    }
+
+    /// Get an entry by a key from a public user data store.
+    /// \param userID The ID of the user who owns this public user data store.
+    /// \param key The key of entry.
+    ///
+    public static Request<Dictionary<string, string>> PublicGetEntryByKey(UInt64 userID, string key)
+    {
+      if (Core.IsInitialized())
+      {
+        return new Request<Dictionary<string, string>>(CAPI.ovr_UserDataStore_PublicGetEntryByKey(userID, key));
+      }
+
+      return null;
+    }
+
+    /// Write a single entry to a public user data store.
+    /// \param userID The ID of the user who owns this public user data store.
+    /// \param key The key of entry.
+    /// \param value The value of entry.
+    ///
+    public static Request<Models.UserDataStoreUpdateResponse> PublicWriteEntry(UInt64 userID, string key, string value)
+    {
+      if (Core.IsInitialized())
+      {
+        return new Request<Models.UserDataStoreUpdateResponse>(CAPI.ovr_UserDataStore_PublicWriteEntry(userID, key, value));
+      }
+
+      return null;
+    }
+
+  }
+
   public static partial class Voip
   {
     /// Sets whether SystemVoip should be suppressed so that this app's Voip can
@@ -2598,6 +2817,20 @@ namespace Oculus.Platform
     {
       Callback.SetNotificationCallback(
         Message.MessageType.Notification_Voip_SystemVoipState,
+        callback
+      );
+    }
+
+  }
+
+  public static partial class Vrcamera
+  {
+    /// Get surface and update action from platform webrtc for update.
+    ///
+    public static void SetGetSurfaceUpdateNotificationCallback(Message<string>.Callback callback)
+    {
+      Callback.SetNotificationCallback(
+        Message.MessageType.Notification_Vrcamera_GetSurfaceUpdate,
         callback
       );
     }
@@ -2705,6 +2938,29 @@ namespace Oculus.Platform
           CAPI.ovr_HTTP_GetWithMessageType(
             list.NextUrl,
             (int)Message.MessageType.IAP_GetNextPurchaseArrayPage
+          )
+        );
+      }
+
+      return null;
+    }
+
+  }
+
+  public static partial class Leaderboards {
+    public static Request<Models.LeaderboardList> GetNextLeaderboardListPage(Models.LeaderboardList list) {
+      if (!list.HasNextPage)
+      {
+        Debug.LogWarning("Oculus.Platform.GetNextLeaderboardListPage: List has no next page");
+        return null;
+      }
+
+      if (Core.IsInitialized())
+      {
+        return new Request<Models.LeaderboardList>(
+          CAPI.ovr_HTTP_GetWithMessageType(
+            list.NextUrl,
+            (int)Message.MessageType.Leaderboard_GetNextLeaderboardArrayPage
           )
         );
       }

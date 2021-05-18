@@ -46,16 +46,28 @@ public class OVRProjectConfig : ScriptableObject
 		HandsOnly = 2
 	}
 
-	public List<DeviceType> targetDeviceTypes;
-	public HandTrackingSupport handTrackingSupport;
+	public enum HandTrackingFrequency
+	{
+		LOW = 0,
+		HIGH = 1,
+		MAX = 2
+	}
 
-	public bool disableBackups;
-	public bool enableNSCConfig;
+
+	public List<DeviceType> targetDeviceTypes = new List<DeviceType> {DeviceType.Quest, DeviceType.Quest2};
+	public bool allowOptional3DofHeadTracking = false;
+	public HandTrackingSupport handTrackingSupport = HandTrackingSupport.ControllersOnly;
+	public HandTrackingFrequency handTrackingFrequency = HandTrackingFrequency.LOW;
+
+	public bool disableBackups = true;
+	public bool enableNSCConfig = true;
 	public string securityXmlPath;
 
-	public bool skipUnneededShaders;
-	public bool focusAware;
-	public bool requiresSystemKeyboard;
+	public bool skipUnneededShaders = false;
+	public bool focusAware = true;
+	public bool requiresSystemKeyboard = false;
+
+	public Texture2D systemSplashScreen;
 
 	//public const string OculusProjectConfigAssetPath = "Assets/Oculus/OculusProjectConfig.asset";
 
@@ -82,6 +94,16 @@ public class OVRProjectConfig : ScriptableObject
 		string editorDir = Directory.GetParent(assetPath).FullName;
 		string ovrDir = Directory.GetParent(editorDir).FullName;
 		string oculusDir = Directory.GetParent(ovrDir).FullName;
+
+		if (OVRPluginUpdaterStub.IsInsidePackageDistribution())
+		{
+			oculusDir = Path.GetFullPath(Path.Combine(Application.dataPath, "Oculus"));
+			if (!Directory.Exists(oculusDir))
+			{
+				Directory.CreateDirectory(oculusDir);
+			}
+		}
+
 		string configAssetPath = Path.GetFullPath(Path.Combine(oculusDir, "OculusProjectConfig.asset"));
 		Uri configUri = new Uri(configAssetPath);
 		Uri projectUri = new Uri(Application.dataPath);
@@ -109,7 +131,9 @@ public class OVRProjectConfig : ScriptableObject
 			projectConfig.targetDeviceTypes = new List<DeviceType>();
 			projectConfig.targetDeviceTypes.Add(DeviceType.Quest);
 			projectConfig.targetDeviceTypes.Add(DeviceType.Quest2);
+			projectConfig.allowOptional3DofHeadTracking = false;
 			projectConfig.handTrackingSupport = HandTrackingSupport.ControllersOnly;
+			projectConfig.handTrackingFrequency = HandTrackingFrequency.LOW;
 			projectConfig.disableBackups = true;
 			projectConfig.enableNSCConfig = true;
 			projectConfig.skipUnneededShaders = false;
