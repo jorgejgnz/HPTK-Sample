@@ -1,7 +1,7 @@
 # HPTK - Sample
 This is a ready-to-go project using [HPTK](https://github.com/jorgejgnz/HPTK). Used only for educational purposes.
 
-[![Screenshot](https://imgur.com/iH35YoZ.jpg)
+![Screenshot](https://imgur.com/iH35YoZ.jpg)
 
 # Getting started
 Clone this repository. To do this, open a command line terminal, rooted on the Assets folder of your Unity project. 
