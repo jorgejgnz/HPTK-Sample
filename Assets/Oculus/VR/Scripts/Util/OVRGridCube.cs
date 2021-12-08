@@ -128,7 +128,7 @@ public class OVRGridCube : MonoBehaviour
 				Renderer r = cube.GetComponent<Renderer>();
 
 #if UNITY_4_0 || UNITY_4_1 || UNITY_4_2 || UNITY_4_3 || UNITY_4_5 || UNITY_4_6
-                // Renderer.castShadows was deprecated starting in Unity 5.0
+				// Renderer.castShadows was deprecated starting in Unity 5.0
 				r.castShadows    = false;
 #else
 				r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;

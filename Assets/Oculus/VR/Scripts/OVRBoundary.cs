@@ -46,6 +46,7 @@ public class OVRBoundary
 	/// </summary>
 	public enum BoundaryType
 	{
+		[System.Obsolete("Deprecated. This enum value will not be supported in OpenXR", false)]
 		OuterBoundary      = OVRPlugin.BoundaryType.OuterBoundary, ///< Outer boundary that closely matches the user's configured walls.
 		PlayArea           = OVRPlugin.BoundaryType.PlayArea,      ///< Smaller convex area inset within the outer boundary.
 	}
@@ -53,6 +54,7 @@ public class OVRBoundary
 	/// <summary>
 	/// Provides test results of boundary system queries.
 	/// </summary>
+	[System.Obsolete("Deprecated. This struct will not be supported in OpenXR", false)]
 	public struct BoundaryTestResult
 	{
 		public bool IsTriggering;                              ///< Returns true if the queried test would violate and/or trigger the tested boundary types.
@@ -82,6 +84,7 @@ public class OVRBoundary
 	/// Returns the results of testing a tracked node against the specified boundary type.
 	/// All points are returned in local tracking space shared by tracked nodes and accessible through OVRCameraRig's trackingSpace anchor.
 	/// </summary>
+	[System.Obsolete("Deprecated. This function will not be supported in OpenXR", false)]
 	public OVRBoundary.BoundaryTestResult TestNode(OVRBoundary.Node node, OVRBoundary.BoundaryType boundaryType)
 	{
 		OVRPlugin.BoundaryTestResult ovrpRes = OVRPlugin.TestBoundaryNode((OVRPlugin.Node)node, (OVRPlugin.BoundaryType)boundaryType);
@@ -102,6 +105,7 @@ public class OVRBoundary
 	/// The test point is expected in local tracking space.
 	/// All points are returned in local tracking space shared by tracked nodes and accessible through OVRCameraRig's trackingSpace anchor.
 	/// </summary>
+	[System.Obsolete("Deprecated. This function will not be supported in OpenXR", false)]
 	public OVRBoundary.BoundaryTestResult TestPoint(Vector3 point, OVRBoundary.BoundaryType boundaryType)
 	{
 		OVRPlugin.BoundaryTestResult ovrpRes = OVRPlugin.TestBoundaryPoint(point.ToFlippedZVector3f(), (OVRPlugin.BoundaryType)boundaryType);
@@ -199,6 +203,7 @@ public class OVRBoundary
 	/// <summary>
 	/// Returns true if the boundary system is currently visible.
 	/// </summary>
+	[System.Obsolete("Deprecated. This function will not be supported in OpenXR", false)]
 	public bool GetVisible()
 	{
 		if (OVRManager.loadedXRDevice == OVRManager.XRDevice.Oculus)
@@ -217,6 +222,7 @@ public class OVRBoundary
 	/// Requests that the boundary system visibility be set to the specified value.
 	/// The actual visibility can be overridden by the system (i.e., proximity trigger) or by the user (boundary system disabled)
 	/// </summary>
+	[System.Obsolete("Deprecated. This function will not be supported in OpenXR", false)]
 	public void SetVisible(bool value)
 	{
 		if (OVRManager.loadedXRDevice == OVRManager.XRDevice.Oculus)

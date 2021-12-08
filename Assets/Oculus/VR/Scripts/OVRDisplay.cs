@@ -194,14 +194,14 @@ public class OVRDisplay
 		}
 	}
 
-    /// <summary>
-    /// Gets the current angular acceleration of the head in radians per second per second about each axis.
-    /// </summary>
-    public Vector3 angularAcceleration
-    {
-        get
-        {
-            if (!OVRManager.isHmdPresent)
+	/// <summary>
+	/// Gets the current angular acceleration of the head in radians per second per second about each axis.
+	/// </summary>
+	public Vector3 angularAcceleration
+	{
+		get
+		{
+			if (!OVRManager.isHmdPresent)
 				return Vector3.zero;
 
 			Vector3 retVec = Vector3.zero;
@@ -209,25 +209,25 @@ public class OVRDisplay
 				return retVec;
 			return Vector3.zero;
 
-        }
-    }
+		}
+	}
 
-    /// <summary>
-    /// Gets the current linear velocity of the head in meters per second.
-    /// </summary>
-    public Vector3 velocity
-    {
-        get
-        {
-            if (!OVRManager.isHmdPresent)
-                return Vector3.zero;
+	/// <summary>
+	/// Gets the current linear velocity of the head in meters per second.
+	/// </summary>
+	public Vector3 velocity
+	{
+		get
+		{
+			if (!OVRManager.isHmdPresent)
+				return Vector3.zero;
 
 			Vector3 retVec = Vector3.zero;
 			if (OVRNodeStateProperties.GetNodeStatePropertyVector3(Node.Head, NodeStatePropertyType.Velocity, OVRPlugin.Node.Head, OVRPlugin.Step.Render, out retVec))
 				return retVec;
 			return Vector3.zero;
 		}
-    }
+	}
 
 	/// <summary>
 	/// Gets the current angular velocity of the head in radians per second about each axis.
@@ -248,7 +248,7 @@ public class OVRDisplay
 	/// <summary>
 	/// Gets the resolution and field of view for the given eye.
 	/// </summary>
-    public EyeRenderDesc GetEyeRenderDesc(UnityEngine.XR.XRNode eye)
+	public EyeRenderDesc GetEyeRenderDesc(UnityEngine.XR.XRNode eye)
 	{
 		return eyeDescs[(int)eye];
 	}
@@ -262,21 +262,21 @@ public class OVRDisplay
 			if (!OVRManager.isHmdPresent)
 				return new LatencyData();
 
-            string latency = OVRPlugin.latency;
+			string latency = OVRPlugin.latency;
 
-            var r = new Regex("Render: ([0-9]+[.][0-9]+)ms, TimeWarp: ([0-9]+[.][0-9]+)ms, PostPresent: ([0-9]+[.][0-9]+)ms", RegexOptions.None);
+			var r = new Regex("Render: ([0-9]+[.][0-9]+)ms, TimeWarp: ([0-9]+[.][0-9]+)ms, PostPresent: ([0-9]+[.][0-9]+)ms", RegexOptions.None);
 
-            var ret = new LatencyData();
+			var ret = new LatencyData();
 
-            Match match = r.Match(latency);
-            if (match.Success)
-            {
-                ret.render = float.Parse(match.Groups[1].Value);
-                ret.timeWarp = float.Parse(match.Groups[2].Value);
-                ret.postPresent = float.Parse(match.Groups[3].Value);
-            }
+			Match match = r.Match(latency);
+			if (match.Success)
+			{
+				ret.render = float.Parse(match.Groups[1].Value);
+				ret.timeWarp = float.Parse(match.Groups[2].Value);
+				ret.postPresent = float.Parse(match.Groups[3].Value);
+			}
 
-            return ret;
+			return ret;
 		}
 	}
 

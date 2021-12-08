@@ -81,7 +81,7 @@ public class OVRBundleManager
 		{
 			OVRBundleTool.PrintError();
 		}
-		OVRPlugin.SendEvent("oculus_bundle_tool", "apk_build_time", (DateTime.Now - apkBuildStart).TotalSeconds.ToString());
+		OculusBuildApp.SendBuildEvent("oculus_bundle_tool", "apk_build_time", (DateTime.Now - apkBuildStart).TotalSeconds.ToString());
 		PostbuildProjectSettingUpdate();
 	}
 
@@ -276,7 +276,7 @@ public class OVRBundleManager
 
 		double bundleBuildTime = (DateTime.Now - totalStart).TotalSeconds;
 		Debug.Log("[OVRBundleManager] - Total Time: " + bundleBuildTime);
-		OVRPlugin.SendEvent("oculus_bundle_tool", "bundle_build_time", bundleBuildTime.ToString());
+		OculusBuildApp.SendBuildEvent("oculus_bundle_tool", "bundle_build_time", bundleBuildTime.ToString());
 	}
 
 	private static void ProcessAssets(string[] assetPaths,
@@ -365,7 +365,7 @@ public class OVRBundleManager
 			if (adbTool.RunCommand(pushCommand, null, out output, out error) == 0)
 			{
 				Debug.Log("[OVRBundleManager] Scene Load Data Pushed to Device.");
-				OVRPlugin.SendEvent("oculus_bundle_tool", "transfer_bundle_time", (DateTime.Now - transferStart).TotalSeconds.ToString());
+				OculusBuildApp.SendBuildEvent("oculus_bundle_tool", "transfer_bundle_time", (DateTime.Now - transferStart).TotalSeconds.ToString());
 				return true;
 			}
 			OVRBundleTool.PrintError(string.IsNullOrEmpty(error) ? output : error);

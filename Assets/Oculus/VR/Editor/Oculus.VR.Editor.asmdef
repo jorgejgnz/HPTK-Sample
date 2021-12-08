@@ -1,14 +1,18 @@
 {
     "name": "Oculus.VR.Editor",
     "references": [
-        "Oculus.VR"
+        "GUID:f64c9ebcd7899c3448a08dc9f9ddbe30",
+        "GUID:4af21795022437d4bb139a86514b9ff9"
     ],
-    "optionalUnityReferences": [],
     "includePlatforms": [
         "Editor"
     ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
     "versionDefines": [
         {
             "name": "com.unity.xr.management",
@@ -24,6 +28,12 @@
             "name": "com.unity.xr.oculus",
             "expression": "1.4.0",
             "define": "USING_COMPATIBLE_OCULUS_XR_PLUGIN_VERSION"
+        },
+        {
+            "name": "com.unity.xr.oculus",
+            "expression": "1.7.0",
+            "define": "PRIORITIZE_OCULUS_XR_SETTINGS"
         }
-    ]
+    ],
+    "noEngineReferences": false
 }

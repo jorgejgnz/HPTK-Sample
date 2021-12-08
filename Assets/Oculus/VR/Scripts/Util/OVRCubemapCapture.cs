@@ -213,7 +213,7 @@ public class OVRCubemapCapture : MonoBehaviour
 		}
 		else
 		{
-            Debug.LogError("Unsupported file format" + extName);
+			Debug.LogError("Unsupported file format" + extName);
 			return false;
 		}
 
@@ -224,7 +224,7 @@ public class OVRCubemapCapture : MonoBehaviour
 		}
 		catch (System.Exception e)
 		{
-            Debug.LogError("Failed to create path " + dirName + " since " + e.ToString());
+			Debug.LogError("Failed to create path " + dirName + " since " + e.ToString());
 			return false;
 		}
 
@@ -259,19 +259,19 @@ public class OVRCubemapCapture : MonoBehaviour
 			x += width;
 		}
 
-        try
-        {
-            // Encode the texture and save it to disk
-            byte[] bytes = saveToPNG ? tex.EncodeToPNG() : tex.EncodeToJPG();
+		try
+		{
+			// Encode the texture and save it to disk
+			byte[] bytes = saveToPNG ? tex.EncodeToPNG() : tex.EncodeToJPG();
 
-            System.IO.File.WriteAllBytes(dirName + fileName, bytes);
-            Debug.Log("Cubemap file created " + dirName + fileName);
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogError("Failed to save cubemap file since " + e.ToString());
+			System.IO.File.WriteAllBytes(dirName + fileName, bytes);
+			Debug.Log("Cubemap file created " + dirName + fileName);
+		}
+		catch (System.Exception e)
+		{
+			Debug.LogError("Failed to save cubemap file since " + e.ToString());
 			return false;
-        }
+		}
 
 		DestroyImmediate(tex);
 		return true;

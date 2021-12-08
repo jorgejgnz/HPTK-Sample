@@ -18,7 +18,11 @@ namespace Oculus.Platform
 
       if (type == Message.MessageType.Notification_Room_InviteAccepted)
       {
-          FlushRoomInviteNotificationQueue();
+        FlushRoomInviteNotificationQueue();
+      }
+      else if (type == Message.MessageType.Notification_GroupPresence_JoinIntentReceived)
+      {
+        FlushJoinIntentNotificationQueue();
       }
     }
 
@@ -30,7 +34,7 @@ namespace Oculus.Platform
 
       notificationCallbacks[type] = new RequestCallback(callback);
     }
-    #endregion 
+    #endregion
 
     #region Adding and running request handlers
     internal static void AddRequest(Request request)
@@ -96,6 +100,16 @@ namespace Oculus.Platform
         pendingRoomInviteNotifications.Clear();
     }
 
+    private static bool hasRegisteredJoinIntentNotificationHandler = false;
+    private static Message latestPendingJoinIntentNotifications;
+    private static void FlushJoinIntentNotificationQueue() {
+        hasRegisteredJoinIntentNotificationHandler = true;
+        if (latestPendingJoinIntentNotifications != null) {
+          HandleMessage(latestPendingJoinIntentNotifications);
+        }
+        latestPendingJoinIntentNotifications = null;
+    }
+
     private class RequestCallback
     {
       private Message.Callback messageCallback;
@@ -128,14 +142,6 @@ namespace Oculus.Platform
       {
         if (callback != null)
         {
-
-          // We need to queue up GameInvites because the callback runner will be called before a handler has beeen set.
-          if (!hasRegisteredRoomInviteNotificationHandler && msg.Type == Message.MessageType.Notification_Room_InviteAccepted)
-          {
-              pendingRoomInviteNotifications.Add(msg);
-              return;
-          }
-
           if (msg is Message<T>)
           {
             callback((Message<T>)msg);
@@ -164,6 +170,16 @@ namespace Oculus.Platform
       if (notificationCallbacks.TryGetValue(msg.Type, out callbackHolder))
       {
         callbackHolder.HandleMessage(msg);
+      }
+      // We need to queue up Join Intents because the callback runner will be called before a handler has beeen set.
+      else if (!hasRegisteredJoinIntentNotificationHandler && msg.Type == Message.MessageType.Notification_GroupPresence_JoinIntentReceived)
+      {
+        latestPendingJoinIntentNotifications = msg;
+      }
+      // We need to queue up GameInvites because the callback runner will be called before a handler has beeen set.
+      else if (!hasRegisteredRoomInviteNotificationHandler && msg.Type == Message.MessageType.Notification_Room_InviteAccepted)
+      {
+        pendingRoomInviteNotifications.Add(msg);
       }
     }
 

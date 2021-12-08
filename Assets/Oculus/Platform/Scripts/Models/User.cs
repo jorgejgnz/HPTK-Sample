@@ -18,6 +18,8 @@ namespace Oculus.Platform.Models
     public readonly string Presence;
     public readonly string PresenceDeeplinkMessage;
     public readonly string PresenceDestinationApiName;
+    public readonly string PresenceLobbySessionId;
+    public readonly string PresenceMatchSessionId;
     public readonly UserPresenceStatus PresenceStatus;
     public readonly string SmallImageUrl;
 
@@ -32,6 +34,8 @@ namespace Oculus.Platform.Models
       Presence = CAPI.ovr_User_GetPresence(o);
       PresenceDeeplinkMessage = CAPI.ovr_User_GetPresenceDeeplinkMessage(o);
       PresenceDestinationApiName = CAPI.ovr_User_GetPresenceDestinationApiName(o);
+      PresenceLobbySessionId = CAPI.ovr_User_GetPresenceLobbySessionId(o);
+      PresenceMatchSessionId = CAPI.ovr_User_GetPresenceMatchSessionId(o);
       PresenceStatus = CAPI.ovr_User_GetPresenceStatus(o);
       SmallImageUrl = CAPI.ovr_User_GetSmallImageUrl(o);
     }

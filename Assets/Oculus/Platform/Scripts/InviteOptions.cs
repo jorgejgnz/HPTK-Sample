@@ -14,6 +14,15 @@ namespace Oculus.Platform
       Handle = CAPI.ovr_InviteOptions_Create();
     }
 
+    /// Passing in these users will add them to the invitable users list
+    public void AddSuggestedUser(UInt64 userID) {
+      CAPI.ovr_InviteOptions_AddSuggestedUser(Handle, userID);
+    }
+
+    public void ClearSuggestedUsers() {
+      CAPI.ovr_InviteOptions_ClearSuggestedUsers(Handle);
+    }
+
 
     /// For passing to native C
     public static explicit operator IntPtr(InviteOptions options) {

@@ -14,6 +14,7 @@ namespace Oculus.Platform.Models
   {
     public readonly string DisplayScore;
     public readonly byte[] ExtraData;
+    public readonly UInt64 ID;
     public readonly int Rank;
     public readonly long Score;
     // May be null. Check before using.
@@ -28,6 +29,7 @@ namespace Oculus.Platform.Models
     {
       DisplayScore = CAPI.ovr_LeaderboardEntry_GetDisplayScore(o);
       ExtraData = CAPI.ovr_LeaderboardEntry_GetExtraData(o);
+      ID = CAPI.ovr_LeaderboardEntry_GetID(o);
       Rank = CAPI.ovr_LeaderboardEntry_GetRank(o);
       Score = CAPI.ovr_LeaderboardEntry_GetScore(o);
       {

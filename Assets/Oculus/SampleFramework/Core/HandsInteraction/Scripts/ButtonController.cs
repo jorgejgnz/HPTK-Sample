@@ -40,6 +40,9 @@ namespace OculusSampleFramework
 		  new InteractableToolTags[] { InteractableToolTags.All };
 		private int _toolTagsMask;
 
+		[SerializeField]
+		private bool _allowMultipleNearFieldInteraction = false;
+
 		public override int ValidToolTagsMask
 		{
 			get
@@ -59,7 +62,7 @@ namespace OculusSampleFramework
 			get { return _localButtonDirection; }
 		}
 
-		private InteractableState _currentButtonState = InteractableState.Default;
+		public InteractableState CurrentButtonState { get; private set; } = InteractableState.Default;
 
 		private Dictionary<InteractableTool, InteractableState> _toolToState =
 		  new Dictionary<InteractableTool, InteractableState>();
@@ -109,12 +112,16 @@ namespace OculusSampleFramework
 			bool isFarFieldTool = interactableTool.IsFarFieldTool;
 
 			// if this is a near field tool and another tool already controls it, bail.
-			if (!isFarFieldTool && _toolToState.Keys.Count > 0 && !_toolToState.ContainsKey(interactableTool))
+			// (assuming we are not allowing multiple near field tools)
+			bool testForSingleToolInteraction = !isFarFieldTool &&
+			  !_allowMultipleNearFieldInteraction;
+			if (testForSingleToolInteraction && _toolToState.Keys.Count > 0 &&
+				!_toolToState.ContainsKey(interactableTool))
 			{
 				return;
 			}
 
-			var oldState = _currentButtonState;
+			var oldState = CurrentButtonState;
 
 			// ignore contact test if you are using the far field tool
 			var currButtonDirection = transform.TransformDirection(_localButtonDirection);
@@ -166,11 +173,11 @@ namespace OculusSampleFramework
 				_toolToState.Remove(interactableTool);
 			}
 
-			// if using far field tool, the upcoming state is based
-			// on the far field tool that has the greatest max state so far
-			// (since there can be multiple far field tools interacting
-			// with button)
-			if (isFarFieldTool)
+			// far field tools depend on max state set
+			// (or if proper flag is set for near field tools)
+			bool setMaxStateForAllTools = isFarFieldTool ||
+			  _allowMultipleNearFieldInteraction;
+			if (setMaxStateForAllTools)
 			{
 				foreach (var toolState in _toolToState.Values)
 				{
@@ -183,21 +190,30 @@ namespace OculusSampleFramework
 
 			if (oldState != upcomingState)
 			{
-				_currentButtonState = upcomingState;
+				CurrentButtonState = upcomingState;
 
 				var interactionType = !switchingStates ? InteractionType.Stay :
 				  newCollisionDepth == InteractableCollisionDepth.None ? InteractionType.Exit :
 				  InteractionType.Enter;
-				var CurrentCollider =
-					_currentButtonState == InteractableState.ProximityState ? ProximityCollider :
-					_currentButtonState == InteractableState.ContactState ? ContactCollider :
-					_currentButtonState == InteractableState.ActionState ? ActionCollider : null;
-				if (InteractableStateChanged != null)
+				ColliderZone currentCollider = null;
+				switch (CurrentButtonState)
 				{
-					InteractableStateChanged.Invoke(new InteractableStateArgs(this, interactableTool,
-					  _currentButtonState, oldState, new ColliderZoneArgs(CurrentCollider, Time.frameCount,
-					  interactableTool, interactionType)));
+					case InteractableState.ProximityState:
+						currentCollider = ProximityCollider;
+						break;
+					case InteractableState.ContactState:
+						currentCollider = ContactCollider;
+						break;
+					case InteractableState.ActionState:
+						currentCollider = ActionCollider;
+						break;
+					default:
+						currentCollider = null;
+						break;
 				}
+				InteractableStateChanged?.Invoke(new InteractableStateArgs(this, interactableTool,
+					CurrentButtonState, oldState, new ColliderZoneArgs(currentCollider, Time.frameCount,
+					interactableTool, interactionType)));
 			}
 		}
 
@@ -279,6 +295,15 @@ namespace OculusSampleFramework
 			}
 
 			return upcomingState;
+		}
+
+		public void ForceResetButton()
+		{
+			var oldState = CurrentButtonState;
+			CurrentButtonState = InteractableState.Default;
+			InteractableStateChanged?.Invoke(new InteractableStateArgs(this, null,
+				CurrentButtonState, oldState, new ColliderZoneArgs(ContactCollider, Time.frameCount,
+				null, InteractionType.Exit)));
 		}
 
 		private bool IsValidContact(InteractableTool collidingTool, Vector3 buttonDirection)

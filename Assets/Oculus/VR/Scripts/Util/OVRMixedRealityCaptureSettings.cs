@@ -81,7 +81,7 @@ public class OVRMixedRealityCaptureSettings : ScriptableObject, OVRMixedRealityC
 
 
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN        // Rift MRC only
-    const string configFileName = "mrc.config";
+	const string configFileName = "mrc.config";
 	public void WriteToConfigurationFile()
 	{
 		string text = JsonUtility.ToJson(this, true);

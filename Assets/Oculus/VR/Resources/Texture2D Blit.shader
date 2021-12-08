@@ -3,6 +3,7 @@
         _MainTex("Base (RGB) Trans (A)", 2D) = "white" {}
         _linearToSrgb("Perform linear-to-gamma conversion", Int) = 0
         _premultiply("Pre-multiply alpha", Int) = 0
+		_flip("Y-Flip", Int) = 0
     }
     SubShader{
         Tags{ "Queue" = "Transparent" "IgnoreProjector" = "True" "RenderType" = "Transparent" }
@@ -14,7 +15,7 @@
 			CGPROGRAM
 				#pragma vertex vert
 				#pragma fragment frag
-				
+
 				#include "UnityCG.cginc"
 
 				struct appdata_t
@@ -33,6 +34,7 @@
 				float4 _MainTex_ST;
 				int _linearToSrgb;
 				int _premultiply;
+				int _flip;
 
 				v2f vert (appdata_t v)
 				{
@@ -41,9 +43,15 @@
 					o.texcoord = TRANSFORM_TEX(v.texcoord, _MainTex);
 					return o;
 				}
-				
+
 				fixed4 frag (v2f i) : COLOR
 				{
+#if SHADER_API_D3D11
+					if (_flip)
+					{
+							i.texcoord.y = 1.0f - i.texcoord.y;
+					}
+#endif
 					fixed4 col = tex2D(_MainTex, i.texcoord);
 					if (_linearToSrgb)
 					{

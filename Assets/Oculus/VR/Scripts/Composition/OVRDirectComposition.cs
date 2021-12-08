@@ -15,6 +15,10 @@ using UnityEngine;
 using System.Collections;
 using Object = UnityEngine.Object;
 
+#if USING_URP
+using UnityEngine.Rendering.Universal;
+#endif
+
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
 
 public class OVRDirectComposition : OVRCameraComposition
@@ -50,7 +54,7 @@ public class OVRDirectComposition : OVRCameraComposition
 			RefreshCameraRig(parentObject, mainCamera);
 
 			Debug.Assert(directCompositionCameraGameObject == null);
-			if (configuration.instantiateMixedRealityCameraGameObject != null) 
+			if (configuration.instantiateMixedRealityCameraGameObject != null)
 			{
 				directCompositionCameraGameObject = configuration.instantiateMixedRealityCameraGameObject(mainCamera.gameObject, OVRManager.MrcCameraType.Normal);
 			}
@@ -69,11 +73,21 @@ public class OVRDirectComposition : OVRCameraComposition
 				Object.Destroy(directCompositionCameraGameObject.GetComponent<OVRManager>());
 			}
 			directCompositionCamera = directCompositionCameraGameObject.GetComponent<Camera>();
+#if USING_MRC_COMPATIBLE_URP_VERSION
+			var directCamData = directCompositionCamera.GetUniversalAdditionalCameraData();
+			if (directCamData != null)
+			{
+				directCamData.allowXRRendering = false;
+			}
+#elif USING_URP
+			Debug.LogError("Using URP with MRC is only supported with URP version 10.0.0 or higher. Consider using Unity 2020 or higher.");
+#else
 			directCompositionCamera.stereoTargetEye = StereoTargetEyeMask.None;
+#endif
 			directCompositionCamera.depth = float.MaxValue;
 			directCompositionCamera.rect = new Rect(0.0f, 0.0f, 1.0f, 1.0f);
 			directCompositionCamera.cullingMask = (directCompositionCamera.cullingMask & ~configuration.extraHiddenLayers) | configuration.extraVisibleLayers;
-			
+
 
 			Debug.Log("DirectComposition activated : useDynamicLighting " + (configuration.useDynamicLighting ? "ON" : "OFF"));
 			RefreshCameraFramePlaneObject(parentObject, directCompositionCamera, configuration);
@@ -98,7 +112,7 @@ public class OVRDirectComposition : OVRCameraComposition
 
 		directCompositionCamera.clearFlags = mainCamera.clearFlags;
 		directCompositionCamera.backgroundColor = mainCamera.backgroundColor;
-		if (configuration.dynamicCullingMask) 
+		if (configuration.dynamicCullingMask)
 		{
 			directCompositionCamera.cullingMask = (mainCamera.cullingMask & ~configuration.extraHiddenLayers) | configuration.extraVisibleLayers;
 		}

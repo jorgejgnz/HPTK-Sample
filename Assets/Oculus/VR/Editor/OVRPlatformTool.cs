@@ -58,6 +58,7 @@ namespace Assets.Oculus.VR.Editor
 		private const int MAX_DOWNLOAD_RETRY_COUNT = 2;
 
 		private static GUIStyle boldFoldoutStyle;
+		private static GUIStyle odhCalloutStyle;
 
 		[MenuItem("Oculus/Tools/Oculus Platform Tool")]
 		static void Init()
@@ -93,6 +94,13 @@ namespace Assets.Oculus.VR.Editor
 			{
 				boldFoldoutStyle = new GUIStyle(EditorStyles.foldout);
 				boldFoldoutStyle.fontStyle = FontStyle.Bold;
+			}
+
+			if (odhCalloutStyle == null)
+			{
+				odhCalloutStyle = new GUIStyle(EditorStyles.label);
+				odhCalloutStyle.richText = true;
+				odhCalloutStyle.wordWrap = true;
 			}
 
 			EditorGUIUtility.labelWidth = DEFAULT_LABEL_WIDTH;
@@ -393,6 +401,35 @@ namespace Assets.Oculus.VR.Editor
 			logBoxStyle.normal.textColor = logBoxStyle.focused.textColor = EditorStyles.label.normal.textColor;
 			EditorGUILayout.SelectableLabel(OVRPlatformTool.log, logBoxStyle, GUILayout.Height(position.height - 30));
 			EditorGUILayout.EndScrollView();
+
+			// ODH Callout Section
+			GUILayout.BeginHorizontal(EditorStyles.helpBox);
+			var script = MonoScript.FromScriptableObject(this);
+			string assetPath = AssetDatabase.GetAssetPath(script);
+			string editorPath = Path.GetDirectoryName(assetPath);
+			string odhIconPath = Path.Combine(editorPath, "Textures\\odh_icon.png");
+			Texture ODHIcon = (Texture)EditorGUIUtility.Load(odhIconPath);
+			GUILayout.Box(ODHIcon, GUILayout.Width(60.0f), GUILayout.Height(60.0f));
+
+			GUILayout.BeginVertical();
+
+			EditorGUILayout.LabelField("<b>Oculus Developer Hub</b> is a desktop companion tool that can upload builds, manage apps and reduce friction in daily Quest development.",
+				odhCalloutStyle);
+			GUIContent ODHLabel = new GUIContent("Download Oculus Developer Hub");
+#if UNITY_2021_1_OR_NEWER
+			if (EditorGUILayout.LinkButton(ODHLabel))
+#else
+			if (GUILayout.Button(ODHLabel, GUILayout.ExpandWidth(false)))
+#endif
+			{
+#if UNITY_EDITOR_WIN
+				Application.OpenURL("https://developer.oculus.com/downloads/package/oculus-developer-hub-win/?source=unity");
+#elif UNITY_EDITOR_OSX
+				Application.OpenURL("https://developer.oculus.com/downloads/package/oculus-developer-hub-mac/?source=unity");
+#endif
+			}
+			GUILayout.EndVertical();
+			GUILayout.EndHorizontal();
 		}
 
 		private void SetOVRProjectConfig(TargetPlatform targetPlatform)

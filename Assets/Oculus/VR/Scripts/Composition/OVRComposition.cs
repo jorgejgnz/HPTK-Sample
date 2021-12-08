@@ -25,8 +25,7 @@ public abstract class OVRComposition {
 	public OVRCameraRig cameraRig = null;
 
 	protected OVRComposition(GameObject parentObject, Camera mainCamera, OVRMixedRealityCaptureConfiguration configuration) {
-		
-        RefreshCameraRig(parentObject, mainCamera);
+		RefreshCameraRig(parentObject, mainCamera);
 	}
 
 	public abstract OVRManager.CompositionMethod CompositionMethod();
@@ -39,19 +38,19 @@ public abstract class OVRComposition {
 	protected bool usingLastAttachedNodePose = false;
 	protected OVRPose lastAttachedNodePose = new OVRPose();            // Sometimes the attach node pose is not readable (lose tracking, low battery, etc.) Use the last pose instead when it happens
 
-    public void RefreshCameraRig(GameObject parentObject, Camera mainCamera)
-    {
-        OVRCameraRig cameraRig = mainCamera.GetComponentInParent<OVRCameraRig>();
-        if (cameraRig == null)
-        {
-            cameraRig = parentObject.GetComponent<OVRCameraRig>();
-        }
-        cameraInTrackingSpace = (cameraRig != null && cameraRig.trackingSpace != null);
-        this.cameraRig = cameraRig;
-        Debug.Log(cameraRig == null ? "[OVRComposition] CameraRig not found" : "[OVRComposition] CameraRig found");
-    }
+	public void RefreshCameraRig(GameObject parentObject, Camera mainCamera)
+	{
+		OVRCameraRig cameraRig = mainCamera.GetComponentInParent<OVRCameraRig>();
+		if (cameraRig == null)
+		{
+			cameraRig = parentObject.GetComponent<OVRCameraRig>();
+		}
+		cameraInTrackingSpace = (cameraRig != null && cameraRig.trackingSpace != null);
+		this.cameraRig = cameraRig;
+		Debug.Log(cameraRig == null ? "[OVRComposition] CameraRig not found" : "[OVRComposition] CameraRig found");
+	}
 
-    public OVRPose ComputeCameraWorldSpacePose(OVRPlugin.CameraExtrinsics extrinsics)
+	public OVRPose ComputeCameraWorldSpacePose(OVRPlugin.CameraExtrinsics extrinsics)
 	{
 		OVRPose trackingSpacePose = ComputeCameraTrackingSpacePose(extrinsics);
 		OVRPose worldSpacePose = OVRExtensions.ToWorldSpacePose(trackingSpacePose);

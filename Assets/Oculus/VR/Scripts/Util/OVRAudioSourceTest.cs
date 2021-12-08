@@ -7,9 +7,9 @@ public class OVRAudioSourceTest : MonoBehaviour
 	public float period = 2.0f;
 	private float nextActionTime;
 
-    // Start is called before the first frame update
-    void Start()
-    {
+	// Start is called before the first frame update
+	void Start()
+	{
 		Material templateMaterial = GetComponent<Renderer>().material;
 		Material newMaterial = Instantiate<Material>(templateMaterial);
 		newMaterial.color = Color.green;
@@ -18,10 +18,10 @@ public class OVRAudioSourceTest : MonoBehaviour
 		nextActionTime = Time.time + period;
 	}
 
-    // Update is called once per frame
-    void Update()
-    {
-        if (Time.time > nextActionTime)
+	// Update is called once per frame
+	void Update()
+	{
+		if (Time.time > nextActionTime)
 		{
 			nextActionTime = Time.time + period;
 
@@ -45,5 +45,5 @@ public class OVRAudioSourceTest : MonoBehaviour
 				audioSource.Play();
 			}
 		}
-    }
+	}
 }

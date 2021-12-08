@@ -31,12 +31,12 @@ internal class OVRCompositionUtil {
 
 	public static void SafeDestroy(ref GameObject obj)
 	{
-        if (obj != null)
-        {
-            SafeDestroy(obj);
-            obj = null;
-        }
-    }
+		if (obj != null)
+		{
+			SafeDestroy(obj);
+			obj = null;
+		}
+	}
 
 	public static OVRPlugin.CameraDevice ConvertCameraDevice(OVRManager.CameraDevice cameraDevice)
 	{
@@ -60,18 +60,18 @@ internal class OVRCompositionUtil {
 
 	public static OVRBoundary.BoundaryType ToBoundaryType(OVRManager.VirtualGreenScreenType type)
 	{
-		if (type == OVRManager.VirtualGreenScreenType.OuterBoundary)
+		/*if (type == OVRManager.VirtualGreenScreenType.OuterBoundary)
 		{
 			return OVRBoundary.BoundaryType.OuterBoundary;
 		}
-		else if (type == OVRManager.VirtualGreenScreenType.PlayArea)
+		else */if (type == OVRManager.VirtualGreenScreenType.PlayArea)
 		{
 			return OVRBoundary.BoundaryType.PlayArea;
 		}
 		else
 		{
 			Debug.LogWarning("Unmatched VirtualGreenScreenType");
-			return OVRBoundary.BoundaryType.OuterBoundary;
+			return OVRBoundary.BoundaryType.PlayArea;
 		}
 	}
 

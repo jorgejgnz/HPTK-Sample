@@ -4,6 +4,7 @@
         _face("Face", Int) = 0
         _linearToSrgb("Perform linear-to-gamma conversion", Int) = 0
         _premultiply("Cubemap Blit", Int) = 0
+		_flip("Y-Flip", Int) = 0
     }
     SubShader{
         Tags{ "Queue" = "Transparent" "IgnoreProjector" = "True" "RenderType" = "Transparent" }
@@ -15,7 +16,7 @@
 			CGPROGRAM
 				#pragma vertex vert
 				#pragma fragment frag
-				
+
 				#include "UnityCG.cginc"
 
 				struct appdata_t
@@ -35,6 +36,7 @@
 				int _face;
 				int _linearToSrgb;
 				int _premultiply;
+				int _flip;
 
 				v2f vert (appdata_t va)
 				{
@@ -51,9 +53,15 @@
 
 					return vo;
 				}
-				
+
 				fixed4 frag (v2f vi) : COLOR
 				{
+#if SHADER_API_D3D11
+					if (_flip)
+					{
+							vi.cubedir = vi.cubedir * -1.0f;
+					}
+#endif
 					fixed4 col = texCUBE(_MainTex, vi.cubedir);
 
 					if (_linearToSrgb)

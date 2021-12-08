@@ -13,7 +13,7 @@ Then clone using this command *git clone https://github.com/jorgejgnz/HPTK-Sampl
 
 # Current setup
 - [HPTK](https://github.com/jorgejgnz/HPTK) V0.6.0
-- [Oculus Integration](https://assetstore.unity.com/packages/tools/integration/oculus-integration-82022) v28.0
+- [Oculus Integration](https://assetstore.unity.com/packages/tools/integration/oculus-integration-82022) v34.0
 - Unity 2020.3.8f1 LTS
 
 # Author
