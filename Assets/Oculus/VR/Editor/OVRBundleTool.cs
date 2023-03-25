@@ -1,3 +1,23 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ * All rights reserved.
+ *
+ * Licensed under the Oculus SDK License Agreement (the "License");
+ * you may not use the Oculus SDK except in compliance with the License,
+ * which is provided at the time of installation or download, or which
+ * otherwise accompanies this software in either electronic or hard copy form.
+ *
+ * You may obtain a copy of the License at
+ *
+ * https://developer.oculus.com/licenses/oculussdk/
+ *
+ * Unless required by applicable law or agreed to in writing, the Oculus SDK
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #if UNITY_EDITOR_WIN && UNITY_ANDROID
 using System;
 using System.Collections;
@@ -16,10 +36,13 @@ public class OVRBundleTool : EditorWindow
 	private static bool invalidBuildableScene;
 
 	private static string toolLog;
+	private static bool deployScenesWhenDeployingApk;
 	private static bool useOptionalTransitionApkPackage;
+	private static GUIStyle windowStyle;
 	private static GUIStyle logBoxStyle;
+	private static GUIStyle statusStyle;
 	private static Vector2 logBoxSize;
-	private static float logBoxSpacing = 30.0f;
+	private static Vector2 sceneScrollViewPos;
 
 	private bool forceRestart = false;
 	private bool showBundleManagement = false;
@@ -27,6 +50,8 @@ public class OVRBundleTool : EditorWindow
 
 	// Needed to ensure that APK checking does happen during editor start up, but will still happen when the window is opened/updated
 	private static bool panelInitialized = false;
+
+	const float spacesPerIndent = 12;
 
 	private enum ApkStatus
 	{
@@ -38,7 +63,7 @@ public class OVRBundleTool : EditorWindow
 
 	public enum SceneBundleStatus
 	{
-		[Description("Unknown")]
+		[Description("")]
 		UNKNOWN,
 		[Description("Queued")]
 		QUEUED,
@@ -57,12 +82,14 @@ public class OVRBundleTool : EditorWindow
 		public string scenePath;
 		public string sceneName;
 		public SceneBundleStatus buildStatus;
+		public bool shouldDeploy;
 
 		public EditorSceneInfo(string path, string name)
 		{
 			scenePath = path;
 			sceneName = name;
 			buildStatus = SceneBundleStatus.UNKNOWN;
+			shouldDeploy = true;
 		}
 	}
 
@@ -82,6 +109,9 @@ public class OVRBundleTool : EditorWindow
 	private GuiAction action = GuiAction.None;
 
 	private static ApkStatus currentApkStatus;
+
+	private const string deployScenesWhenDeployingApkPrefName = "OVRBundleTool_DeployScenesWithAPK";
+	private const string useOptionalTransitionApkPackagePrefName = "OVRBundleTool_UseOptionalPackageName";
 
 	[MenuItem("Oculus/OVR Build/OVR Scene Quick Preview %l", false, 10)]
 	static void Init()
@@ -106,6 +136,8 @@ public class OVRBundleTool : EditorWindow
 	{
 		panelInitialized = true;
 		GetScenesFromBuildSettings();
+        deployScenesWhenDeployingApk = EditorPrefs.GetBool(deployScenesWhenDeployingApkPrefName, true);
+        useOptionalTransitionApkPackage = EditorPrefs.GetBool(useOptionalTransitionApkPackagePrefName, false);
 		EditorBuildSettings.sceneListChanged += GetScenesFromBuildSettings;
 	}
 
@@ -116,8 +148,15 @@ public class OVRBundleTool : EditorWindow
 		if (panelInitialized)
 		{
 			CheckForTransitionAPK();
+			CheckForDeployedScenes();
 			panelInitialized = false;
 		}
+
+        if (windowStyle == null)
+        {
+            windowStyle = new GUIStyle();
+            windowStyle.margin = new RectOffset(10, 10, 10, 10);
+        }
 
 		if (logBoxStyle == null)
 		{
@@ -128,10 +167,83 @@ public class OVRBundleTool : EditorWindow
 			logBoxStyle.richText = true;
 		}
 
-		GUILayout.Space(10.0f);
+		if (statusStyle == null)
+		{
+			statusStyle = new GUIStyle(EditorStyles.label);
+			statusStyle.richText = true;
+		}
 
-		GUILayout.Label("Scenes", EditorStyles.boldLabel);
+        EditorGUILayout.BeginVertical(windowStyle);
+
+        GUILayout.BeginHorizontal(EditorStyles.helpBox);
+        GUILayout.BeginVertical();
+        EditorGUILayout.LabelField("OVR Scene Quick Preview generates a version of your app which supports hot-reloading "
+			+ "content changes to individual scenes, reducing iteration time.",
+            EditorStyles.wordWrappedLabel);
+
+#if UNITY_2021_1_OR_NEWER
+        if (EditorGUILayout.LinkButton("Documentation"))
+#else
+        if (GUILayout.Button("Documentation", GUILayout.ExpandWidth(false)))
+#endif
+        {
+            Application.OpenURL("https://developer.oculus.com/documentation/unity/unity-build-android-tools/");
+        }
+        GUILayout.EndVertical();
+        GUILayout.EndHorizontal();
+		
+		GUILayout.Space(10f);
+		GUIContent transitionContent = new GUIContent("Modified APK [?]",
+			"Build and deploy an APK that can hot-reload scenes. This enables fast iteration on content changes to scenes.");
+		GUILayout.Label(transitionContent, EditorStyles.boldLabel);
+
+		EditorGUILayout.BeginHorizontal();
+		{
+			GUILayout.Label("Status: ", statusStyle, GUILayout.ExpandWidth(false));
+
+			string statusMesssage;
+			switch (currentApkStatus)
+			{
+				case ApkStatus.OK:
+					statusMesssage = "<color=green>APK installed. Ready to build and deploy scenes.</color>";
+					break;
+				case ApkStatus.NOT_INSTALLED:
+					statusMesssage = "<color=red>APK not installed. Press \"Build and Deploy APK\" to install the modified APK.</color>";
+					break;
+				case ApkStatus.DEVICE_NOT_CONNECTED:
+					statusMesssage = "<color=red>Device not connected via ADB. Please connect device and allow debugging.</color>";
+					break;
+				case ApkStatus.UNKNOWN:
+				default:
+					statusMesssage = "<color=red>Failed to get APK status!</color>";
+					break;
+			}
+			GUILayout.Label(statusMesssage, statusStyle, GUILayout.ExpandWidth(true));
+		}
+		EditorGUILayout.EndHorizontal();
+
+		EditorGUILayout.BeginHorizontal();
+		if (GUILayout.Button("Build and Deploy APK", GUILayout.Width(200)))
+		{
+			action = GuiAction.BuildAndDeployApp;
+		}
+		EditorGUI.BeginDisabledGroup(currentApkStatus != ApkStatus.OK);
+		if (GUILayout.Button("Launch APK", GUILayout.Width(120)))
+		{
+			action = GuiAction.LaunchApp;
+		}
+		EditorGUI.EndDisabledGroup();
+		EditorGUILayout.EndHorizontal();
+
+		GUILayout.Space(10f);
+
+		GUIContent scenesContent = new GUIContent("Scenes [?]",
+			"Build and deploy individual scenes, which can be hot-reloaded at runtime by the modified APK.");
+		GUILayout.Label(scenesContent, EditorStyles.boldLabel);
+
 		GUIContent buildSettingsBtnTxt = new GUIContent("Open Build Settings");
+		GUIContent deployLabelTxt = new GUIContent("Deploy?",
+			"If true, this scene will be hot-reloaded. To reduce iteration time, only deploy scenes under active iteration.");
 		if (buildableScenes == null || buildableScenes.Count == 0)
 		{
 			string sceneErrorMessage;
@@ -153,31 +265,33 @@ public class OVRBundleTool : EditorWindow
 		}
 		else
 		{
+			float currWidth = EditorGUIUtility.currentViewWidth;
+			float sceneNameWidth = Math.Max(EditorGUIUtility.currentViewWidth - 170, 60);
+			EditorGUILayout.BeginHorizontal();
+			EditorGUILayout.LabelField("Scene Name", GUI.skin.box, GUILayout.Width(sceneNameWidth));
+			EditorGUILayout.LabelField("Status", GUI.skin.box, GUILayout.Width(80));
+			EditorGUILayout.LabelField(deployLabelTxt, GUI.skin.box, GUILayout.Width(60));
+			EditorGUILayout.EndHorizontal();
+
+			int scrollViewHeight = Math.Min(buildableScenes.Count * 21, 200);
+			sceneScrollViewPos = EditorGUILayout.BeginScrollView(sceneScrollViewPos, GUILayout.MaxHeight(scrollViewHeight));
 			foreach (EditorSceneInfo scene in buildableScenes)
 			{
 				EditorGUILayout.BeginHorizontal();
-				{
-					EditorGUILayout.LabelField(scene.sceneName, GUILayout.ExpandWidth(true));
-					GUILayout.FlexibleSpace();
-
-					if (scene.buildStatus != SceneBundleStatus.UNKNOWN)
-					{
-						string status = GetEnumDescription(scene.buildStatus);
-						EditorGUILayout.LabelField(status, GUILayout.Width(70));
-					}
-				}
+				EditorGUILayout.LabelField(scene.sceneName, GUILayout.Width(sceneNameWidth + 8));
+				EditorGUILayout.LabelField(GetEnumDescription(scene.buildStatus), GUILayout.Width(80));
+				scene.shouldDeploy = EditorGUILayout.Toggle(scene.shouldDeploy, GUILayout.Width(30));
 				EditorGUILayout.EndHorizontal();
 			}
+			EditorGUILayout.EndScrollView();
 
 			EditorGUILayout.BeginHorizontal();
 			{
-				GUIContent sceneBtnTxt = new GUIContent("Build and Deploy Scene(s)");
-				var sceneBtnRt = GUILayoutUtility.GetRect(sceneBtnTxt, GUI.skin.button, GUILayout.Width(200));
-				if (GUI.Button(sceneBtnRt, sceneBtnTxt))
+				if (GUILayout.Button("Build and Deploy Scene(s)", GUILayout.Width(200)))
 				{
 					action = GuiAction.BuildAndDeployScenes;
 				}
-
+				GUILayout.Space(10);
 				GUIContent forceRestartLabel = new GUIContent("Force Restart [?]", "Relaunch the application after scene bundles are finished deploying.");
 				forceRestart = GUILayout.Toggle(forceRestart, forceRestartLabel, GUILayout.ExpandWidth(true));
 			}
@@ -185,134 +299,107 @@ public class OVRBundleTool : EditorWindow
 		}
 
 		GUILayout.Space(10.0f);
-		GUIContent transitionContent = new GUIContent("Transition APK [?]", "Build and deploy an APK that will transition into the scene you are working on. This enables fast iteration on a specific scene.");
-		GUILayout.Label(transitionContent, EditorStyles.boldLabel);
-
-		EditorGUILayout.BeginHorizontal();
-		{
-			GUIStyle statusStyle = EditorStyles.label;
-			statusStyle.richText = true;
-			GUILayout.Label("Status: ", statusStyle, GUILayout.ExpandWidth(false));
-
-			string statusMesssage;
-			switch (currentApkStatus)
-			{
-				case ApkStatus.OK:
-					statusMesssage = "<color=green>APK installed. Ready to build and deploy scenes.</color>";
-					break;
-				case ApkStatus.NOT_INSTALLED:
-					statusMesssage = "<color=red>APK not installed. Press build and deploy to install the transition APK.</color>";
-					break;
-				case ApkStatus.DEVICE_NOT_CONNECTED:
-					statusMesssage = "<color=red>Device not connected via ADB. Please connect device and allow debugging.</color>";
-					break;
-				case ApkStatus.UNKNOWN:
-				default:
-					statusMesssage = "<color=red>Failed to get APK status!</color>";
-					break;
-			}
-			GUILayout.Label(statusMesssage, statusStyle, GUILayout.ExpandWidth(true));
-		}
-		EditorGUILayout.EndHorizontal();
-
-		EditorGUILayout.BeginHorizontal();
-		{
-			GUIContent btnTxt = new GUIContent("Build and Deploy App");
-			var rt = GUILayoutUtility.GetRect(btnTxt, GUI.skin.button, GUILayout.Width(200));
-			if (GUI.Button(rt, btnTxt))
-			{
-				action = GuiAction.BuildAndDeployApp;
-			}
-		}
-		EditorGUILayout.EndHorizontal();
-
-		GUILayout.Space(10.0f);
 		GUILayout.Label("Utilities", EditorStyles.boldLabel);
 
-		showBundleManagement = EditorGUILayout.Foldout(showBundleManagement, "Bundle Management");
+		showBundleManagement = EditorGUILayout.BeginFoldoutHeaderGroup(showBundleManagement, "Bundle Management", EditorStyles.foldoutHeader);
 		if (showBundleManagement)
 		{
 			EditorGUILayout.BeginHorizontal();
 			{
-				GUIContent clearDeviceBundlesTxt = new GUIContent("Delete Device Bundles");
-				var clearDeviceBundlesBtnRt = GUILayoutUtility.GetRect(clearDeviceBundlesTxt, GUI.skin.button, GUILayout.ExpandWidth(true));
-				if (GUI.Button(clearDeviceBundlesBtnRt, clearDeviceBundlesTxt))
+				EditorGUILayout.Space(EditorGUI.indentLevel * spacesPerIndent, false); //to match indentLevel
+				GUIContent clearDeviceBundlesTxt = new GUIContent("Delete Device Bundles [?]",
+					"Asset bundles to support hot-reloading are stored in an external location on-device. Click to delete them, freeing up space on-device.");
+				if (GUILayout.Button(clearDeviceBundlesTxt, GUILayout.ExpandWidth(true)))
 				{
 					action = GuiAction.ClearDeviceBundles;
 				}
 
-				GUIContent clearLocalBundlesTxt = new GUIContent("Delete Local Bundles");
-				var clearLocalBundlesBtnRt = GUILayoutUtility.GetRect(clearLocalBundlesTxt, GUI.skin.button, GUILayout.ExpandWidth(true));
-				if (GUI.Button(clearLocalBundlesBtnRt, clearLocalBundlesTxt))
+				GUIContent clearLocalBundlesTxt = new GUIContent("Delete Local Bundles [?]",
+					$"Locally, asset bundles are built into the \"{OVRBundleManager.BUNDLE_MANAGER_OUTPUT_PATH}\" folder at project root. "
+					+ "Click to delete them, freeing up local space.");
+				if (GUILayout.Button(clearLocalBundlesTxt, GUILayout.ExpandWidth(true)))
 				{
 					action = GuiAction.ClearLocalBundles;
 				}
 			}
 			EditorGUILayout.EndHorizontal();
 		}
+		EditorGUILayout.EndFoldoutHeaderGroup();
 
-		showOther = EditorGUILayout.Foldout(showOther, "Other");
+		GUILayout.Space(5.0f);
+		showOther = EditorGUILayout.BeginFoldoutHeaderGroup(showOther, "Other", EditorStyles.foldoutHeader);
 		if (showOther)
 		{
+			const float otherLabelsWidth = 240f;
+			EditorGUI.indentLevel++;
 			EditorGUILayout.BeginHorizontal();
+
+			GUIContent deployScenesWithApkLabel = new GUIContent("Deploy scenes with APK deploy [?]",
+				"If checked, all scenes will be built & deployed when pressing \"Build and Deploy APK\". This takes longer, but provides more expected behavior.");
+				
+			EditorGUILayout.LabelField(deployScenesWithApkLabel, GUILayout.Width(otherLabelsWidth));
+			bool newToggleValue = EditorGUILayout.Toggle(deployScenesWhenDeployingApk);
+
+			if (newToggleValue != deployScenesWhenDeployingApk)
 			{
-				GUIContent useOptionalTransitionPackageLabel = new GUIContent("Use optional APK package name [?]",
-					"This allows both full build APK and transition APK to be installed on device. However, platform services like Entitlement check may fail.");
-
-				EditorGUILayout.LabelField(useOptionalTransitionPackageLabel, GUILayout.ExpandWidth(false));
-				bool newToggleValue = EditorGUILayout.Toggle(useOptionalTransitionApkPackage);
-
-				if (newToggleValue != useOptionalTransitionApkPackage)
-				{
-					useOptionalTransitionApkPackage = newToggleValue;
-					// Update transition APK status after changing package name option
-					CheckForTransitionAPK();
-				}
-
+				deployScenesWhenDeployingApk = newToggleValue;
+				EditorPrefs.SetBool(deployScenesWhenDeployingApkPrefName, deployScenesWhenDeployingApk);
 			}
 			EditorGUILayout.EndHorizontal();
 
 			EditorGUILayout.BeginHorizontal();
+			GUIContent useOptionalTransitionPackageLabel = new GUIContent("Use optional APK package name [?]",
+				"This allows both full build APK and transition APK to be installed on device. However, platform services like Entitlement check may fail.");
+
+			EditorGUILayout.LabelField(useOptionalTransitionPackageLabel, GUILayout.Width(otherLabelsWidth));
+			newToggleValue = EditorGUILayout.Toggle(useOptionalTransitionApkPackage);
+
+			if (newToggleValue != useOptionalTransitionApkPackage)
 			{
-				GUIContent launchBtnTxt = new GUIContent("Launch App");
-				var launchBtnRt = GUILayoutUtility.GetRect(launchBtnTxt, GUI.skin.button, GUILayout.ExpandWidth(true));
-				if (GUI.Button(launchBtnRt, launchBtnTxt))
-				{
-					action = GuiAction.LaunchApp;
-				}
-
-				var buildSettingBtnRt = GUILayoutUtility.GetRect(buildSettingsBtnTxt, GUI.skin.button, GUILayout.ExpandWidth(true));
-				if (GUI.Button(buildSettingBtnRt, buildSettingsBtnTxt))
-				{
-					action = GuiAction.OpenBuildSettingsWindow;
-				}
-
-				GUIContent uninstallTxt = new GUIContent("Uninstall APK");
-				var uninstallBtnRt = GUILayoutUtility.GetRect(uninstallTxt, GUI.skin.button, GUILayout.ExpandWidth(true));
-				if (GUI.Button(uninstallBtnRt, uninstallTxt))
-				{
-					action = GuiAction.UninstallApk;
-				}
-
-				GUIContent clearLogTxt = new GUIContent("Clear Log");
-				var clearLogBtnRt = GUILayoutUtility.GetRect(clearLogTxt, GUI.skin.button, GUILayout.ExpandWidth(true));
-				if (GUI.Button(clearLogBtnRt, clearLogTxt))
-				{
-					action = GuiAction.ClearLog;
-				}
+				useOptionalTransitionApkPackage = newToggleValue;
+				EditorPrefs.SetBool(useOptionalTransitionApkPackagePrefName, useOptionalTransitionApkPackage);
+				// New package name = new check for associated data
+				CheckForTransitionAPK();
+				CheckForDeployedScenes();
 			}
 			EditorGUILayout.EndHorizontal();
+
+			EditorGUILayout.BeginHorizontal();
+			EditorGUILayout.Space(EditorGUI.indentLevel * spacesPerIndent, false); //to match indentLevel
+			if (GUILayout.Button(buildSettingsBtnTxt, GUILayout.ExpandWidth(true)))
+			{
+				action = GuiAction.OpenBuildSettingsWindow;
+			}
+			if (GUILayout.Button("Uninstall APK", GUILayout.ExpandWidth(true)))
+			{
+				action = GuiAction.UninstallApk;
+			}
+			EditorGUILayout.EndHorizontal();
+			EditorGUI.indentLevel--;
 		}
+		EditorGUILayout.EndFoldoutHeaderGroup();
 
-		GUILayout.Space(10.0f);
+		GUILayout.Space(6f);
+		GUILayout.Label("", GUI.skin.horizontalSlider);
+		GUILayout.Space(10f);
+
+		EditorGUILayout.BeginHorizontal();
 		GUILayout.Label("Log", EditorStyles.boldLabel);
+		GUILayout.FlexibleSpace();
+		if (GUILayout.Button("Clear Log", EditorStyles.miniButton))
+		{
+			action = GuiAction.ClearLog;
+		}
+		EditorGUILayout.EndHorizontal();
 
+		debugLogScroll = EditorGUILayout.BeginScrollView(debugLogScroll, EditorStyles.helpBox, GUILayout.ExpandHeight(true));
 		if (!string.IsNullOrEmpty(toolLog))
 		{
-			debugLogScroll = EditorGUILayout.BeginScrollView(debugLogScroll, GUILayout.ExpandHeight(true));
-			EditorGUILayout.SelectableLabel(toolLog, logBoxStyle, GUILayout.Height(logBoxSize.y + logBoxSpacing));
-			EditorGUILayout.EndScrollView();
+			EditorGUILayout.SelectableLabel(toolLog, logBoxStyle, GUILayout.Height(logBoxSize.y));
 		}
+		EditorGUILayout.EndScrollView();
+
+		EditorGUILayout.EndVertical();
 	}
 
 	private void Update()
@@ -323,32 +410,23 @@ public class OVRBundleTool : EditorWindow
 				OpenBuildSettingsWindow();
 				break;
 			case GuiAction.BuildAndDeployScenes:
-				// Check the latest transition apk status
-				CheckForTransitionAPK();
-				// Show a dialog to prompt for building and deploying transition APK
-				if (currentApkStatus != ApkStatus.OK &&
-					EditorUtility.DisplayDialog("Build and Deploy OVR Transition APK?",
-							"OVR Transition APK status not ready, it is required to load your scene bundle for quick preview.",
-							"Yes",
-							"No"))
-				{
-					PrintLog("Building OVR Transition APK");
-					OVRBundleManager.BuildDeployTransitionAPK(useOptionalTransitionApkPackage);
-					CheckForTransitionAPK();
-				}
-
-				for (int i = 0; i < buildableScenes.Count; i++)
-				{
-					buildableScenes[i].buildStatus = SceneBundleStatus.QUEUED;
-				}
 				OVRBundleManager.BuildDeployScenes(buildableScenes, forceRestart);
+				CheckForDeployedScenes();
 				break;
 			case GuiAction.BuildAndDeployApp:
-				OVRBundleManager.BuildDeployTransitionAPK(useOptionalTransitionApkPackage);
+				OVRBundleManager.BuildDeployTransitionAPK();
 				CheckForTransitionAPK();
+				if (deployScenesWhenDeployingApk)
+				{
+					buildableScenes.ForEach(x => x.shouldDeploy = true);
+					OVRBundleManager.BuildDeployScenes(buildableScenes, false);
+					CheckForDeployedScenes();
+				}
+				OVRBundleManager.LaunchApplication();
 				break;
 			case GuiAction.ClearDeviceBundles:
 				OVRBundleManager.DeleteRemoteAssetBundles();
+				CheckForDeployedScenes();
 				break;
 			case GuiAction.ClearLocalBundles:
 				OVRBundleManager.DeleteLocalAssetBundles();
@@ -359,6 +437,7 @@ public class OVRBundleTool : EditorWindow
 			case GuiAction.UninstallApk:
 				OVRBundleManager.UninstallAPK();
 				CheckForTransitionAPK();
+				CheckForDeployedScenes();
 				break;
 			case GuiAction.ClearLog:
 				PrintLog("", true);
@@ -377,6 +456,11 @@ public class OVRBundleTool : EditorWindow
 
 	public static void UpdateSceneBuildStatus(SceneBundleStatus status, int index = -1)
 	{
+		if (buildableScenes == null)
+		{
+			return;
+		}
+		
 		if (index >= 0 && index < buildableScenes.Count)
 		{
 			buildableScenes[index].buildStatus = status;
@@ -480,6 +564,24 @@ public class OVRBundleTool : EditorWindow
 		}
 	}
 
+	private static void CheckForDeployedScenes()
+	{
+		if (buildableScenes == null) return;
+		UpdateSceneBuildStatus(SceneBundleStatus.UNKNOWN);
+
+		string[] deployedBundleNames = OVRBundleManager.ListRemoteAssetBundleNames();
+		if (deployedBundleNames == null) return;
+
+		for (int i = 0; i < buildableScenes.Count; ++i)
+		{
+			string sceneBundleName = "scene_" + buildableScenes[i].sceneName;
+			if (Array.FindIndex(deployedBundleNames, x => x.Equals(sceneBundleName, StringComparison.CurrentCultureIgnoreCase)) != -1)
+			{
+				UpdateSceneBuildStatus(SceneBundleStatus.DEPLOYED, i);
+			}
+		}
+	}
+
 	public static void PrintLog(string message, bool clear = false)
 	{
 		if (clear)
@@ -491,10 +593,13 @@ public class OVRBundleTool : EditorWindow
 			toolLog += message + "\n";
 		}
 
-		GUIContent logContent = new GUIContent(toolLog);
-		logBoxSize = logBoxStyle.CalcSize(logContent);
+		if (logBoxStyle != null)
+		{
+			GUIContent logContent = new GUIContent(toolLog);
+			logBoxSize = logBoxStyle.CalcSize(logContent);
 
-		debugLogScroll.y = logBoxSize.y + logBoxSpacing;
+			debugLogScroll.y = float.MaxValue; //scroll to bottom on new data
+		}
 	}
 
 	public static void PrintError(string error = "")

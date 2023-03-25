@@ -8,12 +8,18 @@ namespace Oculus.Platform.Models
   using System.Collections.Generic;
   using UnityEngine;
 
+  /// DEPRECATED. Will be removed from headers at version v51.
   public class MatchmakingAdminSnapshotCandidate
   {
+    /// DEPRECATED. Will be removed from headers at version v51.
     public readonly bool CanMatch;
+    /// DEPRECATED. Will be removed from headers at version v51.
     public readonly double MyTotalScore;
+    /// DEPRECATED. Will be removed from headers at version v51.
     public readonly double TheirCurrentThreshold;
+    /// DEPRECATED. Will be removed from headers at version v51.
     public readonly double TheirTotalScore;
+    /// DEPRECATED. Will be removed from headers at version v51.
     public readonly string TraceId;
 
 

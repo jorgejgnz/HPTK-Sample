@@ -1,20 +1,28 @@
-/************************************************************************************
-Copyright : Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ * All rights reserved.
+ *
+ * Licensed under the Oculus SDK License Agreement (the "License");
+ * you may not use the Oculus SDK except in compliance with the License,
+ * which is provided at the time of installation or download, or which
+ * otherwise accompanies this software in either electronic or hard copy form.
+ *
+ * You may obtain a copy of the License at
+ *
+ * https://developer.oculus.com/licenses/oculussdk/
+ *
+ * Unless required by applicable law or agreed to in writing, the Oculus SDK
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-Your use of this SDK or tool is subject to the Oculus SDK License Agreement, available at
-https://developer.oculus.com/licenses/oculussdk/
-
-Unless required by applicable law or agreed to in writing, the Utilities SDK distributed
-under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
-ANY KIND, either express or implied. See the License for the specific language governing
-permissions and limitations under the License.
-************************************************************************************/
-
-using System.Collections;
-using System.Collections.Generic;
+using Unity.Collections;
+using Unity.Jobs;
 using UnityEngine;
+using UnityEngine.Rendering;
 
-[DefaultExecutionOrder(-80)]
 public class OVRMesh : MonoBehaviour
 {
 	public interface IOVRMeshDataProvider
@@ -88,56 +96,67 @@ public class OVRMesh : MonoBehaviour
 	private void Initialize(MeshType meshType)
 	{
 		_mesh = new Mesh();
-
-		var ovrpMesh = new OVRPlugin.Mesh();
-		if (OVRPlugin.GetMesh((OVRPlugin.MeshType)_meshType, out ovrpMesh))
+		if (OVRPlugin.GetMesh((OVRPlugin.MeshType)_meshType, out var ovrpMesh))
 		{
-			var vertices = new Vector3[ovrpMesh.NumVertices];
-			for (int i = 0; i < ovrpMesh.NumVertices; ++i)
-			{
-				vertices[i] = ovrpMesh.VertexPositions[i].FromFlippedXVector3f();
-			}
-			_mesh.vertices = vertices;
-
-			var uv = new Vector2[ovrpMesh.NumVertices];
-			for (int i = 0; i < ovrpMesh.NumVertices; ++i)
-			{
-				uv[i] = new Vector2(ovrpMesh.VertexUV0[i].x, -ovrpMesh.VertexUV0[i].y);
-			}
-			_mesh.uv = uv;
-
-			var triangles = new int[ovrpMesh.NumIndices];
-			for (int i = 0; i < ovrpMesh.NumIndices; ++i)
-			{
-				triangles[i] = ovrpMesh.Indices[ovrpMesh.NumIndices - i - 1];
-			}
-			_mesh.triangles = triangles;
-
-			var normals = new Vector3[ovrpMesh.NumVertices];
-			for (int i = 0; i < ovrpMesh.NumVertices; ++i)
-			{
-				normals[i] = ovrpMesh.VertexNormals[i].FromFlippedXVector3f();
-			}
-			_mesh.normals = normals;
-
-			var boneWeights = new BoneWeight[ovrpMesh.NumVertices];
-			for (int i = 0; i < ovrpMesh.NumVertices; ++i)
-			{
-				var currentBlendWeight = ovrpMesh.BlendWeights[i];
-				var currentBlendIndices = ovrpMesh.BlendIndices[i];
-
-				boneWeights[i].boneIndex0 = (int)currentBlendIndices.x;
-				boneWeights[i].weight0 = currentBlendWeight.x;
-				boneWeights[i].boneIndex1 = (int)currentBlendIndices.y;
-				boneWeights[i].weight1 = currentBlendWeight.y;
-				boneWeights[i].boneIndex2 = (int)currentBlendIndices.z;
-				boneWeights[i].weight2 = currentBlendWeight.z;
-				boneWeights[i].boneIndex3 = (int)currentBlendIndices.w;
-				boneWeights[i].weight3 = currentBlendWeight.w;
-			}
-			_mesh.boneWeights = boneWeights;
-
+			TransformOvrpMesh(ovrpMesh, _mesh);
 			IsInitialized = true;
+		}
+	}
+
+	private void TransformOvrpMesh(OVRPlugin.Mesh ovrpMesh, Mesh mesh)
+	{
+		int numVertices = (int)ovrpMesh.NumVertices;
+		int numIndices = (int)ovrpMesh.NumIndices;
+
+		using (var verticesNativeArray =
+		       new OVRMeshJobs.NativeArrayHelper<OVRPlugin.Vector3f>(ovrpMesh.VertexPositions, numVertices))
+		using (var normalsNativeArray =
+		       new OVRMeshJobs.NativeArrayHelper<OVRPlugin.Vector3f>(ovrpMesh.VertexNormals, numVertices))
+		using (var uvNativeArray =
+		       new OVRMeshJobs.NativeArrayHelper<OVRPlugin.Vector2f>(ovrpMesh.VertexUV0, numVertices))
+		using (var weightsNativeArray =
+		       new OVRMeshJobs.NativeArrayHelper<OVRPlugin.Vector4f>(ovrpMesh.BlendWeights, numVertices))
+		using (var indicesNativeArray =
+		       new OVRMeshJobs.NativeArrayHelper<OVRPlugin.Vector4s>(ovrpMesh.BlendIndices, numVertices))
+		using (var trianglesNativeArray = new OVRMeshJobs.NativeArrayHelper<short>(ovrpMesh.Indices, numIndices))
+		using (var vertices = new NativeArray<Vector3>(numVertices, Allocator.TempJob))
+		using (var normals = new NativeArray<Vector3>(numVertices, Allocator.TempJob))
+		using (var uv = new NativeArray<Vector2>(numVertices, Allocator.TempJob))
+		using (var boneWeights = new NativeArray<BoneWeight>(numVertices, Allocator.TempJob))
+		using (var triangles = new NativeArray<uint>(numIndices, Allocator.TempJob))
+		{
+			var job = new OVRMeshJobs.TransformToUnitySpaceJob
+			{
+				Vertices = vertices,
+				Normals = normals,
+				UV = uv,
+				BoneWeights = boneWeights,
+				MeshVerticesPosition = verticesNativeArray.UnityNativeArray,
+				MeshNormals = normalsNativeArray.UnityNativeArray,
+				MeshUV = uvNativeArray.UnityNativeArray,
+				MeshBoneWeights = weightsNativeArray.UnityNativeArray,
+				MeshBoneIndices = indicesNativeArray.UnityNativeArray
+			};
+
+			var jobTransformTriangle = new OVRMeshJobs.TransformTrianglesJob
+			{
+				Triangles = triangles,
+				MeshIndices = trianglesNativeArray.UnityNativeArray,
+				NumIndices = numIndices
+			};
+
+			var handle = job.Schedule(numVertices, 20);
+			var handleTriangleJob = jobTransformTriangle.Schedule(numIndices, 60);
+			JobHandle.CombineDependencies(handle, handleTriangleJob).Complete();
+
+			mesh.SetVertices(job.Vertices);
+			mesh.SetNormals(job.Normals);
+			mesh.SetUVs(0, job.UV);
+			mesh.boneWeights = job.BoneWeights.ToArray();
+
+			mesh.SetIndexBufferParams(numIndices, IndexFormat.UInt32);
+			mesh.SetIndexBufferData(jobTransformTriangle.Triangles, 0, 0, numIndices);
+			mesh.SetSubMesh(0, new SubMeshDescriptor(0, numIndices));
 		}
 	}
 
@@ -150,5 +169,4 @@ public class OVRMesh : MonoBehaviour
 		}
 	}
 #endif
-
 }

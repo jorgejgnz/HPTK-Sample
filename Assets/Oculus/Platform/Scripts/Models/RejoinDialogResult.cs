@@ -10,6 +10,7 @@ namespace Oculus.Platform.Models
 
   public class RejoinDialogResult
   {
+    /// A boolean for if the user decided to rejoin.
     public readonly bool RejoinSelected;
 
 

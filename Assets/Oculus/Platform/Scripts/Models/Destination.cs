@@ -10,7 +10,12 @@ namespace Oculus.Platform.Models
 
   public class Destination
   {
+    /// Pass it into RichPresenceOptions.SetApiName()() when calling
+    /// RichPresence.Set() to set this user's rich presence
     public readonly string ApiName;
+    /// The information that will be in LaunchDetails.GetDeeplinkMessage() when a
+    /// user enters via a deeplink. Alternatively will be in
+    /// User.GetPresenceDeeplinkMessage() if the rich presence is set for the user.
     public readonly string DeeplinkMessage;
     public readonly string DisplayName;
 

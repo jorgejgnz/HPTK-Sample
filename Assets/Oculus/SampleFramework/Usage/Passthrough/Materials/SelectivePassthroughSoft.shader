@@ -35,7 +35,7 @@ Shader "MixedReality/SelectivePassthroughSoft" {
       };
 
       sampler2D _MainTex;
-      sampler2D _CameraDepthTexture;
+      UNITY_DECLARE_DEPTH_TEXTURE(_CameraDepthTexture);
       float4 _MainTex_ST;
       float _SoftFade;
       float _Inflation;

@@ -10,6 +10,7 @@ namespace Oculus.Platform.Models
 
   public class LaunchInvitePanelFlowResult
   {
+    /// A list of users that were sent an invitation to the session.
     public readonly UserList InvitedUsers;
 
 

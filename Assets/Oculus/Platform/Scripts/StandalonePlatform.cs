@@ -2,7 +2,7 @@ namespace Oculus.Platform
 {
   using UnityEngine;
   using System;
-  using System.Collections;
+  using System.Collections.Generic;
   using System.Runtime.InteropServices;
 
   public sealed class StandalonePlatform
@@ -40,6 +40,13 @@ namespace Oculus.Platform
       CAPI.ovr_UnityInitGlobals(IntPtr.Zero);
 
       return new Request<Models.PlatformInitialize>(CAPI.ovr_PlatformInitializeWithAccessToken(appID, accessToken));
+    }
+
+    public Request<Models.PlatformInitialize> AsyncInitializeWithAccessTokenAndOptions(string appId, string accessToken, Dictionary<InitConfigOptions, bool> initConfigOptions)
+    {
+      var configCount = (UIntPtr)initConfigOptions.Count;
+      var configPairs = CAPI.DictionaryToOVRKeyValuePairs(initConfigOptions);
+      return new Request<Models.PlatformInitialize>(CAPI.ovr_PlatformInitializeWithAccessTokenAndOptions(UInt64.Parse(appId), accessToken, configPairs, configCount));
     }
   }
 }

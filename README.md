@@ -9,12 +9,12 @@ Clone this repository. To do this, open a command line terminal, rooted on the A
 
 Then clone using this command *git clone https://github.com/jorgejgnz/HPTK-Sample*
 
-    This repository is using HPTK as a UPM package.
+    This repository is using HPTK as UPM package.
 
 # Current setup
-- [HPTK](https://github.com/jorgejgnz/HPTK) V0.6.0
-- [Oculus Integration](https://assetstore.unity.com/packages/tools/integration/oculus-integration-82022) v34.0
-- Unity 2020.3.8f1 LTS
+- [HPTK](https://github.com/jorgejgnz/HPTK) V0.6.6
+- [Oculus Integration](https://assetstore.unity.com/packages/tools/integration/oculus-integration-82022) v50.0
+- Unity 2021.3.12f1 LTS
 
 # Author
 **Jorge Juan González** - *HCI Researcher at I3A (University of Castilla-La Mancha)*

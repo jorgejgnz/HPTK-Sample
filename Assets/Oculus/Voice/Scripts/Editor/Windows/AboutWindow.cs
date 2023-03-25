@@ -1,54 +1,49 @@
-﻿/**************************************************************************************************
- * Copyright : Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
+﻿/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ * All rights reserved.
  *
- * Your use of this SDK or tool is subject to the Oculus SDK License Agreement, available at
+ * Licensed under the Oculus SDK License Agreement (the "License");
+ * you may not use the Oculus SDK except in compliance with the License,
+ * which is provided at the time of installation or download, or which
+ * otherwise accompanies this software in either electronic or hard copy form.
+ *
+ * You may obtain a copy of the License at
+ *
  * https://developer.oculus.com/licenses/oculussdk/
  *
- * Unless required by applicable law or agreed to in writing, the Utilities SDK distributed
- * under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
- * ANY KIND, either express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
- **************************************************************************************************/
+ * Unless required by applicable law or agreed to in writing, the Oculus SDK
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-using System;
-using Facebook.WitAi;
+using Meta.WitAi;
+using Meta.WitAi.Windows;
 using Oculus.Voice.Utility;
-using UnityEditor;
 using UnityEngine;
 
 namespace Oculus.Voice.Windows
 {
-    public class AboutWindow : VoiceSDKWizardWindow
+    public class AboutWindow : WitScriptableWizard
     {
-        protected override float ContentHeight => EditorGUIUtility.singleLineHeight * 4 + 16 + 100;
+        protected override Texture2D HeaderIcon => VoiceSDKStyles.MainHeader;
+        protected override GUIContent Title => VoiceSDKStyles.AboutTitle;
+        protected override string ButtonLabel => VoiceSDKStyles.Texts.AboutCloseLabel;
+        protected override string ContentSubheaderLabel => string.Empty;
 
-        [MenuItem("Oculus/Voice SDK/About", false, 200)]
-        static void CreateWizard()
+        protected override void LayoutFields()
         {
-            ScriptableWizard.DisplayWizard<AboutWindow>("About Voice SDK", "Close");
-        }
-
-        protected override bool DrawWizardGUI()
-        {
-            base.DrawWizardGUI();
-
-            GUILayout.Label("Voice SDK Version: " + VoiceSDKVersion.VERSION);
-            GUILayout.Label("Wit.ai SDK Version: " + WitRequest.WIT_SDK_VERSION);
-            GUILayout.Label("Wit.ai API Version: " + WitRequest.WIT_API_VERSION);
+            WitEditorUI.LayoutKeyLabel(VoiceSDKStyles.Texts.AboutVoiceSdkVersionLabel, VoiceSDKVersion.VERSION);
+            WitEditorUI.LayoutKeyLabel(VoiceSDKStyles.Texts.AboutWitSdkVersionLabel, WitConstants.SDK_VERSION);
+            WitEditorUI.LayoutKeyLabel(VoiceSDKStyles.Texts.AboutWitApiVersionLabel, WitConstants.API_VERSION);
 
             GUILayout.Space(16);
 
-            if (GUILayout.Button("Tutorials"))
+            if (GUILayout.Button(VoiceSDKStyles.Texts.AboutTutorialButtonLabel, WitStyles.TextButton))
             {
-                Application.OpenURL("https://developer.oculus.com/experimental/voice-sdk/tutorial-overview/");
+                Application.OpenURL(VoiceSDKStyles.Texts.AboutTutorialButtonUrl);
             }
-
-            return false;
-        }
-
-        private void OnWizardCreate()
-        {
-
         }
     }
 }

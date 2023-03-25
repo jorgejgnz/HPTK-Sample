@@ -11,7 +11,9 @@ namespace Oculus.Platform.Models
   public class NetSyncConnection
   {
     public readonly long ConnectionId;
+    /// If status is Disconnected, specifies the reason.
     public readonly NetSyncDisconnectReason DisconnectReason;
+    /// The ID of the local session. Will be null if the connection is not active
     public readonly UInt64 SessionId;
     public readonly NetSyncConnectionStatus Status;
     public readonly string ZoneId;

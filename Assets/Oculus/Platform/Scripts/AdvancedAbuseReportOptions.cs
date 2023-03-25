@@ -14,6 +14,14 @@ namespace Oculus.Platform
       Handle = CAPI.ovr_AdvancedAbuseReportOptions_Create();
     }
 
+    public void SetDeveloperDefinedContext(string key, string value) {
+      CAPI.ovr_AdvancedAbuseReportOptions_SetDeveloperDefinedContextString(Handle, key, value);
+    }
+
+    public void ClearDeveloperDefinedContext() {
+      CAPI.ovr_AdvancedAbuseReportOptions_ClearDeveloperDefinedContext(Handle);
+    }
+
     /// If report_type is content, a string representing the type of content being
     /// reported. This should correspond to the object_type string used in the UI
     public void SetObjectType(string value) {
@@ -22,6 +30,14 @@ namespace Oculus.Platform
 
     public void SetReportType(AbuseReportType value) {
       CAPI.ovr_AdvancedAbuseReportOptions_SetReportType(Handle, value);
+    }
+
+    public void AddSuggestedUser(UInt64 userID) {
+      CAPI.ovr_AdvancedAbuseReportOptions_AddSuggestedUser(Handle, userID);
+    }
+
+    public void ClearSuggestedUsers() {
+      CAPI.ovr_AdvancedAbuseReportOptions_ClearSuggestedUsers(Handle);
     }
 
     public void SetVideoMode(AbuseReportVideoMode value) {

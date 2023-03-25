@@ -1,8 +1,4 @@
-/************************************************************************************
-
-Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.  
-
-************************************************************************************/
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
 
 using UnityEngine;
 using System;

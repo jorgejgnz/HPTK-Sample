@@ -19,7 +19,6 @@ public class PassthroughStyler : MonoBehaviour
     Color savedColor = Color.white;
     float savedBrightness = 0.0f;
     float savedContrast = 0.0f;
-    float savedPosterize = 0.0f;
 
     public CanvasGroup mainCanvas;
 
@@ -36,6 +35,7 @@ public class PassthroughStyler : MonoBehaviour
         savedColor = new Color(1, 1, 1, 0);
         ShowFullMenu(false);
         mainCanvas.interactable = false;
+        passthroughLayer.colorMapEditorType = OVRPassthroughLayer.ColorMapEditorType.ColorAdjustment;
     }
 
     void Update()
@@ -79,7 +79,6 @@ public class PassthroughStyler : MonoBehaviour
         float timer = 0.0f;
         float brightness = passthroughLayer.colorMapEditorBrightness;
         float contrast = passthroughLayer.colorMapEditorContrast;
-        float posterize = passthroughLayer.colorMapEditorPosterize;
         Color edgeCol = new Color(savedColor.r, savedColor.g, savedColor.b, 0.0f);
         passthroughLayer.edgeRenderingEnabled = true;
         while (timer <= fadeTime)
@@ -88,7 +87,6 @@ public class PassthroughStyler : MonoBehaviour
             float normTimer = Mathf.Clamp01(timer / fadeTime);
             passthroughLayer.colorMapEditorBrightness = Mathf.Lerp(brightness, savedBrightness, normTimer);
             passthroughLayer.colorMapEditorContrast = Mathf.Lerp(contrast, savedContrast, normTimer);
-            passthroughLayer.colorMapEditorPosterize = Mathf.Lerp(posterize, savedPosterize, normTimer);
             passthroughLayer.edgeColor = Color.Lerp(edgeCol, savedColor, normTimer);
             yield return null;
         }
@@ -99,7 +97,6 @@ public class PassthroughStyler : MonoBehaviour
         float timer = 0.0f;
         float brightness = passthroughLayer.colorMapEditorBrightness;
         float contrast = passthroughLayer.colorMapEditorContrast;
-        float posterize = passthroughLayer.colorMapEditorPosterize;
         Color edgeCol = passthroughLayer.edgeColor;
         while (timer <= fadeTime)
         {
@@ -107,7 +104,6 @@ public class PassthroughStyler : MonoBehaviour
             float normTimer = Mathf.Clamp01(timer / fadeTime);
             passthroughLayer.colorMapEditorBrightness = Mathf.Lerp(brightness, 0.0f, normTimer);
             passthroughLayer.colorMapEditorContrast = Mathf.Lerp(contrast, 0.0f, normTimer);
-            passthroughLayer.colorMapEditorPosterize = Mathf.Lerp(posterize, 0.0f, normTimer);
             passthroughLayer.edgeColor = Color.Lerp(edgeCol, new Color(edgeCol.r, edgeCol.g, edgeCol.b, 0.0f), normTimer);
             if (timer > fadeTime)
             {
@@ -127,12 +123,6 @@ public class PassthroughStyler : MonoBehaviour
     {
         savedContrast = newValue;
         passthroughLayer.colorMapEditorContrast = savedContrast;
-    }
-
-    public void OnPosterizeChanged(float newValue)
-    {
-        savedPosterize = newValue;
-        passthroughLayer.colorMapEditorPosterize = savedPosterize;
     }
 
     public void OnAlphaChanged(float newValue)

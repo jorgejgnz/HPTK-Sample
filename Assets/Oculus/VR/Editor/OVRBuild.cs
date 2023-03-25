@@ -1,25 +1,24 @@
-/************************************************************************************
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ * All rights reserved.
+ *
+ * Licensed under the Oculus SDK License Agreement (the "License");
+ * you may not use the Oculus SDK except in compliance with the License,
+ * which is provided at the time of installation or download, or which
+ * otherwise accompanies this software in either electronic or hard copy form.
+ *
+ * You may obtain a copy of the License at
+ *
+ * https://developer.oculus.com/licenses/oculussdk/
+ *
+ * Unless required by applicable law or agreed to in writing, the Oculus SDK
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
-
-Licensed under the Oculus SDK License Version 3.4.1 (the "License");
-you may not use the Oculus SDK except in compliance with the License,
-which is provided at the time of installation or download, or which
-otherwise accompanies this software in either electronic or hard copy form.
-
-You may obtain a copy of the License at
-
-https://developer.oculus.com/licenses/sdk-3.4.1
-
-Unless required by applicable law or agreed to in writing, the Oculus SDK
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
-************************************************************************************/
-
-#if USING_XR_MANAGEMENT && USING_XR_SDK_OCULUS
+#if USING_XR_MANAGEMENT && (USING_XR_SDK_OCULUS || USING_XR_SDK_OPENXR)
 #define USING_XR_SDK
 #endif
 
@@ -47,38 +46,6 @@ using System.Threading;
 [InitializeOnLoadAttribute]
 partial class OculusBuildApp : EditorWindow
 {
-    static OculusBuildApp()
-    {
-        EditorApplication.playModeStateChanged += PlayModeStateChanged;
-        EditorApplication.delayCall += OnDelayCall;
-    }
-
-    private const string buildTelemetryName = "Oculus/OVR Build/Enable Oculus Build Telemetry";
-    private static bool buildTelemetryEnabled = false;
-    static void OnDelayCall()
-    {
-#if UNITY_EDITOR_WIN && UNITY_ANDROID
-        buildTelemetryEnabled = GetBuildTelemetryEnabled();
-        Menu.SetChecked(buildTelemetryName, buildTelemetryEnabled);
-#endif
-    }
-
-    public static bool GetBuildTelemetryEnabled()
-    {
-        bool enabled = false;
-        if (EditorPrefs.HasKey("OVRBuild_BuildTelemetry"))
-        {
-            enabled = EditorPrefs.GetBool("OVRBuild_BuildTelemetry");
-        }
-        return enabled;
-    }
-
-    private static void PlayModeStateChanged(PlayModeStateChange state)
-    {
-        if (state == PlayModeStateChange.ExitingEditMode)
-            OVRPlugin.SetDeveloperMode(OVRPlugin.Bool.False);
-    }
-
     static void SetPCTarget()
     {
         if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.StandaloneWindows)
@@ -111,15 +78,6 @@ partial class OculusBuildApp : EditorWindow
 #pragma warning restore 618
 #endif
         AssetDatabase.SaveAssets();
-    }
-
-
-    public static void SendBuildEvent(string name, string param, string source = "")
-    {
-        if (buildTelemetryEnabled)
-        {
-            OVRPlugin.SendEvent(name, param, source);
-        }
     }
 
 #if UNITY_EDITOR_WIN && UNITY_ANDROID
@@ -160,8 +118,6 @@ partial class OculusBuildApp : EditorWindow
     static string gradleExport;
     static bool showCancel;
     static bool buildInProgress;
-
-    static double totalBuildTime;
 
     static DirectorySyncer.CancellationTokenSource syncCancelToken;
     static Process gradleBuildProcess;
@@ -452,43 +408,13 @@ partial class OculusBuildApp : EditorWindow
         OnBuildComplete();
     }
 
-    [MenuItem(buildTelemetryName, false, 30)]
-    static void ToggleBuildTelemetry()
-    {
-        bool enabled = GetBuildTelemetryEnabled();
-        if (!enabled)
-        {
-            enabled = EditorUtility.DisplayDialog("Enable Oculus Build Telemetry",
-                "Enables detailed timing for the major build steps. This measures time spent in each build stage and transmits the time spent per stage to Oculus. " +
-                "This information is used by Oculus to guide work related to optimizing the build process.", "Enable", "Cancel");
-        }
-        else
-        {
-            enabled = false;
-        }
-
-        EditorPrefs.SetBool("OVRBuild_BuildTelemetry", enabled);
-        Menu.SetChecked(buildTelemetryName, enabled);
-        buildTelemetryEnabled = enabled;
-    }
-
     public void StartBuild()
     {
         showCancel = false;
         buildInProgress = true;
-        totalBuildTime = 0;
 
         InitializeProgressBar(NUM_BUILD_AND_RUN_STEPS);
         IncrementProgressBar("Exporting Unity Project . . .");
-
-        if (buildTelemetryEnabled)
-        {
-            OVRPlugin.SetDeveloperMode(OVRPlugin.Bool.True);
-            OVRPlugin.AddCustomMetadata("build_type", "ovr_build_and_run");
-        }
-
-        // Record OVR Build and Run start event
-        SendBuildEvent("ovr_build_and_run_start", "", "ovrbuild");
 
         apkOutputSuccessful = null;
         syncCancelToken = null;
@@ -503,24 +429,6 @@ partial class OculusBuildApp : EditorWindow
 
         if (buildResult.summary.result == UnityEditor.Build.Reporting.BuildResult.Succeeded)
         {
-            foreach (var step in buildResult.steps)
-            {
-                // Only log top level build steps & specific nested steps to reduce the number of events sent
-                if (step.depth == 1 ||
-                    (step.name.StartsWith("Packaging assets") && step.name.EndsWith(".assets")) ||
-                    step.name.Equals("Managed Stripping: (Mono)") ||
-                    step.name.Equals("Splitting assets") ||
-                    step.name.Equals("IL2CPP") ||
-                    step.name.Equals("Exporting project")
-                    )
-                {
-                    SendBuildEvent($"build_step_unity_build_player {step.name}", step.duration.TotalSeconds.ToString(), "ovrbuild");
-                }
-            }
-
-            SendBuildEvent("build_step_unity_export", buildResult.summary.totalTime.TotalSeconds.ToString(), "ovrbuild");
-            totalBuildTime += buildResult.summary.totalTime.TotalSeconds;
-
             // Set static variables so build thread has updated data
             showCancel = true;
             gradlePath = OVRConfig.Instance.GetGradlePath();
@@ -627,7 +535,6 @@ partial class OculusBuildApp : EditorWindow
             IncrementProgressBar("Starting gradle build . . .");
             if (BuildGradleProject())
             {
-                SendBuildEvent("build_complete", totalBuildTime.ToString(), "ovrbuild");
                 CopyAPK();
 
                 // 4. Deploy and run
@@ -738,14 +645,6 @@ partial class OculusBuildApp : EditorWindow
             System.Threading.Thread.Sleep(100);
         }
 
-        // Record time it takes to build gradle project only if we had a successful build
-        double gradleTime = (gradleEndTime - gradleStartTime).TotalSeconds;
-        if (gradleTime > 0)
-        {
-            SendBuildEvent("build_step_building_gradle_project", gradleTime.ToString(), "ovrbuild");
-            totalBuildTime += gradleTime;
-        }
-
         return apkOutputSuccessful.HasValue && apkOutputSuccessful.Value;
     }
 
@@ -777,14 +676,6 @@ partial class OculusBuildApp : EditorWindow
         if (syncCancelToken.IsCancellationRequested)
         {
             return false;
-        }
-
-        // Record time it takes to sync gradle projects only if the sync was successful
-        double syncTime = (syncEndTime - syncStartTime).TotalSeconds;
-        if (syncTime > 0)
-        {
-            SendBuildEvent("build_step_sync_gradle_project", syncTime.ToString(), "ovrbuild");
-            totalBuildTime += syncTime;
         }
 
         return true;
@@ -899,14 +790,6 @@ partial class OculusBuildApp : EditorWindow
             if (adbTool.RunCommand(appStartCommand, null, out output, out error) != 0) return false;
             UnityEngine.Debug.Log("OVRADBTool: Application Start Success");
 
-            // Send back metrics on push and install steps
-            if (transferSpeed.HasValue)
-            {
-                OVRPlugin.AddCustomMetadata("transfer_speed", transferSpeed.Value.ToString());
-            }
-            SendBuildEvent("build_step_push_apk", pushTime.TotalSeconds.ToString(), "ovrbuild");
-            SendBuildEvent("build_step_install_apk", installTime.TotalSeconds.ToString(), "ovrbuild");
-
             IncrementProgressBar("Success!");
 
             // If the user is using a USB 2.0 cable, inform them about improved transfer speeds and estimate time saved
@@ -943,13 +826,11 @@ partial class OculusBuildApp : EditorWindow
             List<string> devices = adbTool.GetDevices();
             if (devices.Count == 0)
             {
-                SendBuildEvent("no_adb_devices", "", "ovrbuild");
                 UnityEngine.Debug.LogError("No ADB devices connected. Connect a device to this computer to run APK.");
                 return false;
             }
             else if (devices.Count > 1)
             {
-                SendBuildEvent("multiple_adb_devices", "", "ovrbuild");
                 UnityEngine.Debug.LogError("Multiple ADB devices connected. Disconnect extra devices from this computer to run APK.");
                 return false;
             }
@@ -961,7 +842,6 @@ partial class OculusBuildApp : EditorWindow
         }
         else
         {
-            SendBuildEvent("ovr_adbtool_initialize_failure", "", "ovrbuild");
             UnityEngine.Debug.LogError("OVR ADB Tool failed to initialize. Check the Android SDK path in [Edit -> Preferences -> External Tools]");
             return false;
         }

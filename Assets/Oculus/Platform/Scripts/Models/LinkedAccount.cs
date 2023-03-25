@@ -10,8 +10,11 @@ namespace Oculus.Platform.Models
 
   public class LinkedAccount
   {
+    /// Access token of the linked account.
     public readonly string AccessToken;
+    /// Service provider with which the linked account is associated.
     public readonly ServiceProvider ServiceProvider;
+    /// User ID of the linked account.
     public readonly string UserId;
 
 

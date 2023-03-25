@@ -10,38 +10,62 @@ namespace Oculus.Platform.Models
   using System.Collections.Generic;
   using UnityEngine;
 
+  /// DEPRECATED. Will be removed from headers at version v51.
   public class Room
   {
+    /// DEPRECATED. Will be removed from headers at version v51.
     public readonly UInt64 ApplicationID;
+    /// DEPRECATED. Will be removed from headers at version v51.
     public readonly Dictionary<string, string> DataStore;
+    /// DEPRECATED. Will be removed from headers at version v51.
     public readonly string Description;
+    /// DEPRECATED. Will be removed from headers at version v51.
     public readonly UInt64 ID;
+    /// DEPRECATED. Will be removed from headers at version v51.
+    ///
+    /// A list of users that have been invited to the room, but have not joined the
+    /// room yet.
     // May be null. Check before using.
     public readonly UserList InvitedUsersOptional;
     [Obsolete("Deprecated in favor of InvitedUsersOptional")]
     public readonly UserList InvitedUsers;
+    /// DEPRECATED. Will be removed from headers at version v51.
     public readonly bool IsMembershipLocked;
+    /// DEPRECATED. Will be removed from headers at version v51.
     public readonly RoomJoinPolicy JoinPolicy;
+    /// DEPRECATED. Will be removed from headers at version v51.
     public readonly RoomJoinability Joinability;
+    /// DEPRECATED. Will be removed from headers at version v51.
+    ///
+    /// If this is a matchmaking room, it contains all users matched into the room,
+    /// including the host as well as users enqueued by someone else. Also includes
+    /// additional per-user matchmaking metadata.
     // May be null. Check before using.
     public readonly MatchmakingEnqueuedUserList MatchedUsersOptional;
     [Obsolete("Deprecated in favor of MatchedUsersOptional")]
     public readonly MatchmakingEnqueuedUserList MatchedUsers;
+    /// DEPRECATED. Will be removed from headers at version v51.
     public readonly uint MaxUsers;
+    /// DEPRECATED. Will be removed from headers at version v51.
     public readonly string Name;
+    /// DEPRECATED. Will be removed from headers at version v51.
     // May be null. Check before using.
     public readonly User OwnerOptional;
     [Obsolete("Deprecated in favor of OwnerOptional")]
     public readonly User Owner;
+    /// DEPRECATED. Will be removed from headers at version v51.
     // May be null. Check before using.
     public readonly TeamList TeamsOptional;
     [Obsolete("Deprecated in favor of TeamsOptional")]
     public readonly TeamList Teams;
+    /// DEPRECATED. Will be removed from headers at version v51.
     public readonly RoomType Type;
+    /// DEPRECATED. Will be removed from headers at version v51.
     // May be null. Check before using.
     public readonly UserList UsersOptional;
     [Obsolete("Deprecated in favor of UsersOptional")]
     public readonly UserList Users;
+    /// DEPRECATED. Will be removed from headers at version v51.
     public readonly uint Version;
 
 

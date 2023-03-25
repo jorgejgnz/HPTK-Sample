@@ -8,13 +8,20 @@ namespace Oculus.Platform.Models
   using System.Collections.Generic;
   using UnityEngine;
 
+  /// DEPRECATED. Will be removed from headers at version v51.
   public class MatchmakingStats
   {
+    /// DEPRECATED. Will be removed from headers at version v51.
     public readonly uint DrawCount;
+    /// DEPRECATED. Will be removed from headers at version v51.
     public readonly uint LossCount;
+    /// DEPRECATED. Will be removed from headers at version v51.
     public readonly uint SkillLevel;
+    /// DEPRECATED. Will be removed from headers at version v51.
     public readonly double SkillMean;
+    /// DEPRECATED. Will be removed from headers at version v51.
     public readonly double SkillStandardDeviation;
+    /// DEPRECATED. Will be removed from headers at version v51.
     public readonly uint WinCount;
 
 

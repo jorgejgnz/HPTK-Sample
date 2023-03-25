@@ -1,55 +1,48 @@
-/**************************************************************************************************
- * Copyright : Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ * All rights reserved.
  *
- * Your use of this SDK or tool is subject to the Oculus SDK License Agreement, available at
+ * Licensed under the Oculus SDK License Agreement (the "License");
+ * you may not use the Oculus SDK except in compliance with the License,
+ * which is provided at the time of installation or download, or which
+ * otherwise accompanies this software in either electronic or hard copy form.
+ *
+ * You may obtain a copy of the License at
+ *
  * https://developer.oculus.com/licenses/oculussdk/
  *
- * Unless required by applicable law or agreed to in writing, the Utilities SDK distributed
- * under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
- * ANY KIND, either express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
- **************************************************************************************************/
+ * Unless required by applicable law or agreed to in writing, the Oculus SDK
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-using UnityEngine;
-using Facebook.WitAi.Data.Configuration;
+using UnityEditor;
+using System.Reflection;
+using Meta.WitAi.Windows;
+using Oculus.Voice.Inspectors;
 
 namespace Oculus.Voice.Windows
 {
-    public class VoiceApplicationDetailProvider : IApplicationDetailProvider
+    public class VoiceApplicationDetailProvider : WitApplicationPropertyDrawer
     {
-        public void DrawApplication(WitApplication application)
+        // Skip fields if voice sdk app id
+        protected override bool ShouldLayoutField(SerializedProperty property, FieldInfo subfield)
         {
-            if (string.IsNullOrEmpty(application.name))
+            string appID = GetFieldStringValue(property, "id").ToLower();
+            if (AppVoiceExperienceWitConfigurationEditor.IsBuiltInConfiguration(appID))
             {
-                GUILayout.Label("Loading...");
-            }
-            else
-            {
-                if (application.id.StartsWith("voice"))
+                switch (subfield.Name)
                 {
-                    InfoField("Name", application.name);
-                    InfoField("Language", application.lang);
-                }
-                else
-                {
-                    InfoField("Name", application.name);
-                    InfoField("ID", application.id);
-                    InfoField("Language", application.lang);
-                    InfoField("Created", application.createdAt);
-                    GUILayout.BeginHorizontal();
-                    GUILayout.Label("Private", GUILayout.Width(100));
-                    GUILayout.Toggle(application.isPrivate, "");
-                    GUILayout.EndHorizontal();
+                    case "name":
+                    case "lang":
+                        return true;
+                    default:
+                        return false;
                 }
             }
-        }
-
-        private void InfoField(string name, string value)
-        {
-            GUILayout.BeginHorizontal();
-            GUILayout.Label(name, GUILayout.Width(100));
-            GUILayout.Label(value, "TextField");
-            GUILayout.EndHorizontal();
+            return base.ShouldLayoutField(property, subfield);
         }
     }
 }

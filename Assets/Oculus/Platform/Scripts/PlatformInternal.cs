@@ -14,69 +14,71 @@ namespace Oculus.Platform
   {
     // Keep this enum in sync with ovrMessageTypeInternal in OVR_Platform_Internal.h
     public enum MessageTypeInternal : uint { //TODO - rename this to type; it's already in Message class
-      AbuseReport_LaunchAdvancedReportFlow   = 0x4CB13A6E,
-      Application_ExecuteCoordinatedLaunch   = 0x267DB4F4,
-      Application_GetInstalledApplications   = 0x520F744C,
-      Avatar_UpdateMetaData                  = 0x7BCFD98E,
-      Cal_FinalizeApplication                = 0x1DA9CBD5,
-      Cal_GetSuggestedApplications           = 0x56707015,
-      Cal_ProposeApplication                 = 0x4E83F2DD,
-      Colocation_GetCurrentMapUuid           = 0x34557EB2,
-      Colocation_RequestMap                  = 0x3215666D,
-      Colocation_ShareMap                    = 0x186DC4DD,
-      GraphAPI_Get                           = 0x30FF006E,
-      GraphAPI_Post                          = 0x76A5A7C4,
-      HTTP_Get                               = 0x6FB63223,
-      HTTP_GetToFile                         = 0x4E81DC59,
-      HTTP_MultiPartPost                     = 0x5842D210,
-      HTTP_Post                              = 0x6B36A54F,
-      Livestreaming_IsAllowedForApplication  = 0x0B6D8D76,
-      Livestreaming_StartPartyStream         = 0x7B2F5CDC,
-      Livestreaming_StartStream              = 0x501AC7BE,
-      Livestreaming_StopPartyStream          = 0x27670F58,
-      Livestreaming_StopStream               = 0x44E40DCA,
-      Livestreaming_UpdateMicStatus          = 0x1C577D87,
-      NetSync_Connect                        = 0x646D855F,
-      NetSync_Disconnect                     = 0x1569FEB5,
-      NetSync_GetSessions                    = 0x6ED60A35,
-      NetSync_GetVoipAttenuation             = 0x112ACA17,
-      NetSync_GetVoipAttenuationDefault      = 0x577BA8A0,
-      NetSync_SetVoipAttenuation             = 0x3497D7F6,
-      NetSync_SetVoipAttenuationModel        = 0x6A94AD8E,
-      NetSync_SetVoipChannelCfg              = 0x5C95A4F3,
-      NetSync_SetVoipGroup                   = 0x58129C8E,
-      NetSync_SetVoipListentoChannels        = 0x5ED0EA32,
-      NetSync_SetVoipMicSource               = 0x3302F770,
-      NetSync_SetVoipSessionMuted            = 0x5585FF0A,
-      NetSync_SetVoipSpeaktoChannels         = 0x2DAFCDD5,
-      NetSync_SetVoipStreamMode              = 0x67E19D37,
-      Party_Create                           = 0x1AD31B4F,
-      Party_GatherInApplication              = 0x7287C183,
-      Party_Get                              = 0x5E8953BD,
-      Party_GetCurrentForUser                = 0x58CBFF2A,
-      Party_Invite                           = 0x35B5C4E3,
-      Party_Join                             = 0x68027C73,
-      Party_Leave                            = 0x329206D1,
-      RichPresence_SetDestination            = 0x4F32E10D,
-      RichPresence_SetIsJoinable             = 0x3E9B1F61,
-      RichPresence_SetLobbySession           = 0x71010917,
-      RichPresence_SetMatchSession           = 0x63DFFC8E,
-      Room_CreateOrUpdateAndJoinNamed        = 0x7C8E0A91,
-      Room_GetNamedRooms                     = 0x077D6E8C,
-      Room_GetSocialRooms                    = 0x61881D76,
-      User_CancelRecordingForReportFlow      = 0x03E0D149,
-      User_GetLinkedAccounts                 = 0x5793F456,
-      User_LaunchBlockFlow                   = 0x6FD62528,
-      User_LaunchReportFlow                  = 0x5662A011,
-      User_LaunchReportFlow2                 = 0x7F835863,
-      User_LaunchUnblockFlow                 = 0x14A22A97,
-      User_NewEntitledTestUser               = 0x11741F03,
-      User_NewTestUser                       = 0x36E84F8C,
-      User_NewTestUserFriends                = 0x1ED726C7,
-      User_StartRecordingForReportFlow       = 0x6C6E33E3,
-      User_StopRecordingAndLaunchReportFlow  = 0x60788C8B,
-      User_StopRecordingAndLaunchReportFlow2 = 0x19C2B32B,
-      User_TestUserCreateDeviceManifest      = 0x6570B2BD
+      AbuseReport_LaunchAdvancedReportFlow           = 0x4CB13A6E,
+      Application_ExecuteCoordinatedLaunch           = 0x267DB4F4,
+      Application_GetInstalledApplications           = 0x520F744C,
+      Avatar_UpdateMetaData                          = 0x7BCFD98E,
+      Cal_FinalizeApplication                        = 0x1DA9CBD5,
+      Cal_GetSuggestedApplications                   = 0x56707015,
+      Cal_ProposeApplication                         = 0x4E83F2DD,
+      Colocation_GetCurrentMapUuid                   = 0x34557EB2,
+      Colocation_RequestMap                          = 0x3215666D,
+      Colocation_ShareMap                            = 0x186DC4DD,
+      DeviceApplicationIntegrity_GetAttestationToken = 0x102FA3DE,
+      GraphAPI_Get                                   = 0x30FF006E,
+      GraphAPI_Post                                  = 0x76A5A7C4,
+      HTTP_Get                                       = 0x6FB63223,
+      HTTP_GetToFile                                 = 0x4E81DC59,
+      HTTP_MultiPartPost                             = 0x5842D210,
+      HTTP_Post                                      = 0x6B36A54F,
+      Livestreaming_IsAllowedForApplication          = 0x0B6D8D76,
+      Livestreaming_StartPartyStream                 = 0x7B2F5CDC,
+      Livestreaming_StartStream                      = 0x501AC7BE,
+      Livestreaming_StopPartyStream                  = 0x27670F58,
+      Livestreaming_StopStream                       = 0x44E40DCA,
+      Livestreaming_UpdateMicStatus                  = 0x1C577D87,
+      NetSync_Connect                                = 0x646D855F,
+      NetSync_Disconnect                             = 0x1569FEB5,
+      NetSync_GetSessions                            = 0x6ED60A35,
+      NetSync_GetVoipAttenuation                     = 0x112ACA17,
+      NetSync_GetVoipAttenuationDefault              = 0x577BA8A0,
+      NetSync_SetVoipAttenuation                     = 0x3497D7F6,
+      NetSync_SetVoipAttenuationModel                = 0x6A94AD8E,
+      NetSync_SetVoipChannelCfg                      = 0x5C95A4F3,
+      NetSync_SetVoipGroup                           = 0x58129C8E,
+      NetSync_SetVoipListentoChannels                = 0x5ED0EA32,
+      NetSync_SetVoipMicSource                       = 0x3302F770,
+      NetSync_SetVoipSessionMuted                    = 0x5585FF0A,
+      NetSync_SetVoipSpeaktoChannels                 = 0x2DAFCDD5,
+      NetSync_SetVoipStreamMode                      = 0x67E19D37,
+      Party_Create                                   = 0x1AD31B4F,
+      Party_GatherInApplication                      = 0x7287C183,
+      Party_Get                                      = 0x5E8953BD,
+      Party_GetCurrentForUser                        = 0x58CBFF2A,
+      Party_Invite                                   = 0x35B5C4E3,
+      Party_Join                                     = 0x68027C73,
+      Party_Leave                                    = 0x329206D1,
+      RichPresence_SetDestination                    = 0x4F32E10D,
+      RichPresence_SetIsJoinable                     = 0x3E9B1F61,
+      RichPresence_SetLobbySession                   = 0x71010917,
+      RichPresence_SetMatchSession                   = 0x63DFFC8E,
+      Room_CreateOrUpdateAndJoinNamed                = 0x7C8E0A91,
+      Room_GetNamedRooms                             = 0x077D6E8C,
+      Room_GetSocialRooms                            = 0x61881D76,
+      User_CancelRecordingForReportFlow              = 0x03E0D149,
+      User_GetLinkedAccounts                         = 0x5793F456,
+      User_GetUserCapabilities                       = 0x121C317C,
+      User_LaunchProfile                             = 0x0A397297,
+      User_LaunchReportFlow                          = 0x5662A011,
+      User_LaunchReportFlow2                         = 0x7F835863,
+      User_NewEntitledTestUser                       = 0x11741F03,
+      User_NewTestUser                               = 0x36E84F8C,
+      User_NewTestUserFriends                        = 0x1ED726C7,
+      User_StartRecordingForReportFlow               = 0x6C6E33E3,
+      User_StopRecordingAndLaunchReportFlow          = 0x60788C8B,
+      User_StopRecordingAndLaunchReportFlow2         = 0x19C2B32B,
+      User_TestUserCreateDeviceManifest              = 0x6570B2BD,
+      Voip_ReportAppVoipSessions                     = 0x185251CE
     };
 
     public static void CrashApplication() {
@@ -119,7 +121,9 @@ namespace Oculus.Platform
         case MessageTypeInternal.RichPresence_SetLobbySession:
         case MessageTypeInternal.RichPresence_SetMatchSession:
         case MessageTypeInternal.User_CancelRecordingForReportFlow:
+        case MessageTypeInternal.User_LaunchProfile:
         case MessageTypeInternal.User_TestUserCreateDeviceManifest:
+        case MessageTypeInternal.Voip_ReportAppVoipSessions:
           message = new Message(messageHandle);
           break;
 
@@ -127,17 +131,9 @@ namespace Oculus.Platform
           message = new MessageWithInstalledApplicationList(messageHandle);
           break;
 
-        case MessageTypeInternal.User_LaunchBlockFlow:
-          message = new MessageWithLaunchBlockFlowResult(messageHandle);
-          break;
-
         case MessageTypeInternal.AbuseReport_LaunchAdvancedReportFlow:
         case MessageTypeInternal.User_LaunchReportFlow2:
           message = new MessageWithLaunchReportFlowResult(messageHandle);
-          break;
-
-        case MessageTypeInternal.User_LaunchUnblockFlow:
-          message = new MessageWithLaunchUnblockFlowResult(messageHandle);
           break;
 
         case MessageTypeInternal.User_GetLinkedAccounts:
@@ -202,6 +198,7 @@ namespace Oculus.Platform
 
         case MessageTypeInternal.Avatar_UpdateMetaData:
         case MessageTypeInternal.Colocation_GetCurrentMapUuid:
+        case MessageTypeInternal.DeviceApplicationIntegrity_GetAttestationToken:
         case MessageTypeInternal.GraphAPI_Get:
         case MessageTypeInternal.GraphAPI_Post:
         case MessageTypeInternal.HTTP_Get:
@@ -212,6 +209,10 @@ namespace Oculus.Platform
         case MessageTypeInternal.User_NewTestUser:
         case MessageTypeInternal.User_NewTestUserFriends:
           message = new MessageWithString(messageHandle);
+          break;
+
+        case MessageTypeInternal.User_GetUserCapabilities:
+          message = new MessageWithUserCapabilityList(messageHandle);
           break;
 
         case MessageTypeInternal.User_LaunchReportFlow:

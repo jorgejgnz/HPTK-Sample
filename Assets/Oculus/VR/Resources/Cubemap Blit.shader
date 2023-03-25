@@ -2,9 +2,7 @@
     Properties{
         _MainTex("Base (RGB) Trans (A)", CUBE) = "white" {}
         _face("Face", Int) = 0
-        _linearToSrgb("Perform linear-to-gamma conversion", Int) = 0
         _premultiply("Cubemap Blit", Int) = 0
-		_flip("Y-Flip", Int) = 0
     }
     SubShader{
         Tags{ "Queue" = "Transparent" "IgnoreProjector" = "True" "RenderType" = "Transparent" }
@@ -34,9 +32,7 @@
 				samplerCUBE _MainTex;
 				float4 _MainTex_ST;
 				int _face;
-				int _linearToSrgb;
 				int _premultiply;
-				int _flip;
 
 				v2f vert (appdata_t va)
 				{
@@ -56,21 +52,7 @@
 
 				fixed4 frag (v2f vi) : COLOR
 				{
-#if SHADER_API_D3D11
-					if (_flip)
-					{
-							vi.cubedir = vi.cubedir * -1.0f;
-					}
-#endif
 					fixed4 col = texCUBE(_MainTex, vi.cubedir);
-
-					if (_linearToSrgb)
-					{
-						float3 S1 = sqrt(col.rgb);
-						float3 S2 = sqrt(S1);
-						float3 S3 = sqrt(S2);
-						col.rgb = 0.662002687 * S1 + 0.684122060 * S2 - 0.323583601 * S3 - 0.0225411470 * col.rgb;
-					}
 
 					if (_premultiply)
 						col.rgb *= col.a;

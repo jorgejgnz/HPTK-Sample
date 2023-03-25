@@ -10,8 +10,11 @@ namespace Oculus.Platform.Models
 
   public class GroupPresenceLeaveIntent
   {
+    /// If populated, the destination the current user wants to leave
     public readonly string DestinationApiName;
+    /// If populated, the lobby session the current user wants to leave
     public readonly string LobbySessionId;
+    /// If populated, the match session the current user wants to leave
     public readonly string MatchSessionId;
 
 

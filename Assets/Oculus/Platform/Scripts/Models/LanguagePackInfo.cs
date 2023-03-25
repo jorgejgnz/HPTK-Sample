@@ -10,8 +10,11 @@ namespace Oculus.Platform.Models
 
   public class LanguagePackInfo
   {
+    /// Language name in English language.
     public readonly string EnglishName;
+    /// Language name in the native language.
     public readonly string NativeName;
+    /// Language tag in BCP47 format.
     public readonly string Tag;
 
 

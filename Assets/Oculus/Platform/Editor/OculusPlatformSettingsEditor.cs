@@ -39,19 +39,19 @@ namespace Oculus.Platform
       //
       EditorGUILayout.LabelField("Application ID:");
       GUIContent riftAppIDLabel = new GUIContent("Oculus Rift [?]", "This AppID will be used when building to the Windows target.");
-      GUIContent mobileAppIDLabel = new GUIContent("Oculus Go/Quest or Gear VR [?]", "This AppID will be used when building to the Android target");
+      GUIContent mobileAppIDLabel = new GUIContent("Meta Quest/2/Pro [?]", "This AppID will be used when building to the Android target");
       PlatformSettings.AppID = MakeTextBox(riftAppIDLabel, PlatformSettings.AppID);
       PlatformSettings.MobileAppID = MakeTextBox(mobileAppIDLabel, PlatformSettings.MobileAppID);
 
-      if (GUILayout.Button("Create / Find your app on https://dashboard.oculus.com"))
+      if (GUILayout.Button("Create / Find your app on https://developer.oculus.com/manage/"))
       {
-        UnityEngine.Application.OpenURL("https://dashboard.oculus.com/");
+        UnityEngine.Application.OpenURL("https://developer.oculus.com/manage/");
       }
 
 #if UNITY_ANDROID
       if (String.IsNullOrEmpty(PlatformSettings.MobileAppID))
       {
-        EditorGUILayout.HelpBox("Please enter a valid Oculus Go/Quest or Gear VR App ID.", MessageType.Error);
+        EditorGUILayout.HelpBox("Please enter a valid App ID for the Meta Quest line of products", MessageType.Error);
       }
       else
       {
@@ -113,7 +113,7 @@ namespace Oculus.Platform
           {
             var emailLabel = "Test User Email: ";
             var emailHint = "Test users can be configured at " +
-              "https://dashboard.oculus.com/organizations/<your org ID>/testusers " +
+              "https://developer.oculus.com/manage/organizations/<your org ID>/testusers " +
               "however any valid Oculus account email may be used.";
             StandalonePlatformSettings.OculusPlatformTestUserEmail =
               MakeTextBox(new GUIContent(emailLabel, emailHint), StandalonePlatformSettings.OculusPlatformTestUserEmail);

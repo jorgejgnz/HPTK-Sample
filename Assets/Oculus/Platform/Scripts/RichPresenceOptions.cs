@@ -14,53 +14,63 @@ namespace Oculus.Platform
       Handle = CAPI.ovr_RichPresenceOptions_Create();
     }
 
-    /// DEPRECATED: Use GroupPresenceOptions.SetDestinationApiName()
+    /// DEPRECATED. Use GroupPresenceOptions.SetDestinationApiName()
+    [Obsolete("Deprecated")]
     public void SetApiName(string value) {
       CAPI.ovr_RichPresenceOptions_SetApiName(Handle, value);
     }
 
-    /// DEPRECATED: Unused
+    /// DEPRECATED. Unused. Will be removed from headers at version v51.
+    [Obsolete("Deprecated")]
     public void SetCurrentCapacity(uint value) {
       CAPI.ovr_RichPresenceOptions_SetCurrentCapacity(Handle, value);
     }
 
-    /// DEPRECATED: Use GroupPresenceOptions.SetLobbySessionId() or
-    /// GroupPresenceOptions.SetMatchSessionId() to specify the session
+    /// DEPRECATED. Use GroupPresenceOptions.SetDeeplinkMessageOverride()
+    [Obsolete("Deprecated")]
     public void SetDeeplinkMessageOverride(string value) {
       CAPI.ovr_RichPresenceOptions_SetDeeplinkMessageOverride(Handle, value);
     }
 
-    /// DEPRECATED: Unused
+    /// DEPRECATED. Unused. Will be removed from headers at version v51.
+    [Obsolete("Deprecated")]
     public void SetEndTime(DateTime value) {
       CAPI.ovr_RichPresenceOptions_SetEndTime(Handle, value);
     }
 
-    /// DEPRECATED: Unused
+    /// DEPRECATED. Unused. Will be removed from headers at version v51.
+    [Obsolete("Deprecated")]
     public void SetExtraContext(RichPresenceExtraContext value) {
       CAPI.ovr_RichPresenceOptions_SetExtraContext(Handle, value);
     }
 
-    /// DEPRECATED: Use GroupPresenceOptions.SetMatchSessionId()
+    /// DEPRECATED. Use GroupPresenceOptions.SetMatchSessionId() Will be removed
+    /// from headers at version v51.
+    [Obsolete("Deprecated")]
     public void SetInstanceId(string value) {
       CAPI.ovr_RichPresenceOptions_SetInstanceId(Handle, value);
     }
 
-    /// DEPRECATED: Unused
+    /// DEPRECATED. Unused. Will be removed from headers at version v51.
+    [Obsolete("Deprecated")]
     public void SetIsIdle(bool value) {
       CAPI.ovr_RichPresenceOptions_SetIsIdle(Handle, value);
     }
 
-    /// DEPRECATED: Use GroupPresenceOptions.SetIsJoinable()
+    /// DEPRECATED. Use GroupPresenceOptions.SetIsJoinable()
+    [Obsolete("Deprecated")]
     public void SetIsJoinable(bool value) {
       CAPI.ovr_RichPresenceOptions_SetIsJoinable(Handle, value);
     }
 
-    /// DEPRECATED: Unused
+    /// DEPRECATED. Unused. Will be removed from headers at version v51.
+    [Obsolete("Deprecated")]
     public void SetMaxCapacity(uint value) {
       CAPI.ovr_RichPresenceOptions_SetMaxCapacity(Handle, value);
     }
 
-    /// DEPRECATED: Unused
+    /// DEPRECATED. Unused. Will be removed from headers at version v51.
+    [Obsolete("Deprecated")]
     public void SetStartTime(DateTime value) {
       CAPI.ovr_RichPresenceOptions_SetStartTime(Handle, value);
     }

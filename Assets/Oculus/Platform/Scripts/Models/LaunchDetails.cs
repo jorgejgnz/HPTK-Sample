@@ -12,12 +12,24 @@ namespace Oculus.Platform.Models
 
   public class LaunchDetails
   {
+    /// An opaque string provided by the developer to help them deeplink to content
+    /// on app startup.
     public readonly string DeeplinkMessage;
+    /// If provided, the intended destination the user would like to go to
     public readonly string DestinationApiName;
+    /// A string typically used to distinguish where the deeplink came from. For
+    /// instance, a DEEPLINK launch type could be coming from events or rich
+    /// presence.
     public readonly string LaunchSource;
     public readonly LaunchType LaunchType;
+    /// DEPRECATED. Will be removed from headers at version v51.
+    ///
+    /// If provided, the intended room the user would like to be in
     public readonly UInt64 RoomID;
+    /// A unique identifer to keep track of a user going through the deeplinking
+    /// flow
     public readonly string TrackingID;
+    /// If provided, the intended users the user would like to be with
     // May be null. Check before using.
     public readonly UserList UsersOptional;
     [Obsolete("Deprecated in favor of UsersOptional")]

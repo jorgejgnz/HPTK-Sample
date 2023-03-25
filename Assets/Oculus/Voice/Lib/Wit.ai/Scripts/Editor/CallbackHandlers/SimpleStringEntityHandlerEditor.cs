@@ -1,5 +1,6 @@
 ﻿/*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ * All rights reserved.
  *
  * This source code is licensed under the license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,80 +8,45 @@
 
 using System;
 using System.Linq;
-using Facebook.WitAi.Data.Configuration;
+using System.Reflection;
+using Meta.WitAi.Data.Info;
 using UnityEditor;
 using UnityEngine;
 
-
-namespace Facebook.WitAi.CallbackHandlers
+namespace Meta.WitAi.CallbackHandlers
 {
-    public class SimpleStringEntityHandlerEditor : Editor
+    [CustomEditor(typeof(SimpleStringEntityHandler))]
+    public class SimpleStringEntityHandlerEditor : WitIntentMatcherEditor
     {
-        private SimpleStringEntityHandler handler;
-        private string[] intentNames;
-        private int intentIndex;
-        private string[] entityNames;
-        private int entityIndex;
+        // Entity values
+        private string[] _entityNames;
+        private int _entityIndex;
 
-        private void OnEnable()
+        // Set app info
+        protected override void SetAppInfo(WitAppInfo appInfo)
         {
-            handler = target as SimpleStringEntityHandler;
-            if (handler && handler.wit && null == intentNames)
+            base.SetAppInfo(appInfo);
+            if (appInfo.entities != null)
             {
-                if (handler.wit is IWitRuntimeConfigProvider provider &&
-                    null != provider.RuntimeConfiguration &&
-                    provider.RuntimeConfiguration.witConfiguration)
-                {
-                    provider.RuntimeConfiguration.witConfiguration.UpdateData();
-                    intentNames = provider.RuntimeConfiguration.witConfiguration.intents.Select(i => i.name).ToArray();
-                    intentIndex = Array.IndexOf(intentNames, handler.intent);
-                }
+                _entityNames = appInfo.entities.Select(i => i.name).ToArray();
+                _entityIndex = Array.IndexOf(_entityNames, ((SimpleStringEntityHandler)_matcher).entity);
             }
         }
-
-        public override void OnInspectorGUI()
+        // Custom GUI
+        protected override bool OnInspectorCustomGUI(FieldInfo fieldInfo)
         {
-            var handler = target as SimpleStringEntityHandler;
-            if (!handler) return;
-            if (!handler.wit)
+            base.OnInspectorCustomGUI(fieldInfo);
+            // Custom layout
+            if (string.Equals(fieldInfo.Name, "entity"))
             {
-                GUILayout.Label("Wit component is not present in the scene. Add wit to scene to get intent and entity suggestions.", EditorStyles.helpBox);
+                EditorGUILayout.Space();
+                EditorGUILayout.LabelField("Entity", EditorStyles.boldLabel);
+                WitEditorUI.LayoutSerializedObjectPopup(serializedObject, "entity",
+                    _entityNames, ref _entityIndex);
+                return true;
             }
-
-            var intentChanged = WitEditorUI.FallbackPopup(serializedObject,"intent", intentNames, ref intentIndex);
-            if (intentChanged ||
-                null != intentNames && intentNames.Length > 0 && null == entityNames)
-            {
-                if (handler && handler.wit && null == intentNames)
-                {
-                    if (handler.wit is IWitRuntimeConfigProvider provider &&
-                        null != provider.RuntimeConfiguration &&
-                        provider.RuntimeConfiguration.witConfiguration)
-                    {
-                        var entities = provider.RuntimeConfiguration.witConfiguration.intents[intentIndex]?.entities;
-                        if (null != entities)
-                        {
-                            entityNames = entities.Select((e) => e.name).ToArray();
-                            entityIndex = Array.IndexOf(entityNames, handler.entity);
-                        }
-                    }
-                }
-            }
-
-            WitEditorUI.FallbackPopup(serializedObject, "entity", entityNames, ref entityIndex);
-
-            var confidenceProperty = serializedObject.FindProperty("confidence");
-            EditorGUILayout.PropertyField(confidenceProperty);
-
-            EditorGUILayout.Space(16);
-            var formatProperty = serializedObject.FindProperty("format");
-            EditorGUILayout.PropertyField(formatProperty);
-
-            GUILayout.Space(16);
-
-            var eventProperty = serializedObject.FindProperty("onIntentEntityTriggered");
-            EditorGUILayout.PropertyField(eventProperty);
-            serializedObject.ApplyModifiedProperties();
+            // Layout intent triggered
+            return false;
         }
     }
 }

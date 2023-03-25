@@ -35,17 +35,6 @@ partial class OculusBuildSamples
         Build("DebugUI");
     }
 
-    // Note this APK isn't fully functional without some additional
-    // build steps listed here:
-    // ovrsource/Software/Samples/Unity/SampleFramework/Assets/Oculus/SampleFramework/Usage/Firebase/README.md
-    //
-    // Here we are only building the smaller (incomplete) build. It's
-    // not perfect  but it's better than nothing.
-    static void BuildFirebase() {
-        InitializeBuild("com.oculus.unitysample.firebase");
-        Build("Firebase");
-    }
-
     static void BuildHandsInteractionTrain() {
         InitializeBuild("com.oculus.unitysample.handsinteractiontrain");
         Build("HandsInteractionTrainScene");
@@ -66,31 +55,34 @@ partial class OculusBuildSamples
         Build("OVROverlayCanvas");
     }
 
-    static void BuildStereo180Video() {
-        AndroidVideoEditorUtil.EnableNativeVideoPlayer();
-        InitializeBuild("com.oculus.unitysample.stereo180video");
-        Build("Stereo180Video");
-        AndroidVideoEditorUtil.DisableNativeVideoPlayer();
-    }
-
-    // TODO(radtker): Add additional build steps for proper functionality.
-    static void BuildWidevineVideo() {
-        AndroidVideoEditorUtil.EnableNativeVideoPlayer();
-        InitializeBuild("com.oculus.unitysample.widevinevideo");
-        Build("WidevineVideo");
-        AndroidVideoEditorUtil.DisableNativeVideoPlayer();
-    }
-
     // reach out to panya or brittahummel for issues regarding passthrough
     static void BuildPassthrough() {
         InitializeBuild("com.oculus.unitysample.passthrough");
         // TODO: enable OpenXR so Passthrough works
         Build("Passthrough");
     }
+    //needs openXR backend in ovrplugin
+    static void BuildBouncingBall() {
+        InitializeBuild("com.oculus.unitysample.bouncingball");
+        Build("BouncingBall");
+    }
 
+    //needs openXR backend in ovrplugin
+    static void BuildShowSceneModel() {
+        InitializeBuild("com.oculus.unitysample.scenemanager");
+        Build("SceneManager");
+    }
+
+    //needs openXR backend in ovrplugin
+    static void BuildVirtualFurniture() {
+        InitializeBuild("com.oculus.unitysample.virtualfurniture");
+        Build("VirtualFurniture");
+    }
     //Reach out to Irad Ratamasky(iradicator) or Rohit Rao (rohitrao) for issues related to enchanced compositor
     static void BuildEnhancedOVROverlay() {
-        InitializeBuild("com.oculus.unitysample.enchancedovroverlay");
+        InitializeBuild("com.oculus.samples_2DPanel");
+        AddSplashScreen("/Assets/Oculus/SampleFramework/Core/OculusInternal/EnhancedOVROverlay/Textures/SplashScreen/STADIUM_White-01.png");
+        SetAppDetails("Oculus","2DPanel");
         BuildInternal("EnhancedOVROverlay"); //Scene is presnet in OculusInternal folder.
     }
 
@@ -108,6 +100,7 @@ partial class OculusBuildSamples
                 "Assets/Oculus/SampleFramework/Usage/OVROverlay.unity",
                 "Assets/Oculus/SampleFramework/Usage/OVROverlayCanvas.unity",
                 "Assets/Oculus/SampleFramework/Usage/Passthrough.unity",
+                "Assets/Oculus/SampleFramework/Usage/SceneManager.unity"
             });
     }
 
@@ -140,5 +133,26 @@ partial class OculusBuildSamples
           buildPlayerOptions.locationPathName = apkName;
           buildPlayerOptions.scenes = scenes;
           BuildReport buildReport = BuildPipeline.BuildPlayer(buildPlayerOptions);
+    }
+
+    private static void AddSplashScreen(string path){
+        Texture2D companyLogo =  Resources.Load<Texture2D>(path);
+        PlayerSettings.virtualRealitySplashScreen = companyLogo;
+
+        var logos = new PlayerSettings.SplashScreenLogo[2];
+
+        // Company logo
+        Sprite companyLogoSprite = (Sprite)AssetDatabase.LoadAssetAtPath(path, typeof(Sprite));
+        logos[0] = PlayerSettings.SplashScreenLogo.Create(2.5f, companyLogoSprite);
+
+        // Set the Unity logo to be drawn after the company logo.
+        logos[1] = PlayerSettings.SplashScreenLogo.CreateWithUnityLogo();
+
+        PlayerSettings.SplashScreen.logos = logos;
+    }
+
+    private static void SetAppDetails(string companyName,string productName){
+        PlayerSettings.companyName = companyName;
+        PlayerSettings.productName = productName;
     }
 }

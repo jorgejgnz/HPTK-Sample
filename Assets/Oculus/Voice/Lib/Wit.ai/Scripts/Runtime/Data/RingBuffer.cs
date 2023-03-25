@@ -1,5 +1,6 @@
 ﻿/*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ * All rights reserved.
  *
  * This source code is licensed under the license found in the
  * LICENSE file in the root directory of this source tree.
@@ -8,18 +9,33 @@
 using System;
 using UnityEngine;
 
-namespace Facebook.WitAi.Data
+namespace Meta.WitAi.Data
 {
     public class RingBuffer<T>
     {
         public delegate void OnDataAdded(T[] data, int offset, int length);
+        public delegate void ByteDataWriter(T[] buffer, int offset, int length);
+
 
         public OnDataAdded OnDataAddedEvent;
 
-        private T[] buffer;
+        private readonly T[] buffer;
         private int bufferIndex;
         private long bufferDataLength;
         public int Capacity => buffer.Length;
+
+        public int GetBufferArrayIndex(long bufferDataIndex)
+        {
+            if (bufferDataLength <= bufferDataIndex) return -1;
+            if (bufferDataLength - bufferDataIndex > buffer.Length) return -1;
+
+            var endOffset = bufferDataLength - bufferDataIndex;
+            var index = bufferIndex - endOffset;
+            if (index < 0) index = buffer.Length + index;
+            return (int) index;
+        }
+
+        public T this[long bufferDataIndex] => buffer[GetBufferArrayIndex(bufferDataIndex)];
 
         public void Clear(bool eraseData = false)
         {
@@ -30,25 +46,42 @@ namespace Facebook.WitAi.Data
             {
                 for (int i = 0; i < buffer.Length; i++)
                 {
-                    buffer[i] = default(T);
+                    buffer[i] = default;
                 }
             }
         }
 
         public class Marker
         {
-            public long bufferDataIndex;
-            public int index;
-            public RingBuffer<T> buffer;
+            private long bufferDataIndex;
+            private int index;
+            private readonly RingBuffer<T> ringBuffer;
 
-            public bool IsValid => buffer.bufferDataLength - bufferDataIndex < buffer.Capacity;
+            public RingBuffer<T> RingBuffer => ringBuffer;
 
-            public int Read(T[] buffer, int offset, int length)
+            public Marker(RingBuffer<T> ringBuffer, long markerPosition, int bufIndex)
+            {
+                this.ringBuffer = ringBuffer;
+                bufferDataIndex = markerPosition;
+                index = bufIndex;
+            }
+
+            public bool IsValid => ringBuffer.bufferDataLength - bufferDataIndex <= ringBuffer.Capacity;
+            public long AvailableByteCount => Math.Min(ringBuffer.Capacity, RequestedByteCount);
+            public long RequestedByteCount => ringBuffer.bufferDataLength - bufferDataIndex;
+            public long CurrentBufferDataIndex => bufferDataIndex;
+
+            public int Read(T[] buffer, int offset, int length, bool skipToNextValid = false)
             {
                 int read = -1;
+                if (!IsValid && skipToNextValid && ringBuffer.bufferDataLength > ringBuffer.Capacity)
+                {
+                    bufferDataIndex = ringBuffer.bufferDataLength - ringBuffer.Capacity;
+                }
+
                 if (IsValid)
                 {
-                    read = this.buffer.Read(buffer, offset, length, bufferDataIndex);
+                    read = this.ringBuffer.Read(buffer, offset, length, bufferDataIndex);
                     bufferDataIndex += read;
                     index += read;
                     if (index > buffer.Length) index -= buffer.Length;
@@ -56,6 +89,44 @@ namespace Facebook.WitAi.Data
 
 
                 return read;
+            }
+
+            public void ReadIntoWriters(params ByteDataWriter[] writers)
+            {
+                if (!IsValid && ringBuffer.bufferDataLength > ringBuffer.Capacity)
+                {
+                    bufferDataIndex = ringBuffer.bufferDataLength - ringBuffer.Capacity;
+                }
+
+                index = ringBuffer.GetBufferArrayIndex(bufferDataIndex);
+                var length = (int) (ringBuffer.bufferDataLength - bufferDataIndex);
+                if (IsValid && length > 0)
+                {
+                    for (int i = 0; i < writers.Length; i++)
+                    {
+                        ringBuffer.WriteFromBuffer(writers[i], index, length);
+                    }
+                }
+
+                bufferDataIndex += length;
+                index = ringBuffer.GetBufferArrayIndex(bufferDataIndex);
+            }
+
+            public Marker Clone()
+            {
+                return new Marker(ringBuffer, bufferDataIndex, index);
+            }
+
+            public void Offset(int amount)
+            {
+                bufferDataIndex += amount;
+                if (bufferDataIndex < 0) bufferDataIndex = 0;
+                if (bufferDataIndex > ringBuffer.bufferDataLength)
+                {
+                    bufferDataIndex = ringBuffer.bufferDataLength;
+                }
+
+                index = ringBuffer.GetBufferArrayIndex(bufferDataIndex);
             }
         }
 
@@ -94,6 +165,36 @@ namespace Facebook.WitAi.Data
             }
         }
 
+        public void WriteFromBuffer(ByteDataWriter writer, long bufferIndex, int length)
+        {
+            lock (buffer)
+            {
+                if (bufferIndex + length < buffer.Length)
+                {
+                    writer(buffer, (int) bufferIndex, length);
+                }
+                else
+                {
+                    if (length > bufferDataLength)
+                    {
+                        length = (int) (bufferDataLength - bufferIndex);
+                    }
+
+                    if (length > buffer.Length)
+                    {
+                        length = buffer.Length;
+                    }
+
+                    var l = Math.Min(buffer.Length, length);
+                    int endChunkLength = (int) (buffer.Length - bufferIndex);
+                    int wrappedChunkLength = l - endChunkLength;
+
+                    writer(buffer, (int) bufferIndex, endChunkLength);
+                    writer(buffer, 0, wrappedChunkLength);
+                }
+            }
+        }
+
         private int CopyFromBuffer(T[] data, int offset, int length, int bufferIndex)
         {
             if (length > buffer.Length)
@@ -127,8 +228,26 @@ namespace Facebook.WitAi.Data
             }
         }
 
+        public void Push(T data)
+        {
+            lock (buffer)
+            {
+                buffer[bufferIndex++] = data;
+                if (bufferIndex >= buffer.Length)
+                {
+                    bufferIndex = 0;
+                }
+                bufferDataLength++;
+            }
+        }
+
         public int Read(T[] data, int offset, int length, long bufferDataIndex)
         {
+            if (bufferIndex == 0 && bufferDataLength == 0) // The ring buffer has been cleared.
+            {
+                return 0;
+            }
+
             lock (buffer)
             {
                 int read = (int) (Math.Min(bufferDataIndex + length, bufferDataLength) -
@@ -154,8 +273,6 @@ namespace Facebook.WitAi.Data
                 markerPosition = 0;
             }
 
-            Debug.Log("Creating marker at " + bufferDataLength + " offset to " + markerPosition);
-
             int bufIndex = bufferIndex + offset;
             if (bufIndex < 0)
             {
@@ -164,15 +281,11 @@ namespace Facebook.WitAi.Data
 
             if (bufIndex > buffer.Length)
             {
-                bufIndex = bufIndex - buffer.Length;
+                bufIndex -= buffer.Length;
             }
 
-            var marker = new Marker()
-            {
-                buffer = this,
-                bufferDataIndex = markerPosition,
-                index = bufIndex
-            };
+            var marker = new Marker(this, markerPosition, bufIndex);
+
             return marker;
         }
     }

@@ -10,8 +10,10 @@ namespace Oculus.Platform.Models
   using System.Collections.Generic;
   using UnityEngine;
 
+  /// DEPRECATED. Will be removed from headers at version v51.
   public class UserAndRoom
   {
+    /// DEPRECATED. Will be removed from headers at version v51.
     // May be null. Check before using.
     public readonly Room RoomOptional;
     [Obsolete("Deprecated in favor of RoomOptional")]

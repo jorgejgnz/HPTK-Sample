@@ -1,5 +1,23 @@
-using System.Collections;
-using System.Collections.Generic;
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ * All rights reserved.
+ *
+ * Licensed under the Oculus SDK License Agreement (the "License");
+ * you may not use the Oculus SDK except in compliance with the License,
+ * which is provided at the time of installation or download, or which
+ * otherwise accompanies this software in either electronic or hard copy form.
+ *
+ * You may obtain a copy of the License at
+ *
+ * https://developer.oculus.com/licenses/oculussdk/
+ *
+ * Unless required by applicable law or agreed to in writing, the Oculus SDK
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 using UnityEngine;
 using UnityEditor;
 using System.Diagnostics;
@@ -23,7 +41,7 @@ public static class OVREditorUtil {
         bool value = EditorGUILayout.Toggle(name, member);
         if (EditorGUI.EndChangeCheck())
         {
-            Undo.RecordObject(target, "Changed " + name);
+            Undo.RecordObject(target, "Changed " + name.text);
             member = value;
             modified = true;
         }
@@ -49,7 +67,7 @@ public static class OVREditorUtil {
         int value = EditorGUILayout.IntField(name, member);
         if (EditorGUI.EndChangeCheck())
         {
-            Undo.RecordObject(target, "Changed " + name);
+            Undo.RecordObject(target, "Changed " + name.text);
             member = value;
             modified = true;
         }
@@ -68,7 +86,7 @@ public static class OVREditorUtil {
         float value = EditorGUILayout.FloatField(name, member);
         if (EditorGUI.EndChangeCheck())
         {
-            Undo.RecordObject(target, "Changed " + name);
+            Undo.RecordObject(target, "Changed " + name.text);
             member = value;
             modified = true;
         }
@@ -87,7 +105,7 @@ public static class OVREditorUtil {
         double value = EditorGUILayout.DoubleField(name, member);
         if (EditorGUI.EndChangeCheck())
         {
-            Undo.RecordObject(target, "Changed " + name);
+            Undo.RecordObject(target, "Changed " + name.text);
             member = value;
             modified = true;
         }
@@ -106,7 +124,7 @@ public static class OVREditorUtil {
         Color value = EditorGUILayout.ColorField(name, member);
         if (EditorGUI.EndChangeCheck())
         {
-            Undo.RecordObject(target, "Changed " + name);
+            Undo.RecordObject(target, "Changed " + name.text);
             member = value;
             modified = true;
         }
@@ -125,7 +143,7 @@ public static class OVREditorUtil {
         int value = EditorGUILayout.MaskField(name, layerMask, layerMaskOptions);
         if (EditorGUI.EndChangeCheck())
         {
-            Undo.RecordObject(target, "Changed " + name);
+            Undo.RecordObject(target, "Changed " + name.text);
             layerMask = value;
         }
     }
@@ -145,7 +163,7 @@ public static class OVREditorUtil {
 		T value = (T)(object)EditorGUILayout.EnumPopup(name, member as System.Enum);
         if (EditorGUI.EndChangeCheck())
         {
-            Undo.RecordObject(target, "Changed " + name);
+            Undo.RecordObject(target, "Changed " + name.text);
             member = value;
             modified = true;
         }
@@ -173,7 +191,7 @@ public static class OVREditorUtil {
 		string value = EditorGUILayout.TextField(name, member);
 		if (EditorGUI.EndChangeCheck())
 		{
-			Undo.RecordObject(target, "Changed " + name);
+			Undo.RecordObject(target, "Changed " + name.text);
 			member = value;
 			modified = true;
 		}
@@ -201,7 +219,7 @@ public static class OVREditorUtil {
 		Texture2D value = (Texture2D)EditorGUILayout.ObjectField(name, member, typeof(Texture2D), false);
 		if (EditorGUI.EndChangeCheck())
 		{
-			Undo.RecordObject(target, "Changed " + name);
+			Undo.RecordObject(target, "Changed " + name.text);
 			member = value;
 			modified = true;
 		}
@@ -212,6 +230,25 @@ public static class OVREditorUtil {
         }
 
         EditorGUILayout.EndHorizontal();
+	}
+
+	[Conditional("UNITY_EDITOR_WIN"), Conditional("UNITY_STANDALONE_WIN"), Conditional("UNITY_ANDROID")]
+	public static void SetupPopupField(Object target, string name, ref int selectedIndex, GUIContent[] options, ref bool modified)
+	{
+		SetupPopupField(target, new GUIContent(name), ref selectedIndex, options, ref modified);
+	}
+
+	[Conditional("UNITY_EDITOR_WIN"), Conditional("UNITY_STANDALONE_WIN"), Conditional("UNITY_ANDROID")]
+	public static void SetupPopupField(Object target, GUIContent name, ref int selectedIndex, GUIContent[] options, ref bool modified)
+	{
+		EditorGUI.BeginChangeCheck();
+		var value = EditorGUILayout.Popup(name, selectedIndex, options);
+		if (EditorGUI.EndChangeCheck())
+		{
+			Undo.RecordObject(target, "Changed " + name.text);
+			selectedIndex = value;
+			modified = true;
+		}
 	}
 
 	[Conditional("UNITY_EDITOR_WIN"), Conditional("UNITY_STANDALONE_WIN"), Conditional("UNITY_ANDROID")]

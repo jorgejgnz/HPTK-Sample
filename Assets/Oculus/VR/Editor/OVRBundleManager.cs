@@ -1,3 +1,23 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ * All rights reserved.
+ *
+ * Licensed under the Oculus SDK License Agreement (the "License");
+ * you may not use the Oculus SDK except in compliance with the License,
+ * which is provided at the time of installation or download, or which
+ * otherwise accompanies this software in either electronic or hard copy form.
+ *
+ * You may obtain a copy of the License at
+ *
+ * https://developer.oculus.com/licenses/oculussdk/
+ *
+ * Unless required by applicable law or agreed to in writing, the Oculus SDK
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #if UNITY_EDITOR_WIN && UNITY_ANDROID
 using System.Collections;
 using System.Collections.Generic;
@@ -12,9 +32,9 @@ using UnityEditor.Build.Reporting;
 public class OVRBundleManager
 {
 	public const string TRANSITION_APK_VERSION_NAME = "OVRTransitionAPKVersion";
+	public const string BUNDLE_MANAGER_OUTPUT_PATH = "OVRAssetBundles";
 	private const int BUNDLE_CHUNK_SIZE = 30;
 	private const string TRANSITION_SCENE_RELATIVE_PATH = "Scenes/OVRTransitionScene.unity";
-	private const string BUNDLE_MANAGER_OUTPUT_PATH = "OVRAssetBundles";
 	private const string BUNDLE_MANAGER_MASTER_BUNDLE = "OVRMasterBundle";
 
 	private const string EXTERNAL_STORAGE_PATH = "/sdcard/Android/data";
@@ -30,48 +50,20 @@ public class OVRBundleManager
 	private static ManagedStrippingLevel projectManagedStrippingLevel;
 	private static bool projectStripEngineCode;
 
-	public static void BuildDeployTransitionAPK(bool useOptionalTransitionApkPackage)
+	public static void BuildDeployTransitionAPK()
 	{
 		OVRBundleTool.PrintLog("Building and deploying transition APK  . . .\n", true);
 
-		if (!Directory.Exists(BUNDLE_MANAGER_OUTPUT_PATH))
-		{
-			Directory.CreateDirectory(BUNDLE_MANAGER_OUTPUT_PATH);
-		}
-
 		PrebuildProjectSettingUpdate();
 
-		if (String.IsNullOrEmpty(transitionScenePath))
+		var buildPlayerOptions = CalculateBundleBuildPlayerOptions();
+		if (!buildPlayerOptions.HasValue)
 		{
-			// Get current editor script's directory as base path
-			string[] res = System.IO.Directory.GetFiles(Application.dataPath, "OVRBundleManager.cs", SearchOption.AllDirectories);
-			if (res.Length > 1)
-			{
-				OVRBundleTool.PrintError("More than one OVRBundleManager editor script has been found, please double check your Oculus SDK import.");
-				return;
-			}
-			else
-			{
-				// Append Transition Scene's relative path to base path
-				var OVREditorScript = Path.GetDirectoryName(res[0]);
-				transitionScenePath = Path.Combine(OVREditorScript, TRANSITION_SCENE_RELATIVE_PATH);
-			}
+			return;
 		}
 
-		string[] buildScenes = new string[1] { transitionScenePath };
-		string apkOutputPath = Path.Combine(BUNDLE_MANAGER_OUTPUT_PATH, "OVRTransition.apk");
 		DateTime apkBuildStart = DateTime.Now;
-
-		var buildPlayerOptions = new BuildPlayerOptions
-		{
-			scenes = buildScenes,
-			locationPathName = apkOutputPath,
-			target = BuildTarget.Android,
-			options = BuildOptions.Development |
-				BuildOptions.AutoRunPlayer
-		};
-
-		BuildReport report = BuildPipeline.BuildPlayer(buildPlayerOptions);
+		BuildReport report = BuildPipeline.BuildPlayer(buildPlayerOptions.Value);
 
 		if (report.summary.result == BuildResult.Succeeded)
 		{
@@ -81,11 +73,11 @@ public class OVRBundleManager
 		{
 			OVRBundleTool.PrintError();
 		}
-		OculusBuildApp.SendBuildEvent("oculus_bundle_tool", "apk_build_time", (DateTime.Now - apkBuildStart).TotalSeconds.ToString());
+
 		PostbuildProjectSettingUpdate();
 	}
 
-	private static void PrebuildProjectSettingUpdate()
+	public static void PrebuildProjectSettingUpdate()
 	{
 		// Save existing settings as some modifications can change other settings
 		projectDefaultAppIdentifier = PlayerSettings.GetApplicationIdentifier(BuildTargetGroup.Android);
@@ -132,7 +124,44 @@ public class OVRBundleManager
 		}
 	}
 
-	private static void PostbuildProjectSettingUpdate()
+	public static BuildPlayerOptions? CalculateBundleBuildPlayerOptions()
+	{
+		if (!Directory.Exists(BUNDLE_MANAGER_OUTPUT_PATH))
+		{
+			Directory.CreateDirectory(BUNDLE_MANAGER_OUTPUT_PATH);
+		}
+
+		if (String.IsNullOrEmpty(transitionScenePath))
+		{
+			// Get current editor script's directory as base path
+			string[] res = System.IO.Directory.GetFiles(Application.dataPath, "OVRBundleManager.cs", SearchOption.AllDirectories);
+			if (res.Length > 1)
+			{
+				OVRBundleTool.PrintError("More than one OVRBundleManager editor script has been found, please double check your Oculus SDK import.");
+				return null;
+			}
+			else
+			{
+				// Append Transition Scene's relative path to base path
+				var OVREditorScript = Path.GetDirectoryName(res[0]);
+				transitionScenePath = Path.Combine(OVREditorScript, TRANSITION_SCENE_RELATIVE_PATH);
+			}
+		}
+
+		string[] buildScenes = new string[1] { transitionScenePath };
+		string apkOutputPath = Path.Combine(BUNDLE_MANAGER_OUTPUT_PATH, "OVRTransition.apk");
+
+		return new BuildPlayerOptions
+		{
+			scenes = buildScenes,
+			locationPathName = apkOutputPath,
+			target = BuildTarget.Android,
+			options = BuildOptions.Development |
+				BuildOptions.AutoRunPlayer
+		};
+	}
+
+	public static void PostbuildProjectSettingUpdate()
 	{
 		// Restore application identifier
 		PlayerSettings.SetApplicationIdentifier(BuildTargetGroup.Android,
@@ -172,6 +201,12 @@ public class OVRBundleManager
 	{
 		externalSceneCache = EXTERNAL_STORAGE_PATH + "/" + PlayerSettings.GetApplicationIdentifier(BuildTargetGroup.Android)
 			+ GetTransitionApkOptionalIdentifier() + "/cache/scenes";
+
+		for (int i = 0; i < sceneList.Count; i++)
+		{
+			if (!sceneList[i].shouldDeploy) continue;
+			sceneList[i].buildStatus = OVRBundleTool.SceneBundleStatus.QUEUED;
+		}
 
 		BuildSceneBundles(sceneList);
 		if (DeploySceneBundles(sceneList))
@@ -226,8 +261,12 @@ public class OVRBundleManager
 
 		OVRBundleTool.PrintLog("Building scene bundles . . . ");
 		DateTime labelingStart = DateTime.Now;
-		foreach (var scene in sceneList)
+
+		for (int i = 0; i < sceneList.Count; ++i)
 		{
+			var scene = sceneList[i];
+			if (!scene.shouldDeploy) continue;
+
 			// Get all the assets that the scene depends on and sort them by type
 			DateTime getDepStart = DateTime.Now;
 			string[] assetDependencies = AssetDatabase.GetDependencies(scene.scenePath);
@@ -276,7 +315,6 @@ public class OVRBundleManager
 
 		double bundleBuildTime = (DateTime.Now - totalStart).TotalSeconds;
 		Debug.Log("[OVRBundleManager] - Total Time: " + bundleBuildTime);
-		OculusBuildApp.SendBuildEvent("oculus_bundle_tool", "bundle_build_time", bundleBuildTime.ToString());
 	}
 
 	private static void ProcessAssets(string[] assetPaths,
@@ -333,13 +371,23 @@ public class OVRBundleManager
 		{
 			DateTime transferStart = DateTime.Now;
 
-			OVRBundleTool.UpdateSceneBuildStatus(OVRBundleTool.SceneBundleStatus.TRANSFERRING);
+			for (int i = 0; i < sceneList.Count; ++i)
+			{
+				if (!sceneList[i].shouldDeploy) continue;
+				OVRBundleTool.UpdateSceneBuildStatus(OVRBundleTool.SceneBundleStatus.TRANSFERRING, i);
+			}
+
 			// Transfer all scene bundles that are relavent
 			if (!TransferSceneBundles(adbTool, absoluteTempPath, externalSceneCache))
 			{
 				return false;
 			}
-			OVRBundleTool.UpdateSceneBuildStatus(OVRBundleTool.SceneBundleStatus.DEPLOYED);
+			
+			for (int i = 0; i < sceneList.Count; ++i)
+			{
+				if (!sceneList[i].shouldDeploy) continue;
+				OVRBundleTool.UpdateSceneBuildStatus(OVRBundleTool.SceneBundleStatus.DEPLOYED, i);
+			}
 
 			// Create file to tell transition scene APK which scene to load and push it to the device
 			string sceneLoadDataPath = Path.Combine(tempDirectory, OVRSceneLoader.sceneLoadDataName);
@@ -354,6 +402,7 @@ public class OVRBundleManager
 			writer.WriteLine(unixTime.ToString());
 			for (int i = 0; i < sceneList.Count; i++)
 			{
+				if (!sceneList[i].shouldDeploy) continue;
 				writer.WriteLine(Path.GetFileNameWithoutExtension(sceneList[i].scenePath));
 			}
 
@@ -365,7 +414,6 @@ public class OVRBundleManager
 			if (adbTool.RunCommand(pushCommand, null, out output, out error) == 0)
 			{
 				Debug.Log("[OVRBundleManager] Scene Load Data Pushed to Device.");
-				OculusBuildApp.SendBuildEvent("oculus_bundle_tool", "transfer_bundle_time", (DateTime.Now - transferStart).TotalSeconds.ToString());
 				return true;
 			}
 			OVRBundleTool.PrintError(string.IsNullOrEmpty(error) ? output : error);
@@ -604,6 +652,25 @@ public class OVRBundleManager
 		{
 			OVRBundleTool.PrintError(ADB_TOOL_INITIALIZE_ERROR);
 		}
+	}
+
+	public static string[] ListRemoteAssetBundleNames()
+	{
+		OVRADBTool adbTool = new OVRADBTool(OVRConfig.Instance.GetAndroidSDKPath());
+		if (adbTool.isReady)
+		{
+			externalSceneCache = EXTERNAL_STORAGE_PATH + "/" + PlayerSettings.GetApplicationIdentifier(BuildTargetGroup.Android)
+				+ GetTransitionApkOptionalIdentifier() + "/cache/scenes";
+
+			string output, error;
+			string[] listBundlesCommand = { "-d shell", "ls", externalSceneCache };
+			if (adbTool.RunCommand(listBundlesCommand, null, out output, out error) == 0)
+			{
+				return output.Split(new[]{ '\r', '\n'}, StringSplitOptions.RemoveEmptyEntries);
+			}
+		}
+
+		return null;
 	}
 
 	public static void DeleteLocalAssetBundles()

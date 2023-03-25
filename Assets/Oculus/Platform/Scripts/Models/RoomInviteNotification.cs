@@ -8,11 +8,16 @@ namespace Oculus.Platform.Models
   using System.Collections.Generic;
   using UnityEngine;
 
+  /// DEPRECATED. Will be removed from headers at version v51.
   public class RoomInviteNotification
   {
+    /// DEPRECATED. Will be removed from headers at version v51.
     public readonly UInt64 ID;
+    /// DEPRECATED. Will be removed from headers at version v51.
     public readonly UInt64 RoomID;
+    /// DEPRECATED. Will be removed from headers at version v51.
     public readonly UInt64 SenderID;
+    /// DEPRECATED. Will be removed from headers at version v51.
     public readonly DateTime SentTime;
 
 

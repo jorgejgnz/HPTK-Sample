@@ -8,9 +8,13 @@ namespace Oculus.Platform.Models
   using System.Collections.Generic;
   using UnityEngine;
 
+  /// An AchievementDefinition defines an achievement; this includes its name and
+  /// how it is unlocked. For an individual user's progress in unlocking an
+  /// achievement, see AchievementProgress.
   public class AchievementDefinition
   {
     public readonly AchievementType Type;
+    /// The name of the achievement.
     public readonly string Name;
     public readonly uint BitfieldLength;
     public readonly ulong Target;

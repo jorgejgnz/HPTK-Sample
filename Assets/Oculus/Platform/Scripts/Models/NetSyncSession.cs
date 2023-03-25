@@ -10,10 +10,15 @@ namespace Oculus.Platform.Models
 
   public class NetSyncSession
   {
+    /// Which connection this session exists within
     public readonly long ConnectionId;
+    /// True if the local session has muted this session.
     public readonly bool Muted;
+    /// The cloud networking internal session ID that represents this connection.
     public readonly UInt64 SessionId;
+    /// The ovrID of the user behind this session
     public readonly UInt64 UserId;
+    /// The name of the voip group that this session is subscribed to
     public readonly string VoipGroup;
 
 

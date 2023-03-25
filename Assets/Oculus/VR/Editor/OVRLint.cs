@@ -1,22 +1,26 @@
-/************************************************************************************
-Copyright : Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
-
-Licensed under the Oculus Master SDK License Version 1.0 (the "License"); you may not use
-the Utilities SDK except in compliance with the License, which is provided at the time of installation
-or download, or which otherwise accompanies this software in either electronic or hard copy form.
-
-You may obtain a copy of the License at
-https://developer.oculus.com/licenses/oculusmastersdk-1.0/
-
-Unless required by applicable law or agreed to in writing, the Utilities SDK distributed
-under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
-ANY KIND, either express or implied. See the License for the specific language governing
-permissions and limitations under the License.
-************************************************************************************/
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ * All rights reserved.
+ *
+ * Licensed under the Oculus SDK License Agreement (the "License");
+ * you may not use the Oculus SDK except in compliance with the License,
+ * which is provided at the time of installation or download, or which
+ * otherwise accompanies this software in either electronic or hard copy form.
+ *
+ * You may obtain a copy of the License at
+ *
+ * https://developer.oculus.com/licenses/oculussdk/
+ *
+ * Unless required by applicable law or agreed to in writing, the Oculus SDK
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #if UNITY_EDITOR
 
-#if USING_XR_MANAGEMENT && USING_XR_SDK_OCULUS
+#if USING_XR_MANAGEMENT && (USING_XR_SDK_OCULUS || USING_XR_SDK_OPENXR)
 #define USING_XR_SDK
 #endif
 
@@ -30,6 +34,11 @@ using System.Collections.Generic;
 using Assets.OVR.Scripts;
 using Assets.Oculus.VR;
 using Assets.Oculus.VR.Editor;
+using Oculus.VR.Editor;
+
+#if USING_XR_MANAGEMENT && USING_XR_SDK_OCULUS
+using Unity.XR.Oculus;
+#endif
 
 /// <summary>
 ///Scans the project and warns about the following conditions:
@@ -50,7 +59,7 @@ using Assets.Oculus.VR.Editor;
 ///Use of projectors (Mobile; can be used carefully but slow enough to warrant a warning)
 ///Maybe in the future once quantified: Graphics jobs and IL2CPP on Mobile.
 ///Real-time global illumination
-///No texture compression, or non-ASTC texture compression as a global setting (Mobile).
+///No texture compression, or non-ASTC/ETC2 texture compression as a global setting (Mobile).
 ///Using deferred rendering
 ///Excessive texture resolution after LOD bias (>2k on Mobile; >4k on Rift)
 ///Not using trilinear or aniso filtering and not generating mipmaps
@@ -340,7 +349,9 @@ public class OVRLint : EditorWindow
 
 	static int FixRecordSorter(FixRecord record1, FixRecord record2)
 	{
-		if (record1.category != record2.category)
+		if (record1.sortOrder != record2.sortOrder)
+			return record1.sortOrder.CompareTo(record2.sortOrder);
+		else if (record1.category != record2.category)
 			return record1.category.CompareTo(record2.category);
 		else
 			return record1.complete.CompareTo(record2.complete);
@@ -348,8 +359,13 @@ public class OVRLint : EditorWindow
 
 	static void AddFix(eRecordType recordType, string category, string message, FixMethodDelegate method, UnityEngine.Object target, bool editModeRequired, params string[] buttons)
 	{
+		AddFix(recordType, 0/*sortOrder*/, category, message, method, target, editModeRequired, buttons);
+	}
+
+	static void AddFix(eRecordType recordType, int sortOrder, string category, string message, FixMethodDelegate method, UnityEngine.Object target, bool editModeRequired, params string[] buttons)
+	{
 		OVRPlugin.SendEvent("perf_lint_add_fix", category);
-		var fixRecord = new FixRecord(category, message, method, target, editModeRequired, buttons);
+		var fixRecord = new FixRecord(sortOrder, category, message, method, target, editModeRequired, buttons);
 		switch (recordType)
 		{
 			case eRecordType.StaticCommon: mRecordsStaticCommon.Add(fixRecord); break;
@@ -364,6 +380,15 @@ public class OVRLint : EditorWindow
 		if (OVRManager.IsUnityAlphaOrBetaVersion())
 		{
 			AddFix(eRecordType.StaticCommon, "General", OVRManager.UnityAlphaOrBetaVersionWarningMessage, null, null, false);
+		}
+
+#if USING_XR_SDK_OPENXR
+		AddFix(eRecordType.StaticCommon, -9999, "Unity OpenXR Plugin Detected", "Unity OpenXR Plugin should NOT be used in production when developing Oculus apps. Please uninstall the package, and install the Oculus XR Plugin from the Package Manager.\nWhen using the Oculus XR Plugin, you can enable OpenXR backend for Oculus Plugin through the 'Oculus -> Tools -> OVR Utilities Plugin' menu.", null, null, false);
+#endif
+
+		if (!OVRPluginInfo.IsOVRPluginOpenXRActivated() || OVRPluginInfo.IsOVRPluginUnityProvidedActivated())
+		{
+			AddFix(eRecordType.StaticCommon, -9999, "Set OVRPlugin to Oculus Utilities-provided (OpenXR backend)", "Oculus recommends using OpenXR plugin provided with its Oculus Utilities package.\nYou can enable OpenXR backend for Oculus through the 'Oculus -> Tools -> OVR Utilities Plugin' menu.", null, null, false);
 		}
 
 		if (QualitySettings.anisotropicFiltering != AnisotropicFiltering.Enable && QualitySettings.anisotropicFiltering != AnisotropicFiltering.ForceEnable)
@@ -525,10 +550,10 @@ public class OVRLint : EditorWindow
 			}
 		}
 
-		var clips = GameObject.FindObjectsOfType<AudioClip>();
-		for (int i = 0; i < clips.Length; ++i)
+		for (int i = 0; i < sources.Length; ++i)
 		{
-			if (clips[i].loadType == AudioClipLoadType.DecompressOnLoad)
+			AudioSource audioSource = sources[i];
+			if (audioSource.clip.loadType == AudioClipLoadType.DecompressOnLoad)
 			{
 				AddFix(eRecordType.StaticCommon, "Audio Loading", "For fast loading, please don't use decompress on load for audio clips", delegate (UnityEngine.Object obj, bool last, int selected)
 				{
@@ -542,15 +567,19 @@ public class OVRLint : EditorWindow
 						SetAudioLoadType(thisClip, AudioClipLoadType.Streaming, last);
 					}
 
-				}, clips[i], false, "Change to Compressed in Memory", "Change to Streaming");
+				}, audioSource.clip, false, "Change to Compressed in Memory", "Change to Streaming");
 			}
 
-			if (clips[i].preloadAudioData)
+#if UNITY_2022_2_OR_NEWER
+			if (GetAudioPreload(audioSource.clip))
+#else
+			if (audioSource.clip.preloadAudioData)
+#endif
 			{
 				AddFix(eRecordType.StaticCommon, "Audio Preload", "For fast loading, please don't preload data for audio clips.", delegate (UnityEngine.Object obj, bool last, int selected)
 				{
-					SetAudioPreload(clips[i], false, last);
-				}, clips[i], false, "Fix");
+					SetAudioPreload(audioSource.clip, false, last);
+				}, audioSource.clip, false, "Fix");
 			}
 		}
 
@@ -629,6 +658,17 @@ public class OVRLint : EditorWindow
 				}
 			}, null, false, "Fix");
 		}
+		for (int i = 0; i < overlays.Length; i++)
+		{
+			if (overlays[i].useLegacyCubemapRotation)
+			{
+				AddFix(eRecordType.StaticCommon, "Fix Cubemap Orientation", "Legacy cubemap rotation will be deprecated in the future. Please fix the cubemap texture instead.", delegate (UnityEngine.Object obj, bool last, int selected)
+				{
+					OVROverlay thisOverlay = (OVROverlay)obj;
+					thisOverlay.useLegacyCubemapRotation = false;
+				}, overlays[i], false, "Remove Legacy Rotation");
+			}
+		}
 
 		var splashScreen = PlayerSettings.virtualRealitySplashScreen;
 		if (splashScreen != null)
@@ -701,26 +741,26 @@ public class OVRLint : EditorWindow
 				}, null, false, "Fix");
 		}
 
-		// Check that the minSDKVersion meets requirement, 23 for Quest
-		AndroidSdkVersions recommendedAndroidMinSdkVersion = AndroidSdkVersions.AndroidApiLevel23;
-		if ((int)PlayerSettings.Android.minSdkVersion < (int)recommendedAndroidMinSdkVersion)
+		// Check that the minSDKVersion meets requirement, 29 for Quest
+		AndroidSdkVersions recommendedAndroidMinSdkVersion = AndroidSdkVersions.AndroidApiLevel29;
+		if ((int)PlayerSettings.Android.minSdkVersion != (int)recommendedAndroidMinSdkVersion)
 		{
-			AddFix(eRecordType.StaticAndroid, "Set Min Android API Level", "Please require at least API level " + (int)recommendedAndroidMinSdkVersion, delegate (UnityEngine.Object obj, bool last, int selected)
+			AddFix(eRecordType.StaticAndroid, "Set Min Android API Level", "Oculus Quest recommend setting minumum API level to " + (int)recommendedAndroidMinSdkVersion, delegate (UnityEngine.Object obj, bool last, int selected)
 			{
 				PlayerSettings.Android.minSdkVersion = recommendedAndroidMinSdkVersion;
 			}, null, false, "Fix");
 		}
 
-		// Check that compileSDKVersion meets minimal version 26 as required for Quest's headtracking feature
+		// Check that compileSDKVersion meets minimal version 26 as required for Quest's headtracking feature. Recommend 29 to match the MinSdkVersion. Set (and allow) Auto to align with Unity Setup Tool.
 		// Unity Sets compileSDKVersion in Gradle as the value used in targetSdkVersion
-		AndroidSdkVersions requiredAndroidTargetSdkVersion = AndroidSdkVersions.AndroidApiLevel26;
+		AndroidSdkVersions requiredAndroidTargetSdkVersion = AndroidSdkVersions.AndroidApiLevel29;
 		if (OVRDeviceSelector.isTargetDeviceQuestFamily &&
-			(int)PlayerSettings.Android.targetSdkVersion < (int)requiredAndroidTargetSdkVersion)
+		    PlayerSettings.Android.targetSdkVersion < recommendedAndroidMinSdkVersion && PlayerSettings.Android.targetSdkVersion != AndroidSdkVersions.AndroidApiLevelAuto)
 		{
-			AddFix(eRecordType.StaticAndroid, "Set Android Target SDK Level", "Oculus Quest apps require at least target API level " +
-				(int)requiredAndroidTargetSdkVersion, delegate (UnityEngine.Object obj, bool last, int selected)
+			AddFix(eRecordType.StaticAndroid, "Set Android Target SDK Level", "Oculus Quest apps recommend setting target API level to " +
+			                                                                  (int)requiredAndroidTargetSdkVersion, delegate (UnityEngine.Object obj, bool last, int selected)
 			{
-				PlayerSettings.Android.targetSdkVersion = requiredAndroidTargetSdkVersion;
+				PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevelAuto;
 			}, null, false, "Fix");
 		}
 
@@ -743,6 +783,25 @@ public class OVRLint : EditorWindow
 			}, null, false, "Fix");
 		}
 
+#if USING_XR_SDK
+		if (OVRPluginInfo.IsOVRPluginOpenXRActivated() && PlayerSettings.colorSpace != ColorSpace.Linear)
+		{
+			AddFix(eRecordType.StaticAndroid, "Set Color Space to Linear", "Oculus Utilities Plugin with OpenXR only supports linear lighting.",
+				delegate (UnityEngine.Object obj, bool last, int selected)
+			{
+				PlayerSettings.colorSpace = ColorSpace.Linear;
+			}, null, false, "Fix");
+		}
+#endif
+
+#if USING_XR_MANAGEMENT && USING_XR_SDK_OCULUS && OCULUS_XR_SYMMETRIC
+		OculusSettings settings;
+		UnityEditor.EditorBuildSettings.TryGetConfigObject<OculusSettings>("Unity.XR.Oculus.Settings", out settings);
+		if (settings.SymmetricProjection)
+		{
+			AddFix(eRecordType.StaticAndroid, "Symmetric Projection Optimization", "Symmetric Projection is enabled in the Oculus XR Settings. To ensure best GPU performance, make sure at least FFR 1 is being used.", null, null, false);
+		}
+#endif
 
 		if (RenderSettings.skybox)
 		{
@@ -795,7 +854,11 @@ public class OVRLint : EditorWindow
 
 		var textures = Resources.FindObjectsOfTypeAll<Texture2D>();
 
+#if UNITY_2022_2_OR_NEWER
+		int maxTextureSize = 1024 * (1 << QualitySettings.globalTextureMipmapLimit);
+#else
 		int maxTextureSize = 1024 * (1 << QualitySettings.masterTextureLimit);
+#endif
 		maxTextureSize = maxTextureSize * maxTextureSize;
 
 		for (int i = 0; i < textures.Length; ++i)
@@ -830,11 +893,11 @@ public class OVRLint : EditorWindow
 			}, null, false, "Disable Projectors");
 		}
 
-		if (EditorUserBuildSettings.androidBuildSubtarget != MobileTextureSubtarget.ASTC)
+		if (EditorUserBuildSettings.androidBuildSubtarget != MobileTextureSubtarget.ASTC && EditorUserBuildSettings.androidBuildSubtarget != MobileTextureSubtarget.ETC2)
 		{
-			AddFix(eRecordType.StaticAndroid, "Optimize Texture Compression", "For GPU performance, please use ASTC.", delegate (UnityEngine.Object obj, bool last, int selected)
+			AddFix(eRecordType.StaticAndroid, "Optimize Texture Compression", "For GPU performance, please use ASTC or ETC2.", delegate (UnityEngine.Object obj, bool last, int selected)
 			{
-				EditorUserBuildSettings.androidBuildSubtarget = MobileTextureSubtarget.ASTC;
+				EditorUserBuildSettings.androidBuildSubtarget = MobileTextureSubtarget.ETC2;
 			}, null, false, "Fix");
 		}
 
@@ -872,21 +935,7 @@ public class OVRLint : EditorWindow
 			AddFix(eRecordType.RuntimeAndroid, "Graphics Memory", "Please use less than 1GB of vertex and texture memory.", null, null, false);
 		}
 
-		if (OVRManager.cpuLevel < 0 || OVRManager.cpuLevel > 3)
-		{
-			AddFix(eRecordType.RuntimeAndroid, "Optimize CPU level", "For battery life, please use a safe CPU level.", delegate (UnityEngine.Object obj, bool last, int selected)
-			{
-				OVRManager.cpuLevel = 2;
-			}, null, false, "Set to CPU2");
-		}
-
-		if (OVRManager.gpuLevel < 0 || OVRManager.gpuLevel > 3)
-		{
-			AddFix(eRecordType.RuntimeAndroid, "Optimize GPU level", "For battery life, please use a safe GPU level.", delegate (UnityEngine.Object obj, bool last, int selected)
-			{
-				OVRManager.gpuLevel = 2;
-			}, null, false, "Set to GPU2");
-		}
+		// Remove the CPU/GPU level test, which won't work in Unity Editor
 
 		if (UnityStats.triangles > 100000 || UnityStats.vertices > 100000)
 		{
@@ -910,6 +959,45 @@ public class OVRLint : EditorWindow
 		return light.lightmapBakeType == LightmapBakeType.Baked;
 	}
 
+#if UNITY_2022_2_OR_NEWER
+	static void SetAudioPreload(AudioClip clip, bool preload, bool refreshImmediately)
+	{
+		if (clip != null)
+		{
+			string assetPath = AssetDatabase.GetAssetPath(clip);
+			AudioImporter importer = AssetImporter.GetAtPath(assetPath) as AudioImporter;
+			if (importer != null)
+			{
+				var audioSettings = importer.defaultSampleSettings;
+				if (preload != audioSettings.preloadAudioData)
+				{
+					audioSettings.preloadAudioData = preload;
+
+					importer.defaultSampleSettings = audioSettings;
+					AssetDatabase.ImportAsset(assetPath);
+					if (refreshImmediately)
+					{
+						AssetDatabase.Refresh();
+					}
+				}
+			}
+		}
+	}
+
+	static bool GetAudioPreload(AudioClip clip)
+	{
+		if (clip != null)
+		{
+			string assetPath = AssetDatabase.GetAssetPath(clip);
+			AudioImporter importer = AssetImporter.GetAtPath(assetPath) as AudioImporter;
+			if (importer != null)
+			{
+				return importer.defaultSampleSettings.preloadAudioData;
+			}
+		}
+		return false;
+	}
+#else
 	static void SetAudioPreload(AudioClip clip, bool preload, bool refreshImmediately)
 	{
 		if (clip != null)
@@ -931,6 +1019,7 @@ public class OVRLint : EditorWindow
 			}
 		}
 	}
+#endif
 
 	static void SetAudioLoadType(AudioClip clip, AudioClipLoadType loadType, bool refreshImmediately)
 	{

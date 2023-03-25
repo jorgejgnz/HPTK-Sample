@@ -10,10 +10,16 @@ namespace Oculus.Platform.Models
 
   public class AssetFileDownloadUpdate
   {
+    /// DEPRECATED. Use AssetFileDownloadUpdate.GetAssetId().
     public readonly UInt64 AssetFileId;
+    /// ID of the asset file
     public readonly UInt64 AssetId;
+    /// Total number of bytes.
     public readonly ulong BytesTotal;
+    /// Number of bytes have been downloaded. -1 If the download hasn't started
+    /// yet.
     public readonly long BytesTransferred;
+    /// Flag indicating a download is completed.
     public readonly bool Completed;
 
 

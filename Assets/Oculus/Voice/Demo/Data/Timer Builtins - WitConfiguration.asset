@@ -12,15 +12,32 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ae5a46bda3295124c99b0e6537ac7252, type: 3}
   m_Name: Timer Builtins - WitConfiguration
   m_EditorClassIdentifier: 
-  application:
-    witConfiguration: {fileID: 0}
+  _clientAccessToken: HOKEABS7HPIQVSRSVWRPTTV75TQJ5QBP
+  _appInfo:
     name: Built-in Models
     id: voiceSDK_en
     lang: en
     isPrivate: 0
     createdAt: 
-  configId: 74f17110584875d438c76cba2242da14
-  clientAccessToken: HOKEABS7HPIQVSRSVWRPTTV75TQJ5QBP
-  entities: []
-  intents: []
-  traits: []
+    trainingStatus: 0
+    lastTrainDuration: 0
+    lastTrainedAt: 
+    nextTrainAt: 
+    intents: []
+    entities: []
+    traits: []
+    voices: []
+  _configurationId: 74f17110584875d438c76cba2242da14
+  timeoutMS: 10000
+  endpointConfiguration:
+    uriScheme: 
+    authority: 
+    port: 0
+    witApiVersion: 
+    speech: 
+    message: 
+    dictation: 
+  isDemoOnly: 1
+  useConduit: 0
+  _manifestLocalPath: 
+  excludedAssemblies: []

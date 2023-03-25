@@ -1,15 +1,22 @@
-/************************************************************************************
-Copyright : Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
-
-Your use of this SDK or tool is subject to the Oculus SDK License Agreement, available at
-https://developer.oculus.com/licenses/oculussdk/
-
-Unless required by applicable law or agreed to in writing, the Utilities SDK distributed
-under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
-ANY KIND, either express or implied. See the License for the specific language governing
-permissions and limitations under the License.
-
-************************************************************************************/
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ * All rights reserved.
+ *
+ * Licensed under the Oculus SDK License Agreement (the "License");
+ * you may not use the Oculus SDK except in compliance with the License,
+ * which is provided at the time of installation or download, or which
+ * otherwise accompanies this software in either electronic or hard copy form.
+ *
+ * You may obtain a copy of the License at
+ *
+ * https://developer.oculus.com/licenses/oculussdk/
+ *
+ * Unless required by applicable law or agreed to in writing, the Oculus SDK
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 using UnityEngine;
 using System.Collections;
@@ -250,9 +257,10 @@ public class OVRGazePointer : OVRCursor {
     // Disable/Enable child elements when we show/hide the cursor. For performance reasons.
     void Hide()
     {
-        foreach (Transform child in transform)
+        var cachedTransform = transform;
+        for (int i = 0; i < cachedTransform.childCount; i++)
         {
-            child.gameObject.SetActive(false);
+	        cachedTransform.GetChild(i).gameObject.SetActive(false);
         }
         if (GetComponent<Renderer>())
             GetComponent<Renderer>().enabled = false;
@@ -261,9 +269,10 @@ public class OVRGazePointer : OVRCursor {
 
     void Show()
     {
-        foreach (Transform child in transform)
+        var cachedTransform = transform;
+        for (int i = 0; i < cachedTransform.childCount; i++)
         {
-            child.gameObject.SetActive(true);
+	        cachedTransform.GetChild(i).gameObject.SetActive(true);
         }
         if (GetComponent<Renderer>())
             GetComponent<Renderer>().enabled = true;

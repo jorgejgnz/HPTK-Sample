@@ -1,14 +1,22 @@
-/************************************************************************************
-Copyright : Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
-
-Your use of this SDK or tool is subject to the Oculus SDK License Agreement, available at
-https://developer.oculus.com/licenses/oculussdk/
-
-Unless required by applicable law or agreed to in writing, the Utilities SDK distributed
-under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
-ANY KIND, either express or implied. See the License for the specific language governing
-permissions and limitations under the License.
-************************************************************************************/
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ * All rights reserved.
+ *
+ * Licensed under the Oculus SDK License Agreement (the "License");
+ * you may not use the Oculus SDK except in compliance with the License,
+ * which is provided at the time of installation or download, or which
+ * otherwise accompanies this software in either electronic or hard copy form.
+ *
+ * You may obtain a copy of the License at
+ *
+ * https://developer.oculus.com/licenses/oculussdk/
+ *
+ * Unless required by applicable law or agreed to in writing, the Oculus SDK
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 using UnityEngine;
 using System;
@@ -60,6 +68,8 @@ public class OVROverlay : MonoBehaviour
 		ReconstructionPassthrough = OVRPlugin.OverlayShape.ReconstructionPassthrough,
 		SurfaceProjectedPassthrough = OVRPlugin.OverlayShape.SurfaceProjectedPassthrough,
 		Fisheye = OVRPlugin.OverlayShape.Fisheye,
+		KeyboardHandsPassthrough = OVRPlugin.OverlayShape.KeyboardHandsPassthrough,
+		KeyboardMaskedHandsPassthrough = OVRPlugin.OverlayShape.KeyboardMaskedHandsPassthrough,
 	}
 
 	/// <summary>
@@ -85,9 +95,9 @@ public class OVROverlay : MonoBehaviour
 	public bool isDynamic = false;
 
 	/// <summary>
-	/// If true, the layer would be used to present protected content (e.g. HDCP). The flag is effective only on PC.
+	/// If true, the layer would be used to present protected content (e.g. HDCP), the content won't be shown in screenshots or recordings.
 	/// </summary>
-	[Tooltip("If true, the layer would be used to present protected content (e.g. HDCP). The flag is effective only on PC.")]
+	[Tooltip("If true, the layer would be used to present protected content (e.g. HDCP), the content won't be shown in screenshots or recordings.")]
 	public bool isProtectedContent = false;
 
 	//Source and dest rects
@@ -111,6 +121,9 @@ public class OVROverlay : MonoBehaviour
 
 	//Warning: Developers should only use this supersample setting if they absolutely have the budget and need for it. It is extremely expensive, and will not be relevant for most developers.
 	public bool useExpensiveSuperSample = false;
+
+	//Warning: Developers should only use this sharpening setting if they absolutely have the budget and need for it. It is extremely expensive, and will not be relevant for most developers.
+	public bool useExpensiveSharpen = false;
 
 	//Property that can hide overlays when required. Should be false when present, true when hidden.
 	public bool hidden = false;
@@ -170,6 +183,14 @@ public class OVROverlay : MonoBehaviour
 	[Tooltip("When checked, the layer will use bicubic filtering")]
 	public bool useBicubicFiltering = false;
 
+	[Tooltip("When checked, the cubemap will retain the legacy rotation which was rotated 180 degrees around the Y axis comapred to Unity's definition of cubemaps. This setting will be deprecated in the near future, therefore it is recommended to fix the cubemap texture instead.")]
+	public bool useLegacyCubemapRotation = false;
+
+	[Tooltip("When checked, the layer will use efficient super sampling")]
+	public bool useEfficientSupersample = false;
+
+	[Tooltip("When checked, the layer will use efficient sharpen.  Must have anisotropic filtering and mipmaps enabled.")]
+	public bool useEfficientSharpen = false;
 
 	/// <summary>
 	/// Preview the overlay in the editor using a mesh renderer.
@@ -187,7 +208,7 @@ public class OVROverlay : MonoBehaviour
 	}
 
 	[SerializeField]
-	private bool _previewInEditor = false;
+	internal bool _previewInEditor = false;
 
 #if UNITY_EDITOR
 	private GameObject previewObject;
@@ -265,6 +286,7 @@ public class OVROverlay : MonoBehaviour
 
 	private Renderer rend;
 
+
 	private int texturesPerStage { get { return (layout == OVRPlugin.LayerLayout.Stereo) ? 2 : 1; } }
 
 	private static bool NeedsTexturesForShape(OverlayShape shape)
@@ -293,6 +315,7 @@ public class OVROverlay : MonoBehaviour
 			}
 		}
 
+
 		bool needsSetup = (
 			isOverridePending ||
 			layerDesc.MipLevels != mipLevels ||
@@ -302,13 +325,18 @@ public class OVROverlay : MonoBehaviour
 			layerDesc.LayerFlags != flags ||
 			!layerDesc.TextureSize.Equals(size) ||
 			layerDesc.Shape != shape ||
-			layerCompositionDepth != compositionDepth);
+			layerCompositionDepth != compositionDepth)
+			;
 
 		if (!needsSetup)
 			return false;
 
 		OVRPlugin.LayerDesc desc = OVRPlugin.CalculateLayerDesc(shape, layout, size, mipLevels, sampleCount, etFormat, flags);
+
+
 		OVRPlugin.EnqueueSetupLayer(desc, compositionDepth, layerIdPtr);
+
+
 		layerId = (int)layerIdHandle.Target;
 
 		if (layerId > 0)
@@ -682,104 +710,88 @@ public class OVROverlay : MonoBehaviour
 			if (et == null)
 				continue;
 
+			ret = true;
+
+			// PC requries premultiplied Alpha, premultiply it unless its already premultiplied
+			bool premultiplyAlpha = !Application.isMobilePlatform && !isAlphaPremultiplied;
+
+			// OpenGL does not support copy texture between different format
+			bool isOpenGL = SystemInfo.graphicsDeviceType == UnityEngine.Rendering.GraphicsDeviceType.OpenGLES3 || SystemInfo.graphicsDeviceType == UnityEngine.Rendering.GraphicsDeviceType.OpenGLES2;
+			// Graphics.CopyTexture only works when textures are same size
+			bool isSameSize = et.width == textures[eyeId].width && et.height == textures[eyeId].height;
+
+			bool bypassBlit = Application.isMobilePlatform && !isOpenGL && isSameSize;
+			if (bypassBlit)
+			{
+				Graphics.CopyTexture(textures[eyeId], et);
+				continue;
+			}
+
+			// Need to run the blit shader for premultiply Alpha
 			for (int mip = 0; mip < mipLevels; ++mip)
 			{
-				bool dataIsLinear = isHdr || (QualitySettings.activeColorSpace == ColorSpace.Linear);
-
-				var rt = textures[eyeId] as RenderTexture;
-#if UNITY_ANDROID && !UNITY_EDITOR
-				dataIsLinear = true; //HACK: Graphics.CopyTexture causes linear->srgb conversion on target write with D3D but not GLES.
-#endif
-				// PC requries premultiplied Alpha
-				bool requiresPremultipliedAlpha = !Application.isMobilePlatform;
-
-				bool linearToSRGB = !isHdr && dataIsLinear;
-				// if the texture needs to be premultiplied, premultiply it unless its already premultiplied
-				bool premultiplyAlpha = requiresPremultipliedAlpha && !isAlphaPremultiplied;
-
-				bool bypassBlit = !linearToSRGB && !premultiplyAlpha && rt != null && rt.format == rtFormat;
-
 				RenderTexture tempRTDst = null;
 
-				if (!bypassBlit)
+				int width = size.w >> mip;
+				if (width < 1) width = 1;
+				int height = size.h >> mip;
+				if (height < 1) height = 1;
+				RenderTextureDescriptor descriptor = new RenderTextureDescriptor(width, height, rtFormat, 0);
+				descriptor.msaaSamples = sampleCount;
+				descriptor.useMipMap = true;
+				descriptor.autoGenerateMips = false;
+				descriptor.sRGB = true;
+
+				tempRTDst = RenderTexture.GetTemporary(descriptor);
+
+				if (!tempRTDst.IsCreated())
 				{
-					int width = size.w >> mip;
-					if (width < 1) width = 1;
-					int height = size.h >> mip;
-					if (height < 1) height = 1;
-					RenderTextureDescriptor descriptor = new RenderTextureDescriptor(width, height, rtFormat, 0);
-					descriptor.msaaSamples = sampleCount;
-					descriptor.useMipMap = true;
-					descriptor.autoGenerateMips = false;
-					descriptor.sRGB = false;
-
-					tempRTDst = RenderTexture.GetTemporary(descriptor);
-
-					if (!tempRTDst.IsCreated())
-					{
-						tempRTDst.Create();
-					}
-
-					tempRTDst.DiscardContents();
-
-					Material blitMat = null;
-					if (currentOverlayShape != OverlayShape.Cubemap && currentOverlayShape != OverlayShape.OffcenterCubemap)
-					{
-						blitMat = tex2DMaterial;
-					}
-					else
-					{
-						blitMat = cubeMaterial;
-					}
-
-					blitMat.SetInt("_linearToSrgb", linearToSRGB ? 1 : 0);
-					blitMat.SetInt("_premultiply", premultiplyAlpha ? 1 : 0);
-					blitMat.SetInt("_flip", OVRPlugin.nativeXrApi == OVRPlugin.XrApi.OpenXR ? 1 : 0);
+					tempRTDst.Create();
 				}
+
+				tempRTDst.DiscardContents();
+
+				Material blitMat = null;
+				if (currentOverlayShape != OverlayShape.Cubemap && currentOverlayShape != OverlayShape.OffcenterCubemap)
+				{
+					blitMat = tex2DMaterial;
+				}
+				else
+				{
+					blitMat = cubeMaterial;
+				}
+
+				blitMat.SetInt("_premultiply", premultiplyAlpha ? 1 : 0);
 
 				if (currentOverlayShape != OverlayShape.Cubemap && currentOverlayShape != OverlayShape.OffcenterCubemap)
 				{
-					if (bypassBlit)
+					blitMat.SetInt("_flip", OVRPlugin.nativeXrApi == OVRPlugin.XrApi.OpenXR ? 1 : 0);
+					if (overrideTextureRectMatrix)
 					{
-						Graphics.CopyTexture(textures[eyeId], 0, mip, et, 0, mip);
+						BlitSubImage(textures[eyeId], tempRTDst, tex2DMaterial, GetBlitRect(eyeId));
 					}
 					else
 					{
-						if (overrideTextureRectMatrix)
-						{
-							BlitSubImage(textures[eyeId], tempRTDst, tex2DMaterial, GetBlitRect(eyeId));
-						}
-						else
-						{
-							Graphics.Blit(textures[eyeId], tempRTDst, tex2DMaterial);
-						}
-						//Resolve, decompress, swizzle, etc not handled by simple CopyTexture.
-						Graphics.CopyTexture(tempRTDst, 0, 0, et, 0, mip);
+						Graphics.Blit(textures[eyeId], tempRTDst, tex2DMaterial);
 					}
+					//Resolve, decompress, swizzle, etc not handled by simple CopyTexture.
+					Graphics.CopyTexture(tempRTDst, 0, 0, et, 0, mip);
 				}
 				else // Cubemap
 				{
 					for (int face = 0; face < 6; ++face)
 					{
 						cubeMaterial.SetInt("_face", face);
-						if (bypassBlit)
-						{
-							Graphics.CopyTexture(textures[eyeId], face, mip, et, face, mip);
-						}
-						else
-						{
-							//Resolve, decompress, swizzle, etc not handled by simple CopyTexture.
-							Graphics.Blit(textures[eyeId], tempRTDst, cubeMaterial);
-							Graphics.CopyTexture(tempRTDst, 0, 0, et, face, mip);
-						}
+						//Resolve, decompress, swizzle, etc not handled by simple CopyTexture.
+						Graphics.Blit(textures[eyeId], tempRTDst, cubeMaterial);
+						Graphics.CopyTexture(tempRTDst, 0, 0, et, face, mip);
 					}
 				}
+
 				if (tempRTDst != null)
 				{
 					RenderTexture.ReleaseTemporary(tempRTDst);
 				}
-
-				ret = true;
 			}
 		}
 
@@ -798,9 +810,10 @@ public class OVROverlay : MonoBehaviour
 			noTextures ? System.IntPtr.Zero : layerTextures[0].appTexturePtr,
 			noTextures ? System.IntPtr.Zero : layerTextures[rightEyeIndex].appTexturePtr,
 			layerId, frameIndex, pose.flipZ().ToPosef_Legacy(), scale.ToVector3f(), layerIndex, (OVRPlugin.OverlayShape)currentOverlayShape,
-			overrideTextureRectMatrix, textureRectMatrix, overridePerLayerColorScaleAndOffset, colorScale, colorOffset, useExpensiveSuperSample,
-			hidden);
-
+			overrideTextureRectMatrix, textureRectMatrix, overridePerLayerColorScaleAndOffset, colorScale, colorOffset,
+			useExpensiveSuperSample, useBicubicFiltering, useEfficientSupersample, useEfficientSharpen, useExpensiveSharpen,
+			hidden, isProtectedContent
+			);
 		prevOverlayShape = currentOverlayShape;
 
 		return isOverlayVisible;
@@ -828,16 +841,13 @@ public class OVROverlay : MonoBehaviour
 
 	public static bool IsPassthroughShape(OverlayShape shape)
 	{
-		return shape == OverlayShape.ReconstructionPassthrough
-			|| shape == OverlayShape.SurfaceProjectedPassthrough;
+		return OVRPlugin.IsPassthroughShape((OVRPlugin.OverlayShape)shape);
 	}
 
 #region Unity Messages
 
 	void Awake()
 	{
-		Debug.Log("Overlay Awake");
-
 		if (Application.isPlaying)
 		{
 			if (tex2DMaterial == null)
@@ -876,11 +886,18 @@ public class OVROverlay : MonoBehaviour
 
 	void InitOVROverlay()
 	{
-		if (!OVRManager.isHmdPresent)
+#if USING_XR_SDK_OPENXR
+		if (!OVRPlugin.UnityOpenXR.Enabled)
 		{
-			enabled = false;
-			return;
+#endif
+			if (!OVRManager.isHmdPresent)
+			{
+				enabled = false;
+				return;
+			}
+#if USING_XR_SDK_OPENXR
 		}
+#endif
 
 		constructedOverlayXRDevice = OVRManager.XRDevice.Unknown;
 		if (OVRManager.loadedXRDevice == OVRManager.XRDevice.OpenVR)
@@ -957,7 +974,7 @@ public class OVROverlay : MonoBehaviour
 #endif
 	}
 
-	bool ComputeSubmit(ref OVRPose pose, ref Vector3 scale, ref bool overlay, ref bool headLocked)
+	void ComputePoseAndScale(ref OVRPose pose, ref Vector3 scale, ref bool overlay, ref bool headLocked)
 	{
 		Camera headCamera = Camera.main;
 
@@ -973,15 +990,25 @@ public class OVROverlay : MonoBehaviour
 
 		if (currentOverlayShape == OverlayShape.Cubemap)
 		{
-#if UNITY_ANDROID && !UNITY_EDITOR
-			if (OVRPlugin.nativeXrApi != OVRPlugin.XrApi.OpenXR)
+			if (useLegacyCubemapRotation)
 			{
-				//HACK: VRAPI cubemaps assume are yawed 180 degrees relative to LibOVR.
+#if UNITY_ANDROID && !UNITY_EDITOR
 				pose.orientation = pose.orientation * Quaternion.AngleAxis(180, Vector3.up);
-			}
 #endif
+			}
+			else
+			{
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR
+				pose.orientation = pose.orientation * Quaternion.AngleAxis(180, Vector3.up);
+#endif
+			}
 			pose.position = headCamera.transform.position;
 		}
+	}
+
+	bool ComputeSubmit(ref OVRPose pose, ref Vector3 scale, ref bool overlay, ref bool headLocked)
+	{
+		ComputePoseAndScale(ref pose, ref scale, ref overlay, ref headLocked);
 
 		// Pack the offsetCenter directly into pose.position for offcenterCubemap
 		if (currentOverlayShape == OverlayShape.OffcenterCubemap)

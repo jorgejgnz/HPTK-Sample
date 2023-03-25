@@ -1,5 +1,6 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ * All rights reserved.
  *
  * This source code is licensed under the license found in the
  * LICENSE file in the root directory of this source tree.
@@ -8,120 +9,159 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace Facebook.WitAi
+namespace Meta.WitAi
 {
-    public class WitStyles
+    public static class WitStyles
     {
-        public static Texture2D WitIcon;
-        public static Texture2D MainHeader;
-        public static Texture2D ContinueButton;
+        // Window Layout Data
+        public const float WindowMinWidth = 0f;
+        public const float WindowMaxWidth = 450f;
+        public const float WindowMinHeight = 400f;
+        public const float WindowMaxSize = 5000f;
+        public const float WindowPaddingTop = 8f;
+        public const float WindowPaddingBottom = 8f;
+        public const float WindowPaddingLeft = 8f;
+        public const float WindowPaddingRight = 8f;
+        public const float WindowScrollBarSize = 15f;
+        // Spacing
+        public const float HeaderWidth = 350f;
+        public const float HeaderPaddingBottom = 8f;
+        public const float WizardFieldPadding = 16f;
+        // Text padding
+        public const float ButtonMargin = 5f;
 
-        public static Texture2D TextureWhite;
-        public static Texture2D TextureWhite25P;
-        public static Texture2D TextureBlack25P;
-        public static Texture2D TextureFBBlue;
-        public static Texture2D TextureTextField;
-        public static Texture2D TextureWitDark;
-        public static GUIStyle BackgroundWhite;
-        public static GUIStyle BackgroundWhite25P;
-        public static GUIStyle BackgroundBlack25P;
-        public static GUIStyle BackgroundWitDark;
-
-        public static GUIStyle LabelHeader;
-        public static GUIStyle LabelHeader2;
-        public static GUIStyle Label;
-        public static GUIStyle WordwrappedLabel;
-        public static GUIStyle FacebookButton;
-
-        public static GUIStyle TextField;
-
-        public static Color ColorFB = new Color(0.09f, 0.47f, 0.95f);
-        public static GUIStyle Link;
-
-        public static GUIContent titleContent;
-        public static GUIContent welcomeTitleContent;
+        // Icons
         public static GUIContent PasteIcon;
         public static GUIContent EditIcon;
+        public static GUIContent ResetIcon;
+        public static GUIContent AcceptIcon;
         public static GUIContent ObjectPickerIcon;
-        public static GUIStyle ImageIcon;
+        public static GUIContent HelpIcon;
+        // Label Styles
+        public static GUIStyle Label;
+        public static GUIStyle LabelWrap;
+        public static GUIStyle LabelError;
+        public static GUIStyle LabelHeader;
+        public static GUIStyle LabelSubheader;
+        public static GUIStyle LabelStatus;
+        public static GUIStyle LabelStatusBackground;
 
-        public const int IconButtonWidth = 20;
+        // Button styles
+        public static GUIStyle TextButton;
+        private const float TextButtonHeight = 25f;
+        public const float TextButtonPadding = 5f;
+        public static GUIStyle IconButton;
+        public const float IconButtonSize = 16f; // Width & Height
+        public static GUIStyle TabButton;
+        private const float TabButtonHeight = 40f;
+        public static GUIStyle HeaderButton;
+        public static Color HeaderTextColor = new Color(0.09f, 0.47f, 0.95f); // FB
+        // Wit error color (Red if in light non-pro editor mode)
+        public static string ErrorColor = "#cc7777";
+        // Wit link color (Blue if in light non-pro editor mode)
+        public static string WitLinkColor = "#ccccff";
+        public const string WitLinkKey = "[COLOR]";
+        
+        // Indentation
+        public const float IndentationSpaces = 15f;
 
+        // Text Field Styles
+        public static GUIStyle TextField;
+        public static GUIStyle IntField;
+        public static GUIStyle PasswordField;
+        // Foldout Style
+        public static GUIStyle Foldout;
+        // Toggle Style
+        public static GUIStyle Toggle;
+        // Popup/Dropdown Styles
+        public static GUIStyle Popup;
+        // Texture
+        public static Texture2D TextureBlack25P;
+
+        // Init
         static WitStyles()
         {
-            WitIcon = (Texture2D) Resources.Load("witai");
-            MainHeader = (Texture2D) Resources.Load("wit-ai-title");
-            ContinueButton = (Texture2D) Resources.Load("continue-with-fb");
+            // Setup icons
+            PasteIcon = EditorGUIUtility.IconContent("Clipboard");
+            EditIcon = EditorGUIUtility.IconContent("editicon.sml");
+            ResetIcon = EditorGUIUtility.IconContent("TreeEditor.Trash");
+            AcceptIcon = EditorGUIUtility.IconContent("FilterSelectedOnly");
+            ObjectPickerIcon = EditorGUIUtility.IconContent("d_Record Off");
+            HelpIcon = EditorGUIUtility.IconContent("_Help");
 
-            TextureWhite = new Texture2D(1, 1);
-            TextureWhite.SetPixel(0, 0, Color.white);
-            TextureWhite.Apply();
+            // Adjust colors to be more visible on light background
+            if (!EditorGUIUtility.isProSkin)
+            {
+                ErrorColor = "red";
+                WitLinkColor = "blue";
+            }
 
-            TextureWhite25P = new Texture2D(1, 1);
-            TextureWhite25P.SetPixel(0, 0, new Color(1, 1, 1, .25f));
-            TextureWhite25P.Apply();
-
+            // Label Styles
+            Label = new GUIStyle();
+            Label.fontSize = 11;
+            Label.padding = new RectOffset(5, 5, 0, 0);
+            Label.margin = new RectOffset(5, 5, 0, 0);
+            Label.alignment = TextAnchor.MiddleLeft;
+            Label.normal.textColor = Color.white;
+            Label.hover.textColor = Color.white;
+            Label.active.textColor = Color.white;
+            Label.richText = true;
+            Label.wordWrap = false;
+            Label.clipping = TextClipping.Clip;
+            LabelWrap = new GUIStyle(Label);
+            LabelWrap.wordWrap = true;
+            LabelSubheader = new GUIStyle(Label);
+            LabelSubheader.fontSize = 14;
+            LabelHeader = new GUIStyle(Label);
+            LabelHeader.fontSize = 24;
+            LabelHeader.padding = new RectOffset(0, 0, 10, 10);
+            LabelHeader.margin = new RectOffset(0, 0, 10, 10);
+            LabelHeader.wordWrap = true;
+            LabelError = new GUIStyle(Label);
+            LabelError.wordWrap = true;
+            Color errorColor = Color.red;
+            ColorUtility.TryParseHtmlString(ErrorColor, out errorColor);
+            LabelError.normal.textColor = errorColor;
+            LabelStatus = new GUIStyle(Label);
             TextureBlack25P = new Texture2D(1, 1);
             TextureBlack25P.SetPixel(0, 0, new Color(0, 0, 0, .25f));
             TextureBlack25P.Apply();
+            LabelStatusBackground = new GUIStyle();
+            LabelStatusBackground.normal.background = TextureBlack25P;
+            LabelStatus.normal.background = TextureBlack25P;
+            LabelStatus.wordWrap = true;
+            LabelStatus.fontSize++;
+            LabelStatus.alignment = TextAnchor.LowerLeft;
+            LabelStatus.margin = new RectOffset(0, 0, 0, 0);
+            LabelStatus.wordWrap = false;
+            LabelStatus.fontSize = 10;
 
-            TextureFBBlue = new Texture2D(1, 1);
-            TextureFBBlue.SetPixel(0, 0, ColorFB);
-            TextureFBBlue.Apply();
+            // Button Styles
+            TextButton = new GUIStyle(EditorStyles.miniButton);
+            TextButton.alignment = TextAnchor.MiddleCenter;
+            TextButton.fixedHeight = TextButtonHeight;
+            TabButton = new GUIStyle(TextButton);
+            TabButton.fixedHeight = TabButtonHeight;
+            IconButton = new GUIStyle(Label);
+            IconButton.margin = new RectOffset(0, 0, 0, 0);
+            IconButton.padding = new RectOffset(0, 0, 0, 0);
+            IconButton.fixedWidth = IconButtonSize;
+            IconButton.fixedHeight = IconButtonSize;
+            HeaderButton = new GUIStyle(Label);
+            HeaderButton.normal.textColor = HeaderTextColor;
 
-            TextureTextField = new Texture2D(1, 1);
-            TextureTextField.SetPixel(0, 0, new Color(.85f, .85f, .95f));
-            TextureTextField.Apply();
-
-            TextureWitDark = new Texture2D(1, 1);
-            TextureWitDark.SetPixel(0,0, new Color(0.267f, 0.286f, 0.31f));
-            TextureWitDark.Apply();
-
-            BackgroundWhite = new GUIStyle();
-            BackgroundWhite.normal.background = TextureWhite;
-
-            BackgroundWhite25P = new GUIStyle();
-            BackgroundWhite25P.normal.background = TextureWhite25P;
-
-            BackgroundBlack25P = new GUIStyle();
-            BackgroundBlack25P.normal.background = TextureBlack25P;
-            BackgroundBlack25P.normal.textColor = Color.white;
-
-            BackgroundWitDark = new GUIStyle();
-            BackgroundWitDark.normal.background = TextureWitDark;
-
-            FacebookButton = new GUIStyle(EditorStyles.miniButton);
-
-            Label = new GUIStyle(EditorStyles.label);
-            Label.richText = true;
-            Label.wordWrap = true;
-
-            WordwrappedLabel = new GUIStyle(EditorStyles.label);
-            WordwrappedLabel.wordWrap = true;
-
-            LabelHeader = new GUIStyle(Label);
-            LabelHeader.fontSize = 24;
-
-            LabelHeader2 = new GUIStyle(Label);
-            LabelHeader2.fontSize = 14;
-
-            Link = new GUIStyle(Label);
-            Link.normal.textColor = ColorFB;
-
+            // Text Field Styles
             TextField = new GUIStyle(EditorStyles.textField);
-            TextField.normal.background = TextureTextField;
-            TextField.normal.textColor = Color.black;
-
-            ImageIcon = new GUIStyle(EditorStyles.label);
-            ImageIcon.fixedWidth = 16;
-            ImageIcon.fixedHeight = 16;
-
-            titleContent = new GUIContent("Wit.ai", WitIcon);
-            welcomeTitleContent = new GUIContent("Welcome to Wit.ai", WitIcon);
-
-            PasteIcon = EditorGUIUtility.IconContent("Clipboard");
-            EditIcon = EditorGUIUtility.IconContent("editicon.sml");
-            ObjectPickerIcon = EditorGUIUtility.IconContent("d_Record Off");
+            TextField.padding = Label.padding;
+            TextField.margin = Label.margin;
+            TextField.alignment = Label.alignment;
+            TextField.clipping = TextClipping.Clip;
+            PasswordField = new GUIStyle(TextField);
+            IntField = new GUIStyle(TextField);
+            // Miscellaneous
+            Foldout = new GUIStyle(EditorStyles.foldout);
+            Toggle = new GUIStyle(EditorStyles.toggle);
+            Popup = new GUIStyle(EditorStyles.popup);
         }
     }
 }

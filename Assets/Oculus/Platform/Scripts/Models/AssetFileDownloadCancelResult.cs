@@ -10,9 +10,13 @@ namespace Oculus.Platform.Models
 
   public class AssetFileDownloadCancelResult
   {
+    /// DEPRECATED. Use AssetFileDownloadCancelResult.GetAssetId().
     public readonly UInt64 AssetFileId;
+    /// ID of the asset file
     public readonly UInt64 AssetId;
+    /// File path of the asset file.
     public readonly string Filepath;
+    /// Whether the cancel request is succeeded.
     public readonly bool Success;
 
 

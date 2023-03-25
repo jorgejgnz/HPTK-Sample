@@ -14,6 +14,15 @@ namespace Oculus.Platform
       Handle = CAPI.ovr_GroupPresenceOptions_Create();
     }
 
+    /// Use GroupPresenceOptions.SetLobbySessionId() or
+    /// GroupPresenceOptions.SetMatchSessionId() to specify the session. Use the
+    /// deeplink message override for any additional data in whatever format you
+    /// wish to aid in bringing users together. If not specified, the
+    /// deeplink_message for the user will default to the one on the destination.
+    public void SetDeeplinkMessageOverride(string value) {
+      CAPI.ovr_GroupPresenceOptions_SetDeeplinkMessageOverride(Handle, value);
+    }
+
     /// This the unique API Name that refers to an in-app destination
     public void SetDestinationApiName(string value) {
       CAPI.ovr_GroupPresenceOptions_SetDestinationApiName(Handle, value);

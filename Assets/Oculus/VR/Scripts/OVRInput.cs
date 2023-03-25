@@ -1,14 +1,22 @@
-/************************************************************************************
-Copyright : Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
-
-Your use of this SDK or tool is subject to the Oculus SDK License Agreement, available at
-https://developer.oculus.com/licenses/oculussdk/
-
-Unless required by applicable law or agreed to in writing, the Utilities SDK distributed
-under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
-ANY KIND, either express or implied. See the License for the specific language governing
-permissions and limitations under the License.
-************************************************************************************/
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ * All rights reserved.
+ *
+ * Licensed under the Oculus SDK License Agreement (the "License");
+ * you may not use the Oculus SDK except in compliance with the License,
+ * which is provided at the time of installation or download, or which
+ * otherwise accompanies this software in either electronic or hard copy form.
+ *
+ * You may obtain a copy of the License at
+ *
+ * https://developer.oculus.com/licenses/oculussdk/
+ *
+ * Unless required by applicable law or agreed to in writing, the Oculus SDK
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 using System;
 using System.Collections;
@@ -173,6 +181,14 @@ public static class OVRInput
 		PrimaryHandTrigger        = 0x04,  ///< Maps to RawAxis1D: [Touch, LTouch: LHandTrigger], [RTouch: RHandTrigger], [Gamepad, Remote: None]
 		SecondaryIndexTrigger     = 0x02,  ///< Maps to RawAxis1D: [Gamepad, Touch: RIndexTrigger], [LTouch, RTouch, Remote: None]
 		SecondaryHandTrigger      = 0x08,  ///< Maps to RawAxis1D: [Touch: RHandTrigger], [Gamepad, LTouch, RTouch, Remote: None]
+		PrimaryIndexTriggerCurl    = 0x10,
+		PrimaryIndexTriggerSlide   = 0x20,
+		PrimaryThumbRestForce      = 0x40,
+		PrimaryStylusForce         = 0x80,
+		SecondaryIndexTriggerCurl  = 0x100,
+		SecondaryIndexTriggerSlide = 0x200,
+		SecondaryThumbRestForce    = 0x400,
+		SecondaryStylusForce       = 0x800,
 		Any                       = ~None, ///< Maps to RawAxis1D: [Gamepad, Touch, LTouch, RTouch: Any], [Remote: None]
 	}
 
@@ -185,6 +201,14 @@ public static class OVRInput
 		LHandTrigger              = 0x04,  ///< Maps to Physical Axis1D: [Touch, LTouch: LHandTrigger], [Gamepad, RTouch, Remote: None]
 		RIndexTrigger             = 0x02,  ///< Maps to Physical Axis1D: [Gamepad, Touch, RTouch: RIndexTrigger], [LTouch, Remote: None]
 		RHandTrigger              = 0x08,  ///< Maps to Physical Axis1D: [Touch, RTouch: RHandTrigger], [Gamepad, LTouch, Remote: None]
+		LIndexTriggerCurl         = 0x10,
+		LIndexTriggerSlide        = 0x20,
+		LThumbRestForce           = 0x40,
+		LStylusForce              = 0x80,
+		RIndexTriggerCurl         = 0x100,
+		RIndexTriggerSlide        = 0x200,
+		RThumbRestForce           = 0x400,
+		RStylusForce              = 0x800,
 		Any                       = ~None, ///< Maps to Physical Axis1D: [Gamepad, Touch, LTouch, RTouch: Any], [Remote: None]
 	}
 
@@ -241,9 +265,46 @@ public static class OVRInput
 
 	public enum Handedness
 	{
-		Unsupported	              = OVRPlugin.Handedness.Unsupported,
+		Unsupported               = OVRPlugin.Handedness.Unsupported,
 		LeftHanded                = OVRPlugin.Handedness.LeftHanded,
 		RightHanded               = OVRPlugin.Handedness.RightHanded,
+	}
+
+	public enum HapticsLocation
+	{
+		None                      = OVRPlugin.HapticsLocation.None,
+		Hand                      = OVRPlugin.HapticsLocation.Hand,
+		Thumb                     = OVRPlugin.HapticsLocation.Thumb,
+		Index                     = OVRPlugin.HapticsLocation.Index,
+	}
+
+	public enum InteractionProfile
+	{
+		None                      = OVRPlugin.InteractionProfile.None,
+		Touch                     = OVRPlugin.InteractionProfile.Touch,
+		TouchPro                  = OVRPlugin.InteractionProfile.TouchPro,
+	}
+
+	public enum Hand
+	{
+		None                      = OVRPlugin.Hand.None,
+		HandLeft                  = OVRPlugin.Hand.HandLeft,
+		HandRight                 = OVRPlugin.Hand.HandRight,
+	}
+
+	public struct HapticsAmplitudeEnvelopeVibration
+	{
+		public int SamplesCount;
+		public float[] Samples;
+		public float Duration;
+	}
+
+	public struct HapticsPcmVibration
+	{
+		public int SamplesCount;
+		public float[] Samples;
+		public float SampleRateHz;
+		public bool Append;
 	}
 
 	private static readonly float AXIS_AS_BUTTON_THRESHOLD = 0.5f;
@@ -291,9 +352,7 @@ public static class OVRInput
 			new OVRControllerHands(),
 			new OVRControllerLHand(),
 			new OVRControllerRHand(),
-#elif UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
-			new OVRControllerGamepadMac(),
-#else
+#elif UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
 			new OVRControllerGamepadPC(),
 			new OVRControllerTouch(),
 			new OVRControllerLTouch(),
@@ -399,6 +458,15 @@ public static class OVRInput
 
 			OVRPlugin.UpdateNodePhysicsPoses(0, predictionSeconds);
 		}
+	}
+
+	/// <summary>
+	/// Returns the the current interaction profile for a given hand.
+	/// This can be used to distinguish between Touch and Touch Pro controllers.
+	/// </summary>
+	public static OVRInput.InteractionProfile GetCurrentInteractionProfile(OVRInput.Hand hand)
+	{
+		return (OVRInput.InteractionProfile)OVRPlugin.GetCurrentInteractionProfile((OVRPlugin.Hand)hand);
 	}
 
 	/// <summary>
@@ -694,6 +762,54 @@ public static class OVRInput
 			default:
 				return Vector3.zero;
 		}
+	}
+
+	/// <summary>
+	/// Gets the current position, rotation and velocity of given Controller local to its tracking space without prediction.
+	/// Only supported for Oculus LTouch and RTouch controllers, when using OpenXR backend
+	/// </summary>
+	public static bool GetLocalControllerStatesWithoutPrediction(OVRInput.Controller controllerType, out Vector3 position, out Quaternion rotation, out Vector3 velocity, out Vector3 angularVelocity)
+	{
+		position = Vector3.zero;
+		rotation = Quaternion.identity;
+		velocity = Vector3.zero;
+		angularVelocity = Vector3.zero;
+
+		if (OVRManager.loadedXRDevice != OVRManager.XRDevice.Oculus)
+			return false;
+
+		if (OVRPlugin.nativeXrApi != OVRPlugin.XrApi.OpenXR)
+			return false;
+
+		OVRPlugin.PoseStatef poseState;
+
+		switch (controllerType)
+		{
+			case Controller.LTouch:
+			case Controller.LHand:
+				poseState = OVRPlugin.GetNodePoseStateImmediate(OVRPlugin.Node.HandLeft);
+				break;
+			case Controller.RTouch:
+			case Controller.RHand:
+				poseState = OVRPlugin.GetNodePoseStateImmediate(OVRPlugin.Node.HandRight);
+				break;
+			default:
+				return false;
+		}
+
+		if (GetControllerPositionValid(controllerType))
+		{
+			position = poseState.Pose.ToOVRPose().position;
+			velocity = poseState.Velocity.FromFlippedZVector3f();
+		}
+
+		if (GetControllerOrientationValid(controllerType))
+		{
+			rotation = poseState.Pose.ToOVRPose().orientation;
+			angularVelocity = poseState.AngularVelocity.FromFlippedZVector3f();
+		}
+
+		return true;
 	}
 
 	/// <summary>
@@ -1193,6 +1309,46 @@ public static class OVRInput
 
 					maxAxis = CalculateAbsMax(maxAxis, axis);
 				}
+				if ((RawAxis1D.LIndexTriggerCurl & resolvedMask) != 0)
+				{
+					float axis = controller.currentState.LIndexTriggerCurl;
+					maxAxis = CalculateAbsMax(maxAxis, axis);
+				}
+				if ((RawAxis1D.RIndexTriggerCurl & resolvedMask) != 0)
+				{
+					float axis = controller.currentState.RIndexTriggerCurl;
+					maxAxis = CalculateAbsMax(maxAxis, axis);
+				}
+				if ((RawAxis1D.LIndexTriggerSlide & resolvedMask) != 0)
+				{
+					float axis = controller.currentState.LIndexTriggerSlide;
+					maxAxis = CalculateAbsMax(maxAxis, axis);
+				}
+				if ((RawAxis1D.RIndexTriggerSlide & resolvedMask) != 0)
+				{
+					float axis = controller.currentState.RIndexTriggerSlide;
+					maxAxis = CalculateAbsMax(maxAxis, axis);
+				}
+				if ((RawAxis1D.LThumbRestForce & resolvedMask) != 0)
+				{
+					float axis = controller.currentState.LThumbRestForce;
+					maxAxis = CalculateAbsMax(maxAxis, axis);
+				}
+				if ((RawAxis1D.RThumbRestForce & resolvedMask) != 0)
+				{
+					float axis = controller.currentState.RThumbRestForce;
+					maxAxis = CalculateAbsMax(maxAxis, axis);
+				}
+				if ((RawAxis1D.LStylusForce & resolvedMask) != 0)
+				{
+					float axis = controller.currentState.LStylusForce;
+					maxAxis = CalculateAbsMax(maxAxis, axis);
+				}
+				if ((RawAxis1D.RStylusForce & resolvedMask) != 0)
+				{
+					float axis = controller.currentState.RStylusForce;
+					maxAxis = CalculateAbsMax(maxAxis, axis);
+				}
 			}
 		}
 
@@ -1468,7 +1624,6 @@ public static class OVRInput
 					}
 				}
 			}
-
 		}
 	}
 
@@ -1527,6 +1682,89 @@ public static class OVRInput
 				StartVibration(amplitude, HAPTIC_VIBRATION_DURATION_SECONDS, controllerNode);
 			}
 		}
+	}
+
+	/// <summary>
+	/// Activates vibration with the given frequency and amplitude with the given controller mask.
+	/// Ignored on controllers that do not support vibration. Expected values range from 0 to 1.
+	/// </summary>
+	public static void SetControllerLocalizedVibration(HapticsLocation hapticsLocationMask, float frequency, float amplitude, Controller controllerMask = Controller.Active)
+	{
+		if (OVRManager.loadedXRDevice == OVRManager.XRDevice.Oculus)
+		{
+			if ((controllerMask & Controller.Active) != 0)
+				controllerMask |= activeControllerType;
+
+			for (int i = 0; i < controllers.Count; i++)
+			{
+				OVRControllerBase controller = controllers[i];
+
+				if (ShouldResolveController(controller.controllerType, controllerMask))
+				{
+					controller.SetControllerLocalizedVibration(hapticsLocationMask, frequency, amplitude);
+				}
+			}
+		}
+		else if (OVRManager.loadedXRDevice == OVRManager.XRDevice.OpenVR)
+		{
+			if ((hapticsLocationMask & HapticsLocation.Hand) != 0)
+			{
+				SetControllerVibration(frequency, amplitude, controllerMask);
+			}
+		}
+	}
+
+	public static void SetControllerHapticsAmplitudeEnvelope(HapticsAmplitudeEnvelopeVibration hapticsVibration, Controller controllerMask = Controller.Active)
+	{
+		if ((controllerMask & Controller.Active) != 0)
+			controllerMask |= activeControllerType;
+
+		for (int i = 0; i < controllers.Count; i++)
+		{
+			OVRControllerBase controller = controllers[i];
+
+			if (ShouldResolveController(controller.controllerType, controllerMask))
+			{
+				controller.SetControllerHapticsAmplitudeEnvelope(hapticsVibration);
+			}
+		}
+	}
+
+	public static int SetControllerHapticsPcm(HapticsPcmVibration hapticsVibration, Controller controllerMask = Controller.Active)
+	{
+		if ((controllerMask & Controller.Active) != 0)
+			controllerMask |= activeControllerType;
+
+		int samplesConsumed = 0;
+		for (int i = 0; i < controllers.Count; i++)
+		{
+			OVRControllerBase controller = controllers[i];
+
+			if (ShouldResolveController(controller.controllerType, controllerMask))
+			{
+				samplesConsumed = controller.SetControllerHapticsPcm(hapticsVibration);
+			}
+		}
+
+		return samplesConsumed;
+	}
+
+	public static float GetControllerSampleRateHz(Controller controllerMask = Controller.Active)
+	{
+		if ((controllerMask & Controller.Active) != 0)
+			controllerMask |= activeControllerType;
+
+		for (int i = 0; i < controllers.Count; i++)
+		{
+			OVRControllerBase controller = controllers[i];
+
+			if (ShouldResolveController(controller.controllerType, controllerMask))
+			{
+				return controller.GetControllerSampleRateHz();
+			}
+		}
+
+		return 0.0f;
 	}
 
 	/// <summary>
@@ -1830,6 +2068,14 @@ public static class OVRInput
 			public RawAxis1D PrimaryHandTrigger        = RawAxis1D.None;
 			public RawAxis1D SecondaryIndexTrigger     = RawAxis1D.None;
 			public RawAxis1D SecondaryHandTrigger      = RawAxis1D.None;
+			public RawAxis1D PrimaryIndexTriggerCurl    = RawAxis1D.None;
+			public RawAxis1D PrimaryIndexTriggerSlide   = RawAxis1D.None;
+			public RawAxis1D PrimaryThumbRestForce      = RawAxis1D.None;
+			public RawAxis1D PrimaryStylusForce         = RawAxis1D.None;
+			public RawAxis1D SecondaryIndexTriggerCurl  = RawAxis1D.None;
+			public RawAxis1D SecondaryIndexTriggerSlide = RawAxis1D.None;
+			public RawAxis1D SecondaryThumbRestForce    = RawAxis1D.None;
+			public RawAxis1D SecondaryStylusForce       = RawAxis1D.None;
 
 			public RawAxis1D ToRawMask(Axis1D virtualMask)
 			{
@@ -1846,6 +2092,22 @@ public static class OVRInput
 					rawMask |= SecondaryIndexTrigger;
 				if ((virtualMask & Axis1D.SecondaryHandTrigger) != 0)
 					rawMask |= SecondaryHandTrigger;
+				if ((virtualMask & Axis1D.PrimaryIndexTriggerCurl) != 0)
+					rawMask |= PrimaryIndexTriggerCurl;
+				if ((virtualMask & Axis1D.PrimaryIndexTriggerSlide) != 0)
+					rawMask |= PrimaryIndexTriggerSlide;
+				if ((virtualMask & Axis1D.PrimaryThumbRestForce) != 0)
+					rawMask |= PrimaryThumbRestForce;
+				if ((virtualMask & Axis1D.PrimaryStylusForce) != 0)
+					rawMask |= PrimaryStylusForce;
+				if ((virtualMask & Axis1D.SecondaryIndexTriggerCurl) != 0)
+					rawMask |= SecondaryIndexTriggerCurl;
+				if ((virtualMask & Axis1D.SecondaryIndexTriggerSlide) != 0)
+					rawMask |= SecondaryIndexTriggerSlide;
+				if ((virtualMask & Axis1D.SecondaryThumbRestForce) != 0)
+					rawMask |= SecondaryThumbRestForce;
+				if ((virtualMask & Axis1D.SecondaryStylusForce) != 0)
+					rawMask |= SecondaryStylusForce;
 
 				return rawMask;
 			}
@@ -1885,8 +2147,8 @@ public static class OVRInput
 		public VirtualNearTouchMap nearTouchMap = new VirtualNearTouchMap();
 		public VirtualAxis1DMap axis1DMap = new VirtualAxis1DMap();
 		public VirtualAxis2DMap axis2DMap = new VirtualAxis2DMap();
-		public OVRPlugin.ControllerState4 previousState = new OVRPlugin.ControllerState4();
-		public OVRPlugin.ControllerState4 currentState = new OVRPlugin.ControllerState4();
+		public OVRPlugin.ControllerState5 previousState = new OVRPlugin.ControllerState5();
+		public OVRPlugin.ControllerState5 currentState = new OVRPlugin.ControllerState5();
 		public bool shouldApplyDeadzone = true;
 
 		public OVRControllerBase()
@@ -1900,12 +2162,12 @@ public static class OVRInput
 
 		public virtual Controller Update()
 		{
-			OVRPlugin.ControllerState4 state;
+			OVRPlugin.ControllerState5 state;
 
 			if (OVRManager.loadedXRDevice == OVRManager.XRDevice.OpenVR && ( (controllerType & Controller.Touch) != 0) )
 				state = GetOpenVRControllerState(controllerType);
 			else
-				state = OVRPlugin.GetControllerState4((uint)controllerType);
+				state = OVRPlugin.GetControllerState5((uint)controllerType);
 
 			if (state.LIndexTrigger >= AXIS_AS_BUTTON_THRESHOLD)
 				state.Buttons |= (uint)RawButton.LIndexTrigger;
@@ -1939,9 +2201,9 @@ public static class OVRInput
 			return ((Controller)currentState.ConnectedControllers & controllerType);
 		}
 
-		private OVRPlugin.ControllerState4 GetOpenVRControllerState(Controller controllerType)
+		private OVRPlugin.ControllerState5 GetOpenVRControllerState(Controller controllerType)
 		{
-			OVRPlugin.ControllerState4 state = new OVRPlugin.ControllerState4();
+			OVRPlugin.ControllerState5 state = new OVRPlugin.ControllerState5();
 
 			if ((controllerType & Controller.LTouch) == Controller.LTouch && IsValidOpenVRDevice(openVRControllerDetails[0].deviceID))
 			{
@@ -2005,6 +2267,78 @@ public static class OVRInput
 		public virtual void SetControllerVibration(float frequency, float amplitude)
 		{
 			OVRPlugin.SetControllerVibration((uint)controllerType, frequency, amplitude);
+		}
+
+		public virtual void SetControllerLocalizedVibration(HapticsLocation hapticsLocationMask, float frequency, float amplitude)
+		{
+			OVRPlugin.SetControllerLocalizedVibration((OVRPlugin.Controller)controllerType, (OVRPlugin.HapticsLocation)hapticsLocationMask, frequency, amplitude);
+		}
+
+		public virtual void SetControllerHapticsAmplitudeEnvelope(HapticsAmplitudeEnvelopeVibration hapticsVibration)
+		{
+			GCHandle pinnedSamples = GCHandle.Alloc(hapticsVibration.Samples, GCHandleType.Pinned);
+
+			try
+			{
+				OVRPlugin.HapticsAmplitudeEnvelopeVibration vibration;
+				vibration.AmplitudeCount = (UInt32)hapticsVibration.SamplesCount;
+				vibration.Amplitudes = pinnedSamples.AddrOfPinnedObject();
+				vibration.Duration = hapticsVibration.Duration;
+
+				OVRPlugin.SetControllerHapticsAmplitudeEnvelope((OVRPlugin.Controller)controllerType, vibration);
+			}
+			finally
+			{
+				if (pinnedSamples.IsAllocated)
+				{
+					pinnedSamples.Free();
+				}
+			}
+		}
+
+		private UInt32[] HapticsPcmSamplesConsumedCache = new UInt32[1];
+		public virtual int SetControllerHapticsPcm(HapticsPcmVibration hapticsVibration)
+		{
+			GCHandle pinnedSamples = GCHandle.Alloc(hapticsVibration.Samples, GCHandleType.Pinned);
+			GCHandle pinnedSamplesConsumed = GCHandle.Alloc(HapticsPcmSamplesConsumedCache, GCHandleType.Pinned);
+
+			int samplesConsumed = 0;
+
+			try
+			{
+				OVRPlugin.HapticsPcmVibration vibration;
+				vibration.BufferSize = (UInt32)hapticsVibration.SamplesCount;
+				vibration.Buffer = pinnedSamples.AddrOfPinnedObject();
+				vibration.SampleRateHz = hapticsVibration.SampleRateHz;
+				vibration.Append = hapticsVibration.Append ? OVRPlugin.Bool.True : OVRPlugin.Bool.False;
+				vibration.SamplesConsumed = pinnedSamplesConsumed.AddrOfPinnedObject();
+
+				if (OVRPlugin.SetControllerHapticsPcm((OVRPlugin.Controller)controllerType, vibration))
+				{
+					samplesConsumed = Marshal.ReadInt32(vibration.SamplesConsumed);
+				}
+			}
+			finally
+			{
+				if (pinnedSamples.IsAllocated)
+				{
+					pinnedSamples.Free();
+				}
+
+				if (pinnedSamplesConsumed.IsAllocated)
+				{
+					pinnedSamplesConsumed.Free();
+				}
+			}
+
+			return samplesConsumed;
+		}
+
+		public virtual float GetControllerSampleRateHz()
+		{
+			OVRPlugin.GetControllerSampleRateHz((OVRPlugin.Controller)controllerType, out float sampleRateHz);
+
+			return sampleRateHz;
 		}
 
 		public virtual byte GetBatteryPercentRemaining()
@@ -2121,15 +2455,23 @@ public static class OVRInput
 			axis1DMap.PrimaryHandTrigger        = RawAxis1D.LHandTrigger;
 			axis1DMap.SecondaryIndexTrigger     = RawAxis1D.RIndexTrigger;
 			axis1DMap.SecondaryHandTrigger      = RawAxis1D.RHandTrigger;
+			axis1DMap.PrimaryIndexTriggerCurl    = RawAxis1D.LIndexTriggerCurl;
+			axis1DMap.PrimaryIndexTriggerSlide   = RawAxis1D.LIndexTriggerSlide;
+			axis1DMap.PrimaryThumbRestForce      = RawAxis1D.LThumbRestForce;
+			axis1DMap.PrimaryStylusForce         = RawAxis1D.LStylusForce;
+			axis1DMap.SecondaryIndexTriggerCurl  = RawAxis1D.RIndexTriggerCurl;
+			axis1DMap.SecondaryIndexTriggerSlide = RawAxis1D.RIndexTriggerSlide;
+			axis1DMap.SecondaryThumbRestForce    = RawAxis1D.RThumbRestForce;
+			axis1DMap.SecondaryStylusForce       = RawAxis1D.RStylusForce;
 		}
 
 		public override void ConfigureAxis2DMap()
 		{
 			axis2DMap.None                      = RawAxis2D.None;
 			axis2DMap.PrimaryThumbstick         = RawAxis2D.LThumbstick;
-			axis2DMap.PrimaryTouchpad           = RawAxis2D.None;
+			axis2DMap.PrimaryTouchpad           = RawAxis2D.LTouchpad;
 			axis2DMap.SecondaryThumbstick       = RawAxis2D.RThumbstick;
-			axis2DMap.SecondaryTouchpad         = RawAxis2D.None;
+			axis2DMap.SecondaryTouchpad         = RawAxis2D.RTouchpad;
 		}
 
 		public override byte GetBatteryPercentRemaining()
@@ -2219,13 +2561,21 @@ public static class OVRInput
 			axis1DMap.PrimaryHandTrigger        = RawAxis1D.LHandTrigger;
 			axis1DMap.SecondaryIndexTrigger     = RawAxis1D.None;
 			axis1DMap.SecondaryHandTrigger      = RawAxis1D.None;
+			axis1DMap.PrimaryIndexTriggerCurl    = RawAxis1D.LIndexTriggerCurl;
+			axis1DMap.PrimaryIndexTriggerSlide   = RawAxis1D.LIndexTriggerSlide;
+			axis1DMap.PrimaryThumbRestForce      = RawAxis1D.LThumbRestForce;
+			axis1DMap.PrimaryStylusForce         = RawAxis1D.LStylusForce;
+			axis1DMap.SecondaryIndexTriggerCurl  = RawAxis1D.None;
+			axis1DMap.SecondaryIndexTriggerSlide = RawAxis1D.None;
+			axis1DMap.SecondaryThumbRestForce    = RawAxis1D.None;
+			axis1DMap.SecondaryStylusForce       = RawAxis1D.None;
 		}
 
 		public override void ConfigureAxis2DMap()
 		{
 			axis2DMap.None                      = RawAxis2D.None;
 			axis2DMap.PrimaryThumbstick         = RawAxis2D.LThumbstick;
-			axis2DMap.PrimaryTouchpad           = RawAxis2D.None;
+			axis2DMap.PrimaryTouchpad           = RawAxis2D.LTouchpad;
 			axis2DMap.SecondaryThumbstick       = RawAxis2D.None;
 			axis2DMap.SecondaryTouchpad         = RawAxis2D.None;
 		}
@@ -2313,13 +2663,21 @@ public static class OVRInput
 			axis1DMap.PrimaryHandTrigger        = RawAxis1D.RHandTrigger;
 			axis1DMap.SecondaryIndexTrigger     = RawAxis1D.None;
 			axis1DMap.SecondaryHandTrigger      = RawAxis1D.None;
+			axis1DMap.PrimaryIndexTriggerCurl    = RawAxis1D.RIndexTriggerCurl;
+			axis1DMap.PrimaryIndexTriggerSlide   = RawAxis1D.RIndexTriggerSlide;
+			axis1DMap.PrimaryThumbRestForce      = RawAxis1D.RThumbRestForce;
+			axis1DMap.PrimaryStylusForce         = RawAxis1D.RStylusForce;
+			axis1DMap.SecondaryIndexTriggerCurl  = RawAxis1D.None;
+			axis1DMap.SecondaryIndexTriggerSlide = RawAxis1D.None;
+			axis1DMap.SecondaryThumbRestForce    = RawAxis1D.None;
+			axis1DMap.SecondaryStylusForce       = RawAxis1D.None;
 		}
 
 		public override void ConfigureAxis2DMap()
 		{
 			axis2DMap.None                      = RawAxis2D.None;
 			axis2DMap.PrimaryThumbstick         = RawAxis2D.RThumbstick;
-			axis2DMap.PrimaryTouchpad           = RawAxis2D.None;
+			axis2DMap.PrimaryTouchpad           = RawAxis2D.RTouchpad;
 			axis2DMap.SecondaryThumbstick       = RawAxis2D.None;
 			axis2DMap.SecondaryTouchpad         = RawAxis2D.None;
 		}
@@ -2407,6 +2765,14 @@ public static class OVRInput
 			axis1DMap.PrimaryHandTrigger        = RawAxis1D.None;
 			axis1DMap.SecondaryIndexTrigger     = RawAxis1D.None;
 			axis1DMap.SecondaryHandTrigger      = RawAxis1D.None;
+			axis1DMap.PrimaryIndexTriggerCurl    = RawAxis1D.None;
+			axis1DMap.PrimaryIndexTriggerSlide   = RawAxis1D.None;
+			axis1DMap.PrimaryThumbRestForce      = RawAxis1D.None;
+			axis1DMap.PrimaryStylusForce         = RawAxis1D.None;
+			axis1DMap.SecondaryIndexTriggerCurl  = RawAxis1D.None;
+			axis1DMap.SecondaryIndexTriggerSlide = RawAxis1D.None;
+			axis1DMap.SecondaryThumbRestForce    = RawAxis1D.None;
+			axis1DMap.SecondaryStylusForce       = RawAxis1D.None;
 		}
 
 		public override void ConfigureAxis2DMap()
@@ -2505,6 +2871,14 @@ public static class OVRInput
 			axis1DMap.PrimaryHandTrigger        = RawAxis1D.None;
 			axis1DMap.SecondaryIndexTrigger     = RawAxis1D.None;
 			axis1DMap.SecondaryHandTrigger      = RawAxis1D.None;
+			axis1DMap.PrimaryIndexTriggerCurl    = RawAxis1D.None;
+			axis1DMap.PrimaryIndexTriggerSlide   = RawAxis1D.None;
+			axis1DMap.PrimaryThumbRestForce      = RawAxis1D.None;
+			axis1DMap.PrimaryStylusForce         = RawAxis1D.None;
+			axis1DMap.SecondaryIndexTriggerCurl  = RawAxis1D.None;
+			axis1DMap.SecondaryIndexTriggerSlide = RawAxis1D.None;
+			axis1DMap.SecondaryThumbRestForce    = RawAxis1D.None;
+			axis1DMap.SecondaryStylusForce       = RawAxis1D.None;
 		}
 
 		public override void ConfigureAxis2DMap()
@@ -2599,6 +2973,14 @@ public static class OVRInput
 			axis1DMap.PrimaryHandTrigger        = RawAxis1D.None;
 			axis1DMap.SecondaryIndexTrigger     = RawAxis1D.None;
 			axis1DMap.SecondaryHandTrigger      = RawAxis1D.None;
+			axis1DMap.PrimaryIndexTriggerCurl    = RawAxis1D.None;
+			axis1DMap.PrimaryIndexTriggerSlide   = RawAxis1D.None;
+			axis1DMap.PrimaryThumbRestForce      = RawAxis1D.None;
+			axis1DMap.PrimaryStylusForce         = RawAxis1D.None;
+			axis1DMap.SecondaryIndexTriggerCurl  = RawAxis1D.None;
+			axis1DMap.SecondaryIndexTriggerSlide = RawAxis1D.None;
+			axis1DMap.SecondaryThumbRestForce    = RawAxis1D.None;
+			axis1DMap.SecondaryStylusForce       = RawAxis1D.None;
 		}
 
 		public override void ConfigureAxis2DMap()
@@ -2693,6 +3075,14 @@ public static class OVRInput
 			axis1DMap.PrimaryHandTrigger       = RawAxis1D.None;
 			axis1DMap.SecondaryIndexTrigger    = RawAxis1D.None;
 			axis1DMap.SecondaryHandTrigger     = RawAxis1D.None;
+			axis1DMap.PrimaryIndexTriggerCurl    = RawAxis1D.None;
+			axis1DMap.PrimaryIndexTriggerSlide   = RawAxis1D.None;
+			axis1DMap.PrimaryThumbRestForce      = RawAxis1D.None;
+			axis1DMap.PrimaryStylusForce         = RawAxis1D.None;
+			axis1DMap.SecondaryIndexTriggerCurl  = RawAxis1D.None;
+			axis1DMap.SecondaryIndexTriggerSlide = RawAxis1D.None;
+			axis1DMap.SecondaryThumbRestForce    = RawAxis1D.None;
+			axis1DMap.SecondaryStylusForce       = RawAxis1D.None;
 		}
 
 		public override void ConfigureAxis2DMap()
@@ -2782,6 +3172,14 @@ public static class OVRInput
 			axis1DMap.PrimaryHandTrigger        = RawAxis1D.None;
 			axis1DMap.SecondaryIndexTrigger     = RawAxis1D.RIndexTrigger;
 			axis1DMap.SecondaryHandTrigger      = RawAxis1D.None;
+			axis1DMap.PrimaryIndexTriggerCurl    = RawAxis1D.None;
+			axis1DMap.PrimaryIndexTriggerSlide   = RawAxis1D.None;
+			axis1DMap.PrimaryThumbRestForce      = RawAxis1D.None;
+			axis1DMap.PrimaryStylusForce         = RawAxis1D.None;
+			axis1DMap.SecondaryIndexTriggerCurl  = RawAxis1D.None;
+			axis1DMap.SecondaryIndexTriggerSlide = RawAxis1D.None;
+			axis1DMap.SecondaryThumbRestForce    = RawAxis1D.None;
+			axis1DMap.SecondaryStylusForce       = RawAxis1D.None;
 		}
 
 		public override void ConfigureAxis2DMap()
@@ -2792,249 +3190,6 @@ public static class OVRInput
 			axis2DMap.SecondaryThumbstick       = RawAxis2D.RThumbstick;
 			axis2DMap.SecondaryTouchpad         = RawAxis2D.None;
 		}
-	}
-
-	private class OVRControllerGamepadMac : OVRControllerBase
-	{
-		/// <summary> An axis on the gamepad. </summary>
-		private enum AxisGPC
-		{
-			None = -1,
-			LeftXAxis = 0,
-			LeftYAxis,
-			RightXAxis,
-			RightYAxis,
-			LeftTrigger,
-			RightTrigger,
-			DPad_X_Axis,
-			DPad_Y_Axis,
-			Max,
-		};
-
-		/// <summary> A button on the gamepad. </summary>
-		public enum ButtonGPC
-		{
-			None = -1,
-			A = 0,
-			B,
-			X,
-			Y,
-			Up,
-			Down,
-			Left,
-			Right,
-			Start,
-			Back,
-			LStick,
-			RStick,
-			LeftShoulder,
-			RightShoulder,
-			Max
-		};
-
-		private bool initialized = false;
-
-		public OVRControllerGamepadMac()
-		{
-			controllerType = Controller.Gamepad;
-
-			initialized = OVR_GamepadController_Initialize();
-		}
-
-		~OVRControllerGamepadMac()
-		{
-			if (!initialized)
-				return;
-
-			OVR_GamepadController_Destroy();
-		}
-
-		public override Controller Update()
-		{
-			if (!initialized)
-			{
-				return Controller.None;
-			}
-
-			OVRPlugin.ControllerState4 state = new OVRPlugin.ControllerState4();
-
-			bool result = OVR_GamepadController_Update();
-
-			if (result)
-				state.ConnectedControllers = (uint)Controller.Gamepad;
-
-			if (OVR_GamepadController_GetButton((int)ButtonGPC.A))
-				state.Buttons |= (uint)RawButton.A;
-			if (OVR_GamepadController_GetButton((int)ButtonGPC.B))
-				state.Buttons |= (uint)RawButton.B;
-			if (OVR_GamepadController_GetButton((int)ButtonGPC.X))
-				state.Buttons |= (uint)RawButton.X;
-			if (OVR_GamepadController_GetButton((int)ButtonGPC.Y))
-				state.Buttons |= (uint)RawButton.Y;
-			if (OVR_GamepadController_GetButton((int)ButtonGPC.Up))
-				state.Buttons |= (uint)RawButton.DpadUp;
-			if (OVR_GamepadController_GetButton((int)ButtonGPC.Down))
-				state.Buttons |= (uint)RawButton.DpadDown;
-			if (OVR_GamepadController_GetButton((int)ButtonGPC.Left))
-				state.Buttons |= (uint)RawButton.DpadLeft;
-			if (OVR_GamepadController_GetButton((int)ButtonGPC.Right))
-				state.Buttons |= (uint)RawButton.DpadRight;
-			if (OVR_GamepadController_GetButton((int)ButtonGPC.Start))
-				state.Buttons |= (uint)RawButton.Start;
-			if (OVR_GamepadController_GetButton((int)ButtonGPC.Back))
-				state.Buttons |= (uint)RawButton.Back;
-			if (OVR_GamepadController_GetButton((int)ButtonGPC.LStick))
-				state.Buttons |= (uint)RawButton.LThumbstick;
-			if (OVR_GamepadController_GetButton((int)ButtonGPC.RStick))
-				state.Buttons |= (uint)RawButton.RThumbstick;
-			if (OVR_GamepadController_GetButton((int)ButtonGPC.LeftShoulder))
-				state.Buttons |= (uint)RawButton.LShoulder;
-			if (OVR_GamepadController_GetButton((int)ButtonGPC.RightShoulder))
-				state.Buttons |= (uint)RawButton.RShoulder;
-
-			state.LThumbstick.x = OVR_GamepadController_GetAxis((int)AxisGPC.LeftXAxis);
-			state.LThumbstick.y = OVR_GamepadController_GetAxis((int)AxisGPC.LeftYAxis);
-			state.RThumbstick.x = OVR_GamepadController_GetAxis((int)AxisGPC.RightXAxis);
-			state.RThumbstick.y = OVR_GamepadController_GetAxis((int)AxisGPC.RightYAxis);
-			state.LIndexTrigger = OVR_GamepadController_GetAxis((int)AxisGPC.LeftTrigger);
-			state.RIndexTrigger = OVR_GamepadController_GetAxis((int)AxisGPC.RightTrigger);
-
-			if (state.LIndexTrigger >= AXIS_AS_BUTTON_THRESHOLD)
-				state.Buttons |= (uint)RawButton.LIndexTrigger;
-			if (state.LHandTrigger >= AXIS_AS_BUTTON_THRESHOLD)
-				state.Buttons |= (uint)RawButton.LHandTrigger;
-			if (state.LThumbstick.y >= AXIS_AS_BUTTON_THRESHOLD)
-				state.Buttons |= (uint)RawButton.LThumbstickUp;
-			if (state.LThumbstick.y <= -AXIS_AS_BUTTON_THRESHOLD)
-				state.Buttons |= (uint)RawButton.LThumbstickDown;
-			if (state.LThumbstick.x <= -AXIS_AS_BUTTON_THRESHOLD)
-				state.Buttons |= (uint)RawButton.LThumbstickLeft;
-			if (state.LThumbstick.x >= AXIS_AS_BUTTON_THRESHOLD)
-				state.Buttons |= (uint)RawButton.LThumbstickRight;
-
-			if (state.RIndexTrigger >= AXIS_AS_BUTTON_THRESHOLD)
-				state.Buttons |= (uint)RawButton.RIndexTrigger;
-			if (state.RHandTrigger >= AXIS_AS_BUTTON_THRESHOLD)
-				state.Buttons |= (uint)RawButton.RHandTrigger;
-			if (state.RThumbstick.y >= AXIS_AS_BUTTON_THRESHOLD)
-				state.Buttons |= (uint)RawButton.RThumbstickUp;
-			if (state.RThumbstick.y <= -AXIS_AS_BUTTON_THRESHOLD)
-				state.Buttons |= (uint)RawButton.RThumbstickDown;
-			if (state.RThumbstick.x <= -AXIS_AS_BUTTON_THRESHOLD)
-				state.Buttons |= (uint)RawButton.RThumbstickLeft;
-			if (state.RThumbstick.x >= AXIS_AS_BUTTON_THRESHOLD)
-				state.Buttons |= (uint)RawButton.RThumbstickRight;
-
-			previousState = currentState;
-			currentState = state;
-
-			return ((Controller)currentState.ConnectedControllers & controllerType);
-		}
-
-		public override void ConfigureButtonMap()
-		{
-			buttonMap.None                     = RawButton.None;
-			buttonMap.One                      = RawButton.A;
-			buttonMap.Two                      = RawButton.B;
-			buttonMap.Three                    = RawButton.X;
-			buttonMap.Four                     = RawButton.Y;
-			buttonMap.Start                    = RawButton.Start;
-			buttonMap.Back                     = RawButton.Back;
-			buttonMap.PrimaryShoulder          = RawButton.LShoulder;
-			buttonMap.PrimaryIndexTrigger      = RawButton.LIndexTrigger;
-			buttonMap.PrimaryHandTrigger       = RawButton.None;
-			buttonMap.PrimaryThumbstick        = RawButton.LThumbstick;
-			buttonMap.PrimaryThumbstickUp      = RawButton.LThumbstickUp;
-			buttonMap.PrimaryThumbstickDown    = RawButton.LThumbstickDown;
-			buttonMap.PrimaryThumbstickLeft    = RawButton.LThumbstickLeft;
-			buttonMap.PrimaryThumbstickRight   = RawButton.LThumbstickRight;
-			buttonMap.PrimaryTouchpad          = RawButton.None;
-			buttonMap.SecondaryShoulder        = RawButton.RShoulder;
-			buttonMap.SecondaryIndexTrigger    = RawButton.RIndexTrigger;
-			buttonMap.SecondaryHandTrigger     = RawButton.None;
-			buttonMap.SecondaryThumbstick      = RawButton.RThumbstick;
-			buttonMap.SecondaryThumbstickUp    = RawButton.RThumbstickUp;
-			buttonMap.SecondaryThumbstickDown  = RawButton.RThumbstickDown;
-			buttonMap.SecondaryThumbstickLeft  = RawButton.RThumbstickLeft;
-			buttonMap.SecondaryThumbstickRight = RawButton.RThumbstickRight;
-			buttonMap.SecondaryTouchpad        = RawButton.None;
-			buttonMap.DpadUp                   = RawButton.DpadUp;
-			buttonMap.DpadDown                 = RawButton.DpadDown;
-			buttonMap.DpadLeft                 = RawButton.DpadLeft;
-			buttonMap.DpadRight                = RawButton.DpadRight;
-			buttonMap.Up                       = RawButton.LThumbstickUp;
-			buttonMap.Down                     = RawButton.LThumbstickDown;
-			buttonMap.Left                     = RawButton.LThumbstickLeft;
-			buttonMap.Right                    = RawButton.LThumbstickRight;
-		}
-
-		public override void ConfigureTouchMap()
-		{
-			touchMap.None                      = RawTouch.None;
-			touchMap.One                       = RawTouch.None;
-			touchMap.Two                       = RawTouch.None;
-			touchMap.Three                     = RawTouch.None;
-			touchMap.Four                      = RawTouch.None;
-			touchMap.PrimaryIndexTrigger       = RawTouch.None;
-			touchMap.PrimaryThumbstick         = RawTouch.None;
-			touchMap.PrimaryThumbRest          = RawTouch.None;
-			touchMap.PrimaryTouchpad           = RawTouch.None;
-			touchMap.SecondaryIndexTrigger     = RawTouch.None;
-			touchMap.SecondaryThumbstick       = RawTouch.None;
-			touchMap.SecondaryThumbRest        = RawTouch.None;
-			touchMap.SecondaryTouchpad         = RawTouch.None;
-		}
-
-		public override void ConfigureNearTouchMap()
-		{
-			nearTouchMap.None                      = RawNearTouch.None;
-			nearTouchMap.PrimaryIndexTrigger       = RawNearTouch.None;
-			nearTouchMap.PrimaryThumbButtons       = RawNearTouch.None;
-			nearTouchMap.SecondaryIndexTrigger     = RawNearTouch.None;
-			nearTouchMap.SecondaryThumbButtons     = RawNearTouch.None;
-		}
-
-		public override void ConfigureAxis1DMap()
-		{
-			axis1DMap.None                      = RawAxis1D.None;
-			axis1DMap.PrimaryIndexTrigger       = RawAxis1D.LIndexTrigger;
-			axis1DMap.PrimaryHandTrigger        = RawAxis1D.None;
-			axis1DMap.SecondaryIndexTrigger     = RawAxis1D.RIndexTrigger;
-			axis1DMap.SecondaryHandTrigger      = RawAxis1D.None;
-		}
-
-		public override void ConfigureAxis2DMap()
-		{
-			axis2DMap.None                      = RawAxis2D.None;
-			axis2DMap.PrimaryThumbstick         = RawAxis2D.LThumbstick;
-			axis2DMap.PrimaryTouchpad           = RawAxis2D.None;
-			axis2DMap.SecondaryThumbstick       = RawAxis2D.RThumbstick;
-			axis2DMap.SecondaryTouchpad         = RawAxis2D.None;
-		}
-
-		public override void SetControllerVibration(float frequency, float amplitude)
-		{
-			int gpcNode = 0;
-			float gpcFrequency = frequency * 200.0f; //Map frequency from 0-1 CAPI range to 0-200 GPC range
-			float gpcStrength = amplitude;
-
-			OVR_GamepadController_SetVibration(gpcNode, gpcStrength, gpcFrequency);
-		}
-
-		private const string DllName = "OVRGamepad";
-
-		[DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-		private static extern bool OVR_GamepadController_Initialize();
-		[DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-		private static extern bool OVR_GamepadController_Destroy();
-		[DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-		private static extern bool OVR_GamepadController_Update();
-		[DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-		private static extern float OVR_GamepadController_GetAxis(int axis);
-		[DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-		private static extern bool OVR_GamepadController_GetButton(int button);
-		[DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-		private static extern bool OVR_GamepadController_SetVibration(int node, float strength, float frequency);
 	}
 
 	private class OVRControllerGamepadAndroid : OVRControllerBase
@@ -3114,6 +3269,14 @@ public static class OVRInput
 			axis1DMap.PrimaryHandTrigger        = RawAxis1D.None;
 			axis1DMap.SecondaryIndexTrigger     = RawAxis1D.RIndexTrigger;
 			axis1DMap.SecondaryHandTrigger      = RawAxis1D.None;
+			axis1DMap.PrimaryIndexTriggerCurl    = RawAxis1D.None;
+			axis1DMap.PrimaryIndexTriggerSlide   = RawAxis1D.None;
+			axis1DMap.PrimaryThumbRestForce      = RawAxis1D.None;
+			axis1DMap.PrimaryStylusForce         = RawAxis1D.None;
+			axis1DMap.SecondaryIndexTriggerCurl  = RawAxis1D.None;
+			axis1DMap.SecondaryIndexTriggerSlide = RawAxis1D.None;
+			axis1DMap.SecondaryThumbRestForce    = RawAxis1D.None;
+			axis1DMap.SecondaryStylusForce       = RawAxis1D.None;
 		}
 
 		public override void ConfigureAxis2DMap()

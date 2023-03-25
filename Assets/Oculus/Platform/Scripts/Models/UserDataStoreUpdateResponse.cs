@@ -10,6 +10,7 @@ namespace Oculus.Platform.Models
 
   public class UserDataStoreUpdateResponse
   {
+    /// Whether the update request is succeeded.
     public readonly bool Success;
 
 

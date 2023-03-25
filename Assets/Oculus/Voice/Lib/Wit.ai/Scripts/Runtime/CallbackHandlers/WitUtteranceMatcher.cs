@@ -1,17 +1,19 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ * All rights reserved.
  *
  * This source code is licensed under the license found in the
  * LICENSE file in the root directory of this source tree.
  */
 
 using System.Text.RegularExpressions;
-using Facebook.WitAi.Lib;
-using Facebook.WitAi.Utilities;
+using Meta.WitAi.Json;
+using Meta.WitAi.Utilities;
 using UnityEngine;
 
-namespace Facebook.WitAi.CallbackHandlers
+namespace Meta.WitAi.CallbackHandlers
 {
+    [AddComponentMenu("Wit.ai/Response Matchers/Utterance Matcher")]
     public class WitUtteranceMatcher : WitResponseHandler
     {
         [SerializeField] private string searchText;
@@ -22,10 +24,24 @@ namespace Facebook.WitAi.CallbackHandlers
 
         private Regex regex;
 
-        protected override void OnHandleResponse(WitResponseNode response)
+        protected override string OnValidateResponse(WitResponseNode response, bool isEarlyResponse)
         {
             var text = response["text"].Value;
+            if (!IsMatch(text))
+            {
+                return "Required utterance does not match";
+            }
+            return "";
+        }
+        protected override void OnResponseInvalid(WitResponseNode response, string error){}
+        protected override void OnResponseSuccess(WitResponseNode response)
+        {
+            var text = response["text"].Value;
+            onUtteranceMatched?.Invoke(text);
+        }
 
+        private bool IsMatch(string text)
+        {
             if (useRegex)
             {
                 if (null == regex)
@@ -38,22 +54,23 @@ namespace Facebook.WitAi.CallbackHandlers
                 {
                     if (exactMatch && match.Value == text)
                     {
-                        onUtteranceMatched?.Invoke(text);
+                        return true;
                     }
                     else
                     {
-                        onUtteranceMatched?.Invoke(text);
+                        return true;
                     }
                 }
             }
             else if (exactMatch && text.ToLower() == searchText.ToLower())
             {
-                onUtteranceMatched?.Invoke(text);
+                return true;
             }
             else if (text.ToLower().Contains(searchText.ToLower()))
             {
-                onUtteranceMatched?.Invoke(text);
+                return true;
             }
+            return false;
         }
     }
 }

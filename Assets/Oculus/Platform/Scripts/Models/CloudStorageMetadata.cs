@@ -8,6 +8,7 @@ namespace Oculus.Platform.Models
   using System.Collections.Generic;
   using UnityEngine;
 
+  /// DEPRECATED. Will be removed from headers at version v51.
   public class CloudStorageMetadata
   {
     public readonly string Bucket;

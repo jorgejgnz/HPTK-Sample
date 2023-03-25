@@ -1,14 +1,22 @@
-/************************************************************************************
-Copyright : Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
-
-Your use of this SDK or tool is subject to the Oculus SDK License Agreement, available at
-https://developer.oculus.com/licenses/oculussdk/
-
-Unless required by applicable law or agreed to in writing, the Utilities SDK distributed
-under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
-ANY KIND, either express or implied. See the License for the specific language governing
-permissions and limitations under the License.
-************************************************************************************/
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ * All rights reserved.
+ *
+ * Licensed under the Oculus SDK License Agreement (the "License");
+ * you may not use the Oculus SDK except in compliance with the License,
+ * which is provided at the time of installation or download, or which
+ * otherwise accompanies this software in either electronic or hard copy form.
+ *
+ * You may obtain a copy of the License at
+ *
+ * https://developer.oculus.com/licenses/oculussdk/
+ *
+ * Unless required by applicable law or agreed to in writing, the Oculus SDK
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 using System;
 using System.Collections;
@@ -48,6 +56,8 @@ public class OVRSystemPerfMetrics
 		public float compositorGpuTime;
 		public bool compositorDroppedFrameCount_IsValid;
 		public int compositorDroppedFrameCount;
+		public bool compositorSpaceWarpMode_IsValid;
+		public int compositorSpaceWarpMode;
 		public bool systemGpuUtilPercentage_IsValid;
 		public float systemGpuUtilPercentage;
 		public bool systemCpuUtilAveragePercentage_IsValid;
@@ -62,6 +72,8 @@ public class OVRSystemPerfMetrics
 		public int deviceCpuClockLevel;
 		public bool deviceGpuClockLevel_IsValid;
 		public int deviceGpuClockLevel;
+		public bool[] deviceCpuCoreUtilPercentage_IsValid = new bool[OVRPlugin.MAX_CPU_CORES];
+		public float[] deviceCpuCoreUtilPercentage = new float[OVRPlugin.MAX_CPU_CORES];
 
 		public string ToJSON()
 		{
@@ -88,6 +100,10 @@ public class OVRSystemPerfMetrics
 			if (compositorDroppedFrameCount_IsValid)
 			{
 				jsonNode.Add("compositorDroppedFrameCount", new OVRSimpleJSON.JSONNumber(compositorDroppedFrameCount));
+			}
+			if (compositorSpaceWarpMode_IsValid)
+			{
+				jsonNode.Add("compositorSpaceWarpMode", new OVRSimpleJSON.JSONNumber(compositorSpaceWarpMode));
 			}
 			if (systemGpuUtilPercentage_IsValid)
 			{
@@ -117,6 +133,11 @@ public class OVRSystemPerfMetrics
 			{
 				jsonNode.Add("deviceGpuClockLevel", new OVRSimpleJSON.JSONNumber(deviceGpuClockLevel));
 			}
+			for (int i = 0; i < OVRPlugin.MAX_CPU_CORES; i++)
+			{
+				if (deviceCpuCoreUtilPercentage_IsValid[i])
+					jsonNode.Add("deviceCpuCore" + i + "UtilPercentage", new OVRSimpleJSON.JSONNumber(deviceCpuCoreUtilPercentage[i]));
+			}
 			string str = jsonNode.ToString();
 			return str;
 		}
@@ -140,7 +161,9 @@ public class OVRSystemPerfMetrics
 			compositorGpuTime_IsValid = jsonNode["compositorGpuTime"] != null;
 			compositorGpuTime = compositorGpuTime_IsValid ? jsonNode["compositorGpuTime"].AsFloat : 0;
 			compositorDroppedFrameCount_IsValid = jsonNode["compositorDroppedFrameCount"] != null;
-			compositorDroppedFrameCount = compositorDroppedFrameCount_IsValid ? jsonNode["ompositorDroppedFrameCount"].AsInt : 0;
+			compositorDroppedFrameCount = compositorDroppedFrameCount_IsValid ? jsonNode["compositorDroppedFrameCount"].AsInt : 0;
+			compositorSpaceWarpMode_IsValid = jsonNode["compositorSpaceWarpMode"] != null;
+			compositorSpaceWarpMode = compositorSpaceWarpMode_IsValid ? jsonNode["compositorSpaceWarpMode"].AsInt : 0;
 			systemGpuUtilPercentage_IsValid = jsonNode["systemGpuUtilPercentage"] != null;
 			systemGpuUtilPercentage = systemGpuUtilPercentage_IsValid ? jsonNode["systemGpuUtilPercentage"].AsFloat : 0;
 			systemCpuUtilAveragePercentage_IsValid = jsonNode["systemCpuUtilAveragePercentage"] != null;
@@ -155,6 +178,11 @@ public class OVRSystemPerfMetrics
 			deviceCpuClockLevel = deviceCpuClockLevel_IsValid ? jsonNode["deviceCpuClockLevel"].AsInt : 0;
 			deviceGpuClockLevel_IsValid = jsonNode["deviceGpuClockLevel"] != null;
 			deviceGpuClockLevel = deviceGpuClockLevel_IsValid ? jsonNode["deviceGpuClockLevel"].AsInt : 0;
+			for (int i = 0; i < OVRPlugin.MAX_CPU_CORES; i++)
+			{
+				deviceCpuCoreUtilPercentage_IsValid[i] = jsonNode["deviceCpuCore" + i + "UtilPercentage"] != null;
+				deviceCpuCoreUtilPercentage[i] = deviceCpuCoreUtilPercentage_IsValid[i] ? jsonNode["deviceCpuCore" + i + "UtilPercentage"].AsFloat : 0;
+			}
 			return true;
 		}
 	}
@@ -206,7 +234,7 @@ public class OVRSystemPerfMetrics
 			}
 		}
 
-		PerfMetrics GatherPerfMetrics()
+		public PerfMetrics GatherPerfMetrics()
 		{
 			PerfMetrics metrics = new PerfMetrics();
 
@@ -237,6 +265,10 @@ public class OVRSystemPerfMetrics
 			metrics.compositorDroppedFrameCount_IsValid = intValue.HasValue;
 			metrics.compositorDroppedFrameCount = intValue.GetValueOrDefault();
 
+			intValue = OVRPlugin.GetPerfMetricsInt(OVRPlugin.PerfMetrics.Compositor_SpaceWarp_Mode_Int);
+			metrics.compositorSpaceWarpMode_IsValid = intValue.HasValue;
+			metrics.compositorSpaceWarpMode = intValue.GetValueOrDefault();
+
 			floatValue = OVRPlugin.GetPerfMetricsFloat(OVRPlugin.PerfMetrics.System_GpuUtilPercentage_Float);
 			metrics.systemGpuUtilPercentage_IsValid = floatValue.HasValue;
 			metrics.systemGpuUtilPercentage = floatValue.GetValueOrDefault();
@@ -264,6 +296,13 @@ public class OVRSystemPerfMetrics
 			intValue = OVRPlugin.GetPerfMetricsInt(OVRPlugin.PerfMetrics.Device_GpuClockLevel_Int);
 			metrics.deviceGpuClockLevel_IsValid = intValue.HasValue;
 			metrics.deviceGpuClockLevel = intValue.GetValueOrDefault();
+
+			for (int i = 0; i < OVRPlugin.MAX_CPU_CORES; i++)
+			{
+				floatValue = OVRPlugin.GetPerfMetricsFloat(OVRPlugin.PerfMetrics.Device_CpuCore0UtilPercentage_Float);
+				metrics.deviceCpuCoreUtilPercentage_IsValid[i] = floatValue.HasValue;
+				metrics.deviceCpuCoreUtilPercentage[i] = floatValue.GetValueOrDefault();
+			}
 
 			return metrics;
 		}

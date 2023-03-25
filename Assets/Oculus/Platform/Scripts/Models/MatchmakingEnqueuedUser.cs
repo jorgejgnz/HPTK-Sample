@@ -10,9 +10,12 @@ namespace Oculus.Platform.Models
   using System.Collections.Generic;
   using UnityEngine;
 
+  /// DEPRECATED. Will be removed from headers at version v51.
   public class MatchmakingEnqueuedUser
   {
+    /// DEPRECATED. Will be removed from headers at version v51.
     public readonly Dictionary<string, string> CustomData;
+    /// DEPRECATED. Will be removed from headers at version v51.
     // May be null. Check before using.
     public readonly User UserOptional;
     [Obsolete("Deprecated in favor of UserOptional")]

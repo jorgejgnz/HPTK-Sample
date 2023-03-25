@@ -1,22 +1,21 @@
 ﻿/*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ * All rights reserved.
  *
  * This source code is licensed under the license found in the
  * LICENSE file in the root directory of this source tree.
  */
 
-using System;
-using Facebook.WitAi.Data.Configuration;
-using UnityEngine;
-
+using Meta.WitAi.Data.Configuration;
 #if UNITY_EDITOR
-using UnityEditor;
+
 #endif
 
-namespace Facebook.WitAi
+namespace Meta.WitAi
 {
     public class WitAuthUtility
     {
+        private static string serverToken;
         public static ITokenValidationProvider tokenValidator = new DefaultTokenValidatorProvider();
 
         public static bool IsServerTokenValid()
@@ -29,27 +28,25 @@ namespace Facebook.WitAi
             return tokenValidator.IsServerTokenValid(token);
         }
 
-        private static string serverToken;
-
         public static string GetAppServerToken(WitConfiguration configuration,
             string defaultValue = "")
         {
-            return GetAppServerToken(configuration?.application?.id, defaultValue);
+            return GetAppServerToken(configuration.GetApplicationId(), defaultValue);
         }
 
-        public static string GetAppServerToken(string appId, string defaultValue = "")
+        public static string GetAppServerToken(string appId, string defaultServerToken = "")
         {
 #if UNITY_EDITOR
-            return EditorPrefs.GetString("Wit::AppIdToToken::" + appId, defaultValue);
+            return WitSettingsUtility.GetServerToken(appId, defaultServerToken);
 #else
         return "";
 #endif
         }
 
-        public static string GetAppId(string serverToken, string defaultValue = "")
+        public static string GetAppId(string serverToken, string defaultAppID = "")
         {
 #if UNITY_EDITOR
-            return EditorPrefs.GetString("Wit::TokenToAppId::" + serverToken, defaultValue);
+            return WitSettingsUtility.GetServerTokenAppID(serverToken, defaultAppID);
 #else
         return "";
 #endif
@@ -58,16 +55,11 @@ namespace Facebook.WitAi
         public static void SetAppServerToken(string appId, string token)
         {
 #if UNITY_EDITOR
-            EditorPrefs.SetString("Wit::AppIdToToken::" + appId, token);
-            EditorPrefs.SetString("Wit::TokenToAppId::" + token, appId);
+            WitSettingsUtility.SetServerToken(appId, token);
 #endif
         }
 
-        private static void SavePrefs()
-        {
-
-        }
-
+        public const string SERVER_TOKEN_ID = "SharedServerToken";
         public static string ServerToken
         {
 #if UNITY_EDITOR
@@ -75,24 +67,14 @@ namespace Facebook.WitAi
             {
                 if (null == serverToken)
                 {
-                    try
-                    {
-                        serverToken = EditorPrefs.GetString("Wit::ServerToken", "");
-                    }
-                    catch (Exception e)
-                    {
-                        // This will happen if we don't prime the server token on the main thread and
-                        // we access the server token editorpref value in a request.
-                        Debug.LogError(e.Message);
-                    }
+                    serverToken = WitSettingsUtility.GetServerToken(SERVER_TOKEN_ID);
                 }
-
                 return serverToken;
             }
             set
             {
                 serverToken = value;
-                EditorPrefs.SetString("Wit::ServerToken", serverToken);
+                WitSettingsUtility.SetServerToken(SERVER_TOKEN_ID, serverToken);
             }
 #else
         get => "";
@@ -117,15 +99,5 @@ namespace Facebook.WitAi
             bool IsTokenValid(string appId, string token);
             bool IsServerTokenValid(string serverToken);
         }
-
-#if UNITY_EDITOR
-        public static void InitEditorTokens()
-        {
-            if (null == serverToken)
-            {
-                serverToken = EditorPrefs.GetString("Wit::ServerToken", "");
-            }
-        }
-#endif
     }
 }

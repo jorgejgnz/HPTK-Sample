@@ -1,26 +1,34 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ * All rights reserved.
+ *
+ * Licensed under the Oculus SDK License Agreement (the "License");
+ * you may not use the Oculus SDK except in compliance with the License,
+ * which is provided at the time of installation or download, or which
+ * otherwise accompanies this software in either electronic or hard copy form.
+ *
+ * You may obtain a copy of the License at
+ *
+ * https://developer.oculus.com/licenses/oculussdk/
+ *
+ * Unless required by applicable law or agreed to in writing, the Oculus SDK
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /************************************************************************************
-Filename    :   ONSPAudioSource.cs
-Content     :   Interface into the Oculus Native Spatializer Plugin
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
-
-Licensed under the Oculus SDK Version 3.5 (the "License");
-you may not use the Oculus SDK except in compliance with the License,
-which is provided at the time of installation or download, or which
-otherwise accompanies this software in either electronic or hard copy form.
-
-You may obtain a copy of the License at
-
-https://developer.oculus.com/licenses/sdk-3.5/
-
-Unless required by applicable law or agreed to in writing, the Oculus SDK
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-************************************************************************************/
+ * Filename    :   ONSPAudioSource.cs
+ * Content     :   Interface into the Oculus Native Spatializer Plugin
+ ***********************************************************************************/
 
 // Uncomment below to test access of read-only spatializer parameters
 //#define TEST_READONLY_PARAMETERS
+
+#if !(UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX || (UNITY_ANDROID && !UNITY_EDITOR))
+#define ONSP_UNSUPPORTED_PLATFORM
+#endif
 
 using UnityEngine;
 using System;
@@ -38,7 +46,9 @@ public class ONSPAudioSource : MonoBehaviour
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     static void OnBeforeSceneLoadRuntimeMethod()
     {
+#if !ONSP_UNSUPPORTED_PLATFORM
         OSP_SetGlobalVoiceLimit(ONSPSettings.Instance.voiceLimit);
+#endif
     }
 
     // Import functions
@@ -51,74 +61,74 @@ public class ONSPAudioSource : MonoBehaviour
     // Public
 
     [SerializeField]
-	private bool enableSpatialization = true;
-	public  bool EnableSpatialization
-	{
-		get
-		{
-			return enableSpatialization;
-		}
-		set
-		{
-			enableSpatialization = value;
-		}
-	}
+    private bool enableSpatialization = true;
+    public  bool EnableSpatialization
+    {
+        get
+        {
+            return enableSpatialization;
+        }
+        set
+        {
+            enableSpatialization = value;
+        }
+    }
 
-	[SerializeField]
-	private float gain = 0.0f;
-	public  float Gain
-	{
-		get
-		{
-			return gain;
-		}
-		set
-		{
-			gain = Mathf.Clamp(value, 0.0f, 24.0f);
-		}
-	}
+    [SerializeField]
+    private float gain = 0.0f;
+    public  float Gain
+    {
+        get
+        {
+            return gain;
+        }
+        set
+        {
+            gain = Mathf.Clamp(value, 0.0f, 24.0f);
+        }
+    }
 
-	[SerializeField]
-	private bool useInvSqr = false;
-	public  bool UseInvSqr
-	{
-		get
-		{
-			return useInvSqr;
-		}
-		set
-		{
-			useInvSqr = value;
-		}
-	}
+    [SerializeField]
+    private bool useInvSqr = false;
+    public  bool UseInvSqr
+    {
+        get
+        {
+            return useInvSqr;
+        }
+        set
+        {
+            useInvSqr = value;
+        }
+    }
 
-	[SerializeField]
-	private float near = 0.25f;
-	public float Near
-	{
-		get
-		{
-			return near;
-		}
-		set
-		{
-			near = Mathf.Clamp(value, 0.0f, 1000000.0f);
-		}
-	}
+    [SerializeField]
+    private float near = 0.25f;
+    public float Near
+    {
+        get
+        {
+            return near;
+        }
+        set
+        {
+            near = Mathf.Clamp(value, 0.0f, 1000000.0f);
+        }
+    }
 
-	[SerializeField]
-	private float far = 250.0f;
-	public float Far
-	{
-		get
-		{
-			return far;
-		}
-		set
-		{
-			far = Mathf.Clamp(value, 0.0f, 1000000.0f);
-		}
-	}
+    [SerializeField]
+    private float far = 250.0f;
+    public float Far
+    {
+        get
+        {
+            return far;
+        }
+        set
+        {
+            far = Mathf.Clamp(value, 0.0f, 1000000.0f);
+        }
+    }
 
     [SerializeField]
     private float volumetricRadius = 0.0f;
@@ -150,43 +160,43 @@ public class ONSPAudioSource : MonoBehaviour
 
 
     [SerializeField]
-	private bool enableRfl = false;
-	public  bool EnableRfl
-	{
-		get
-		{
-			return enableRfl;
-		}
-		set
-		{
-			enableRfl = value;
-		}
-	}
+    private bool enableRfl = false;
+    public  bool EnableRfl
+    {
+        get
+        {
+            return enableRfl;
+        }
+        set
+        {
+            enableRfl = value;
+        }
+    }
 
-	/// <summary>
-	/// Awake this instance.
-	/// </summary>
-	void Awake()
-	{
-		// We might iterate through multiple sources / game object
-		var source = GetComponent<AudioSource>();
-		SetParameters(ref source);
-	}
+    /// <summary>
+    /// Awake this instance.
+    /// </summary>
+    void Awake()
+    {
+        // We might iterate through multiple sources / game object
+        var source = GetComponent<AudioSource>();
+        SetParameters(ref source);
+    }
 
-	/// <summary>
-	/// Start this instance.
-	/// </summary>
+    /// <summary>
+    /// Start this instance.
+    /// </summary>
     void Start()
     {
     }
 
-	/// <summary>
-	/// Update this instance.
-	/// </summary>
+    /// <summary>
+    /// Update this instance.
+    /// </summary>
     void Update()
     {
-		// We might iterate through multiple sources / game object
-		var source = GetComponent<AudioSource>();
+        // We might iterate through multiple sources / game object
+        var source = GetComponent<AudioSource>();
 
         // READ-ONLY PARAMETER TEST
 #if TEST_READONLY_PARAMETERS
@@ -236,15 +246,15 @@ public class ONSPAudioSource : MonoBehaviour
     /// </summary>
     /// <param name="source">Source.</param>
     public void SetParameters(ref AudioSource source)
-	{
+    {
         // See if we should enable spatialization
         source.spatialize = enableSpatialization;
 
         source.SetSpatializerFloat((int)Parameters.P_GAIN, gain);
-		// All inputs are floats; convert bool to 0.0 and 1.0
-		if(useInvSqr == true)
+        // All inputs are floats; convert bool to 0.0 and 1.0
+        if(useInvSqr == true)
             source.SetSpatializerFloat((int)Parameters.P_USEINVSQR, 1.0f);
-		else
+        else
             source.SetSpatializerFloat((int)Parameters.P_USEINVSQR, 0.0f);
 
         source.SetSpatializerFloat((int)Parameters.P_NEAR, near);
@@ -252,13 +262,13 @@ public class ONSPAudioSource : MonoBehaviour
 
         source.SetSpatializerFloat((int)Parameters.P_RADIUS, volumetricRadius);
 
-		if(enableRfl == true)
+        if(enableRfl == true)
             source.SetSpatializerFloat((int)Parameters.P_DISABLE_RFL, 0.0f);
-		else
+        else
             source.SetSpatializerFloat((int)Parameters.P_DISABLE_RFL, 1.0f);
 
         source.SetSpatializerFloat((int)Parameters.P_SENDLEVEL, reverbSend);
-	}
+    }
 
     private static ONSPAudioSource RoomReflectionGizmoAS = null;
 

@@ -12,7 +12,9 @@ namespace Oculus.Platform.Models
 
   public class Challenge
   {
+    /// Was this challenge created by a user or the app developer
     public readonly ChallengeCreationType CreationType;
+    /// A displayable string of the challenge's description
     public readonly string Description;
     public readonly DateTime EndDate;
     public readonly UInt64 ID;
@@ -20,13 +22,16 @@ namespace Oculus.Platform.Models
     public readonly UserList InvitedUsersOptional;
     [Obsolete("Deprecated in favor of InvitedUsersOptional")]
     public readonly UserList InvitedUsers;
+    /// The leaderboard associated with this challenge
     public readonly Leaderboard Leaderboard;
     // May be null. Check before using.
     public readonly UserList ParticipantsOptional;
     [Obsolete("Deprecated in favor of ParticipantsOptional")]
     public readonly UserList Participants;
     public readonly DateTime StartDate;
+    /// A displayable string of the challenge's title
     public readonly string Title;
+    /// A enum that specify who can see this challenge
     public readonly ChallengeVisibility Visibility;
 
 

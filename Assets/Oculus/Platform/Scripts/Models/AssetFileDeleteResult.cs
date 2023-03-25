@@ -10,9 +10,13 @@ namespace Oculus.Platform.Models
 
   public class AssetFileDeleteResult
   {
+    /// DEPRECATED. Use AssetFileDeleteResult.GetAssetId().
     public readonly UInt64 AssetFileId;
+    /// ID of the asset file
     public readonly UInt64 AssetId;
+    /// File path of the asset file.
     public readonly string Filepath;
+    /// Whether the asset delete was successful.
     public readonly bool Success;
 
 

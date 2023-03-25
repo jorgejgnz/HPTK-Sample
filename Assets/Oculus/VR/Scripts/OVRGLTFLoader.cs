@@ -1,14 +1,22 @@
-/************************************************************************************
-Copyright : Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
-
-Your use of this SDK or tool is subject to the Oculus SDK License Agreement, available at
-https://developer.oculus.com/licenses/oculussdk/
-
-Unless required by applicable law or agreed to in writing, the Utilities SDK distributed
-under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
-ANY KIND, either express or implied. See the License for the specific language governing
-permissions and limitations under the License.
-************************************************************************************/
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ * All rights reserved.
+ *
+ * Licensed under the Oculus SDK License Agreement (the "License");
+ * you may not use the Oculus SDK except in compliance with the License,
+ * which is provided at the time of installation or download, or which
+ * otherwise accompanies this software in either electronic or hard copy form.
+ *
+ * You may obtain a copy of the License at
+ *
+ * https://developer.oculus.com/licenses/oculussdk/
+ *
+ * Unless required by applicable law or agreed to in writing, the Oculus SDK
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 using System.Collections;
 using System.Collections.Generic;
@@ -38,6 +46,22 @@ public enum OVRTextureFormat
 	JPEG,
 }
 
+/// <summary>
+/// This enum represents a simplified representation on how Texture Filter quality is implemented in Unity.
+/// The values set in this enum are NOT random and are directly used by ApplyTextureQuality() and DetectTextureQuality()
+/// to get/set the correspondent setup in Unity.
+/// </summary>
+public enum OVRTextureQualityFiltering
+{
+	None = -1,
+	Bilinear = 0,
+	Trilinear = 1,
+	Aniso2x = 2,
+	Aniso4x = 3,
+	Aniso8x = 4,
+	Aniso16x = 5,
+}
+
 public struct OVRBinaryChunk
 {
 	public Stream chunkStream;
@@ -62,6 +86,7 @@ public struct OVRGLTFScene
 {
 	public GameObject root;
 	public List<GameObject> nodes;
+	public Dictionary<OVRGLTFInputNode, OVRGLTFAnimatinonNode> animationNodes;
 }
 
 public struct OVRTextureData
@@ -80,11 +105,27 @@ public class OVRGLTFLoader
 	private OVRBinaryChunk m_binaryChunk;
 
 	private List<GameObject> m_Nodes;
-
-	private static readonly Vector3 GLTFToUnitySpace = new Vector3(-1, 1, 1);
-	private static readonly Vector3 GLTFToUnityTangent = new Vector4(-1, 1, 1, -1);
+	private Dictionary<OVRGLTFInputNode, OVRGLTFAnimatinonNode> m_AnimationNodes;
 
 	private Shader m_Shader = null;
+	private Shader m_AlphaBlendShader = null;
+	private OVRTextureQualityFiltering m_TextureQuality = OVRTextureQualityFiltering.Bilinear;  // = Unity default
+	private float m_TextureMipmapBias = 0.0f;	// = shader default
+
+	public static readonly Vector3 GLTFToUnitySpace = new Vector3(-1, 1, 1);
+	public static readonly Vector3 GLTFToUnityTangent = new Vector4(-1, 1, 1, -1);
+	public static readonly Vector4 GLTFToUnitySpace_Rotation = new Vector4(1, -1, -1, 1);
+
+	private static Dictionary<string, OVRGLTFInputNode> InputNodeNameMap = new Dictionary<string, OVRGLTFInputNode>{
+		{"button_a", OVRGLTFInputNode.Button_A_X },
+		{"button_x", OVRGLTFInputNode.Button_A_X },
+		{"button_b", OVRGLTFInputNode.Button_B_Y },
+		{"button_y", OVRGLTFInputNode.Button_B_Y },
+		{"button_oculus", OVRGLTFInputNode.Button_Oculus_Menu },
+		{"trigger_front", OVRGLTFInputNode.Trigger_Front },
+		{"trigger_grip", OVRGLTFInputNode.Trigger_Grip},
+		{"thumbstick", OVRGLTFInputNode.ThumbStick },
+	};
 
 	public OVRGLTFLoader(string fileName)
 	{
@@ -96,11 +137,13 @@ public class OVRGLTFLoader
 		m_glbStream = new MemoryStream(data, 0, data.Length, false, true);
 	}
 
-	public OVRGLTFScene LoadGLB()
+	public OVRGLTFScene LoadGLB(bool supportAnimation, bool loadMips = true)
 	{
 		OVRGLTFScene scene = new OVRGLTFScene();
 		m_Nodes = new List<GameObject>();
+		m_AnimationNodes = new Dictionary<OVRGLTFInputNode, OVRGLTFAnimatinonNode>();
 
+        int rootNodeId = 0;
 		if (ValidateGLB(m_glbStream))
 		{
 			byte[] jsonChunkData = ReadChunk(m_glbStream, OVRChunkType.JSON);
@@ -123,14 +166,32 @@ public class OVRGLTFLoader
 					Debug.LogWarning("A shader was not set before loading the model. Using default mobile shader.");
 					m_Shader = Shader.Find("Legacy Shaders/Diffuse");
 				}
+				if (m_AlphaBlendShader == null)
+				{
+					Debug.LogWarning("An alpha blend shader was not set before loading the model. Using default transparent shader.");
+					m_AlphaBlendShader = Shader.Find("Unlit/Transparent");
+				}
 
-				LoadGLTF();
+				rootNodeId = LoadGLTF(supportAnimation, loadMips);
+				if (rootNodeId < 0)
+				{
+					m_glbStream.Close();
+					return scene;
+				}
 			}
 		}
 		m_glbStream.Close();
 
 		scene.nodes = m_Nodes;
-		scene.root = m_Nodes[0];
+		scene.root = new GameObject("GLB Scene Root");
+		scene.animationNodes = m_AnimationNodes;
+        foreach (GameObject node in m_Nodes)
+		{
+			if (node.transform.parent == null)
+			{
+				node.transform.SetParent(scene.root.transform);
+			}
+		}
 
 		scene.root.transform.Rotate(Vector3.up, 180.0f);
 
@@ -140,6 +201,98 @@ public class OVRGLTFLoader
 	public void SetModelShader(Shader shader)
 	{
 		m_Shader = shader;
+	}
+
+	public void SetModelAlphaBlendShader(Shader shader)
+	{
+		m_AlphaBlendShader = shader;
+	}
+
+	/// <summary>
+	/// All textures in the glb will be loaded with the following setting. The default is Bilinear.
+	/// Once loaded, textures will be read-only on GPU memory.
+	/// </summary>
+	/// <param name="loadedTexturesQuality">The quality setting.</param>
+	public void SetTextureQualityFiltering(OVRTextureQualityFiltering loadedTexturesQuality)
+	{
+		m_TextureQuality = loadedTexturesQuality;
+	}
+
+	/// <summary>
+	/// All textures in the glb will be preset with this MipMap value. The default is 0.
+	/// Only supported when MipMaps are loaded and the provided shader has a property named "_MainTexMMBias"
+	/// </summary>
+	/// <param name="loadedTexturesMipmapBiasing">The value for bias. Value is clamped between [-1,1]</param>
+	public void SetMipMapBias(float loadedTexturesMipmapBiasing)
+	{
+		m_TextureMipmapBias = Mathf.Clamp(loadedTexturesMipmapBiasing, -1.0f, 1.0f);
+	}
+
+	/// <summary>
+	/// Decodes the Texture Quality setting from the input Texture2D properties' values.
+	/// </summary>
+	/// <param name="srcTexture">The input Texture2D</param>
+	/// <returns>The enum TextureQualityFiltering representing the quality.</returns>
+	public static OVRTextureQualityFiltering DetectTextureQuality(in Texture2D srcTexture)
+	{
+		OVRTextureQualityFiltering quality = OVRTextureQualityFiltering.None;
+		switch (srcTexture.filterMode)
+		{
+			case FilterMode.Point:
+				quality = OVRTextureQualityFiltering.None;
+				break;
+			case FilterMode.Bilinear:
+				goto default;
+			case FilterMode.Trilinear:
+				if (srcTexture.anisoLevel <= 1)
+					quality = OVRTextureQualityFiltering.Trilinear;
+				// In theory, aniso supports values between 2-16x, but in reality GPUs and gfx APIs implement powers of 2 (values in between have no change)
+				else if (srcTexture.anisoLevel < 4)
+					quality = OVRTextureQualityFiltering.Aniso2x;
+				else if (srcTexture.anisoLevel < 8)
+					quality = OVRTextureQualityFiltering.Aniso4x;
+				else if (srcTexture.anisoLevel < 16)
+					quality = OVRTextureQualityFiltering.Aniso8x;
+				else
+					quality = OVRTextureQualityFiltering.Aniso16x;
+				break;
+			default:
+				quality = OVRTextureQualityFiltering.Bilinear;
+				break;
+		}
+		return quality;
+	}
+
+	/// <summary>
+	/// Applies the input Texture Quality setting into the ref Texture2D provided as input. Texture2D must not be readonly.
+	/// </summary>
+	/// <param name="qualityLevel">The quality level to apply</param>
+	/// <param name="destTexture">The destination Texture2D to apply quality setting to</param>
+	public static void ApplyTextureQuality(OVRTextureQualityFiltering qualityLevel, ref Texture2D destTexture)
+	{
+		if (destTexture == null)
+			return;
+
+		switch (qualityLevel)
+		{
+			case OVRTextureQualityFiltering.None:
+				destTexture.filterMode = FilterMode.Point;
+				destTexture.anisoLevel = 0;
+				break;
+			case OVRTextureQualityFiltering.Bilinear:
+				destTexture.filterMode = FilterMode.Bilinear;
+				destTexture.anisoLevel = 0;
+				break;
+			case OVRTextureQualityFiltering.Trilinear:
+				destTexture.filterMode = FilterMode.Trilinear;
+				destTexture.anisoLevel = 0;
+				break;
+			default:    // for higher values
+				destTexture.filterMode = FilterMode.Trilinear;
+				// In theory, aniso supports values between 2-16x, but in reality GPUs and gfx APIs implement powers of 2 (values in between have no change)
+				destTexture.anisoLevel = Mathf.FloorToInt(Mathf.Pow(2.0f, (int)qualityLevel - 1));   // given the enum value, this gives aniso x2 x4 x8 x16
+				break;
+		}
 	}
 
 	private bool ValidateGLB(Stream glbStream)
@@ -207,17 +360,19 @@ public class OVRGLTFLoader
 		return true;
 	}
 
-	private void LoadGLTF()
+	private int LoadGLTF(bool supportAnimation, bool loadMips)
 	{
 		if (m_jsonData == null)
 		{
 			Debug.LogError("m_jsonData was null");
+			return -1;
 		}
 
 		var scenes = m_jsonData["scenes"];
 		if (scenes.Count == 0)
 		{
 			Debug.LogError("No valid scenes in this glTF.");
+			return -1;
 		}
 
 		// Create GameObjects for each node in the model so that they can be referenced during processing
@@ -232,14 +387,21 @@ public class OVRGLTFLoader
 		// Limit loading to just the first scene in the glTF
 		var mainScene = scenes[0];
 		var rootNodes = mainScene["nodes"].AsArray;
-		for (int i = 0; i < rootNodes.Count; i++)
+
+		// Load all nodes (some models like e.g. laptops use multiple nodes)
+		foreach (JSONNode rootNode in rootNodes)
 		{
-			int nodeId = rootNodes[i].AsInt;
-			ProcessNode(m_jsonData["nodes"][nodeId], nodeId);
+			int rootNodeId = rootNode.AsInt;
+			ProcessNode(m_jsonData["nodes"][rootNodeId], rootNodeId, loadMips);
 		}
+
+		if(supportAnimation)
+			ProcessAnimations();
+
+        return rootNodes[0].AsInt;
 	}
 
-	private void ProcessNode(JSONNode node, int nodeId)
+	private void ProcessNode(JSONNode node, int nodeId, bool loadMips)
 	{
 		// Process the child nodes first
 		var childNodes = node["children"];
@@ -249,14 +411,21 @@ public class OVRGLTFLoader
 			{
 				int childId = childNodes[i].AsInt;
 				m_Nodes[childId].transform.SetParent(m_Nodes[nodeId].transform);
-				ProcessNode(m_jsonData["nodes"][childId], childId);
+                ProcessNode(m_jsonData["nodes"][childId], childId, loadMips);
 			}
+		}
+
+		string nodeName = node["name"].ToString();
+		if (nodeName.Contains("batteryIndicator"))
+		{
+			GameObject.Destroy(m_Nodes[nodeId]);
+			return;
 		}
 
 		if (node["mesh"] != null)
 		{
 			var meshId = node["mesh"].AsInt;
-			OVRMeshData meshData = ProcessMesh(m_jsonData["meshes"][meshId]);
+			OVRMeshData meshData = ProcessMesh(m_jsonData["meshes"][meshId], loadMips);
 
 			if (node["skin"] != null)
 			{
@@ -306,7 +475,7 @@ public class OVRGLTFLoader
 		}
 	}
 
-	private OVRMeshData ProcessMesh(JSONNode meshNode)
+	private OVRMeshData ProcessMesh(JSONNode meshNode, bool loadMips)
 	{
 		OVRMeshData meshData = new OVRMeshData();
 
@@ -475,7 +644,7 @@ public class OVRGLTFLoader
 		if (transcodeTask != null)
 		{
 			transcodeTask.Wait();
-			meshData.material = CreateUnityMaterial(matData);
+			meshData.material = CreateUnityMaterial(matData, loadMips);
 		}
 		return meshData;
 	}
@@ -530,6 +699,10 @@ public class OVRGLTFLoader
 		OVRMaterialData matData = new OVRMaterialData();
 
 		var jsonMaterial = m_jsonData["materials"][matId];
+
+		var jsonAlphaMode = jsonMaterial["alphaMode"];
+		bool alphaBlendMode = jsonAlphaMode != null && jsonAlphaMode.Value == "BLEND";
+
 		var jsonPbrDetails = jsonMaterial["pbrMetallicRoughness"];
 
 		var jsonBaseColor = jsonPbrDetails["baseColorTexture"];
@@ -548,7 +721,7 @@ public class OVRGLTFLoader
 			}
 		}
 
-		matData.shader = m_Shader;
+		matData.shader = alphaBlendMode ? m_AlphaBlendShader : m_Shader;
 		return matData;
 	}
 
@@ -604,18 +777,65 @@ public class OVRGLTFLoader
 		}
 	}
 
-	private Material CreateUnityMaterial(OVRMaterialData matData)
+	private Material CreateUnityMaterial(OVRMaterialData matData, bool loadMips)
 	{
 		Material mat = new Material(matData.shader);
 
 		if (matData.texture.format == OVRTextureFormat.KTX2)
 		{
 			Texture2D texture;
-			texture = new Texture2D(matData.texture.width, matData.texture.height, matData.texture.transcodedFormat, true);
+			texture = new Texture2D(matData.texture.width, matData.texture.height, matData.texture.transcodedFormat, loadMips);
 			texture.LoadRawTextureData(matData.texture.data);
-			texture.Apply(false, true);
+			ApplyTextureQuality(m_TextureQuality, ref texture);
+			if (loadMips && mat.HasProperty("_MainTexMMBias"))
+				mat.SetFloat("_MainTexMMBias", m_TextureMipmapBias);
+			texture.Apply(updateMipmaps: false, makeNoLongerReadable: true);
 			mat.mainTexture = texture;
 		}
+
 		return mat;
+	}
+
+	private OVRGLTFInputNode GetInputNodeType(string name)
+	{
+		foreach (var item in InputNodeNameMap)
+		{
+			if (name.Contains(item.Key))
+			{
+				return item.Value;
+			}
+		}
+		return OVRGLTFInputNode.None;
+	}
+
+	private void ProcessAnimations()
+	{
+		Dictionary<int, OVRGLTFInputNode> inputNodeIDTypeMap = new Dictionary<int, OVRGLTFInputNode>();
+		for(int id=0; id<m_Nodes.Count; id++)
+		{
+			GameObject obj = m_Nodes[id];
+			OVRGLTFInputNode inputNodeType = GetInputNodeType(obj.name);
+			if (inputNodeType == OVRGLTFInputNode.None)
+				continue;
+			inputNodeIDTypeMap.Add(id, inputNodeType);
+		}
+
+		var animations = m_jsonData["animations"];
+		foreach (JSONNode animation in animations.AsArray)
+		{
+			//We don't need animation name at this moment
+			//string name = animation["name"].ToString();
+			var channels = animation["channels"].AsArray;
+			foreach (JSONNode channel in channels)
+			{
+				int nodeId = channel["target"]["node"].AsInt;
+				OVRGLTFInputNode inputNodeType = inputNodeIDTypeMap[nodeId];
+				if (!m_AnimationNodes.ContainsKey(inputNodeType))
+				{
+					m_AnimationNodes.Add(inputNodeType, new OVRGLTFAnimatinonNode(m_jsonData, m_binaryChunk, inputNodeType, m_Nodes[nodeId]));
+				}
+				m_AnimationNodes[inputNodeType].AddChannel(channel, animation["samplers"]);
+			}
+		}
 	}
 }

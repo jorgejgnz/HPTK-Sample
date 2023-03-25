@@ -10,9 +10,14 @@ namespace Oculus.Platform.Models
 
   public class GroupPresenceJoinIntent
   {
+    /// An opaque string provided by the developer to help them deeplink to
+    /// content.
     public readonly string DeeplinkMessage;
+    /// If populated, the destination the current user wants to go to
     public readonly string DestinationApiName;
+    /// If populated, the lobby session the current user wants to go to
     public readonly string LobbySessionId;
+    /// If populated, the match session the current user wants to go to
     public readonly string MatchSessionId;
 
 

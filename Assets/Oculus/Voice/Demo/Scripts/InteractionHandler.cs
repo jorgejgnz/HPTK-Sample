@@ -1,21 +1,29 @@
-﻿/**************************************************************************************************
- * Copyright : Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
+﻿/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ * All rights reserved.
  *
- * Your use of this SDK or tool is subject to the Oculus SDK License Agreement, available at
+ * Licensed under the Oculus SDK License Agreement (the "License");
+ * you may not use the Oculus SDK except in compliance with the License,
+ * which is provided at the time of installation or download, or which
+ * otherwise accompanies this software in either electronic or hard copy form.
+ *
+ * You may obtain a copy of the License at
+ *
  * https://developer.oculus.com/licenses/oculussdk/
  *
- * Unless required by applicable law or agreed to in writing, the Utilities SDK distributed
- * under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
- * ANY KIND, either express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
- **************************************************************************************************/
+ * Unless required by applicable law or agreed to in writing, the Oculus SDK
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-using Facebook.WitAi;
-using Facebook.WitAi.Lib;
+using Meta.WitAi;
+using Meta.WitAi.Json;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Oculus.Voice.Demo.UIShapesDemo
+namespace Oculus.Voice.Demo
 {
     public class InteractionHandler : MonoBehaviour
     {
@@ -29,57 +37,120 @@ namespace Oculus.Voice.Demo.UIShapesDemo
         [Header("Voice")]
         [SerializeField] private AppVoiceExperience appVoiceExperience;
 
-        private string pendingText;
+        // Whether voice is activated
+        public bool IsActive => _active;
+        private bool _active = false;
 
+        // Add delegates
         private void OnEnable()
         {
-            appVoiceExperience.events.OnRequestCreated.AddListener(OnRequestStarted);
+            textArea.text = freshStateText;
+            appVoiceExperience.VoiceEvents.OnRequestCreated.AddListener(OnRequestStarted);
+            appVoiceExperience.VoiceEvents.OnPartialTranscription.AddListener(OnRequestTranscript);
+            appVoiceExperience.VoiceEvents.OnFullTranscription.AddListener(OnRequestTranscript);
+            appVoiceExperience.VoiceEvents.OnStartListening.AddListener(OnListenStart);
+            appVoiceExperience.VoiceEvents.OnStoppedListening.AddListener(OnListenStop);
+            appVoiceExperience.VoiceEvents.OnStoppedListeningDueToDeactivation.AddListener(OnListenForcedStop);
+            appVoiceExperience.VoiceEvents.OnStoppedListeningDueToInactivity.AddListener(OnListenForcedStop);
+            appVoiceExperience.VoiceEvents.OnResponse.AddListener(OnRequestResponse);
+            appVoiceExperience.VoiceEvents.OnError.AddListener(OnRequestError);
         }
-
+        // Remove delegates
         private void OnDisable()
         {
-            appVoiceExperience.events.OnRequestCreated.RemoveListener(OnRequestStarted);
+            appVoiceExperience.VoiceEvents.OnRequestCreated.RemoveListener(OnRequestStarted);
+            appVoiceExperience.VoiceEvents.OnPartialTranscription.RemoveListener(OnRequestTranscript);
+            appVoiceExperience.VoiceEvents.OnFullTranscription.RemoveListener(OnRequestTranscript);
+            appVoiceExperience.VoiceEvents.OnStartListening.RemoveListener(OnListenStart);
+            appVoiceExperience.VoiceEvents.OnStoppedListening.RemoveListener(OnListenStop);
+            appVoiceExperience.VoiceEvents.OnStoppedListeningDueToDeactivation.RemoveListener(OnListenForcedStop);
+            appVoiceExperience.VoiceEvents.OnStoppedListeningDueToInactivity.RemoveListener(OnListenForcedStop);
+            appVoiceExperience.VoiceEvents.OnResponse.RemoveListener(OnRequestResponse);
+            appVoiceExperience.VoiceEvents.OnError.RemoveListener(OnRequestError);
         }
 
+        // Request began
         private void OnRequestStarted(WitRequest r)
         {
-            // The raw response comes back on a different thread. We store the
-            // message received for display on the next frame.
-            if (showJson) r.onRawResponse = (response) => pendingText = response;
+            // Store json on completion
+            if (showJson) r.onRawResponse = (response) => textArea.text = response;
+            // Begin
+            _active = true;
         }
-
-        private void Update()
+        // Request transcript
+        private void OnRequestTranscript(string transcript)
         {
-            if (null != pendingText)
-            {
-                textArea.text = pendingText;
-                pendingText = null;
-            }
+            textArea.text = transcript;
         }
-
-        public void OnResponse(WitResponseNode response)
+        // Listen start
+        private void OnListenStart()
         {
-            if (!string.IsNullOrEmpty(response["text"]))
-            {
-                textArea.text = "I heard: " + response["text"];
-            }
-            else
+            textArea.text = "Listening...";
+        }
+        // Listen stop
+        private void OnListenStop()
+        {
+            textArea.text = "Processing...";
+        }
+        // Listen stop
+        private void OnListenForcedStop()
+        {
+            if (!showJson)
             {
                 textArea.text = freshStateText;
             }
+            OnRequestComplete();
         }
-
-        public void OnError(string error, string message)
+        // Request response
+        private void OnRequestResponse(WitResponseNode response)
         {
-            textArea.text = $"<color=\"red\">Error: {error}\n\n{message}</color>";
+            if (!showJson)
+            {
+                if (!string.IsNullOrEmpty(response["text"]))
+                {
+                    textArea.text = "I heard: " + response["text"];
+                }
+                else
+                {
+                    textArea.text = freshStateText;
+                }
+            }
+            OnRequestComplete();
+        }
+        // Request error
+        private void OnRequestError(string error, string message)
+        {
+            if (!showJson)
+            {
+                textArea.text = $"<color=\"red\">Error: {error}\n\n{message}</color>";
+            }
+            OnRequestComplete();
+        }
+        // Deactivate
+        private void OnRequestComplete()
+        {
+            _active = false;
         }
 
+        // Toggle activation
         public void ToggleActivation()
         {
-            if (appVoiceExperience.Active) appVoiceExperience.Deactivate();
-            else
+            SetActivation(!_active);
+        }
+        // Set activation
+        public void SetActivation(bool toActivated)
+        {
+            if (_active != toActivated)
             {
-                appVoiceExperience.Activate();
+                _active = toActivated;
+                if (_active)
+                {
+                    appVoiceExperience.Activate();
+                }
+                else
+                {
+                    appVoiceExperience.Deactivate();
+                }
             }
         }
     }
