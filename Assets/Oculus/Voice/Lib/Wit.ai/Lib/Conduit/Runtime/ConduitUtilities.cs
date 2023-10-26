@@ -16,7 +16,7 @@ namespace Meta.Conduit
     /// <summary>
     /// Utility class for Conduit.
     /// </summary>
-    internal class ConduitUtilities
+    internal static class ConduitUtilities
     {
         /// <summary>
         /// A delegate for reporting progress. The progress value range is 0.0f to 1.0f.
@@ -51,7 +51,7 @@ namespace Meta.Conduit
             return stringToSearch.Contains(value);
         }
 
-        public static string StripWhiteSpace(string input)
+        private static string StripWhiteSpace(string input)
         {
             return string.IsNullOrEmpty(input) ? string.Empty :
                 input.Replace(" ", string.Empty)
@@ -72,7 +72,7 @@ namespace Meta.Conduit
         /// <summary>
         /// Get sanitized entity value
         /// </summary>
-        /// <param name="entityRole"></param>
+        /// <param name="entityValue">The value of the entity.</param>
         /// <returns></returns>
         public static string GetEntityEnumValue(string entityValue)
         {
@@ -93,7 +93,7 @@ namespace Meta.Conduit
                 return string.Empty;
             }
             // Standard sanitize
-            string result = SanitizeString(input);
+            var result = SanitizeString(input);
             // Capitalize first letter
             return result[0].ToString().ToUpper() + result.Substring(1);
         }
@@ -112,7 +112,7 @@ namespace Meta.Conduit
                 return string.Empty;
             }
             // Remove all non word characters, underscore & hyphen
-            string result = Regex.Replace(input, @"[^\w_-]", "");
+            var result = Regex.Replace(input, @"[^\w_-]", "");
             // Starts with number, append N
             if (Regex.IsMatch(result[0].ToString(), @"^\d$"))
             {

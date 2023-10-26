@@ -19,17 +19,17 @@
  */
 
 using Oculus.Interaction.Grab;
+using Oculus.Interaction.HandGrab;
 using Oculus.Interaction.Input;
 using UnityEngine;
-using UnityEngine.Assertions;
 
 namespace Oculus.Interaction
 {
     public class GrabStrengthIndicator : MonoBehaviour
     {
-        [SerializeField, Interface(typeof(IHandGrabber), typeof(IInteractor))]
-        private MonoBehaviour _handGrabInteractor;
-        private IHandGrabber HandGrab { get; set; }
+        [SerializeField, Interface(typeof(IHandGrabInteractor), typeof(IInteractor))]
+        private UnityEngine.Object _handGrabInteractor;
+        private IHandGrabInteractor HandGrab { get; set; }
         private IInteractor Interactor { get; set; }
 
         [SerializeField]
@@ -127,7 +127,7 @@ namespace Oculus.Interaction
 
         private void Awake()
         {
-            HandGrab = _handGrabInteractor as IHandGrabber;
+            HandGrab = _handGrabInteractor as IHandGrabInteractor;
             Interactor = _handGrabInteractor as IInteractor;
         }
 
@@ -219,23 +219,18 @@ namespace Oculus.Interaction
 
         #region Inject
 
-        public void InjectAllGrabStrengthIndicator(IHandGrabber handGrab, IInteractor interactor,
+        public void InjectAllGrabStrengthIndicator(IHandGrabInteractor handGrabInteractor,
             MaterialPropertyBlockEditor handMaterialPropertyBlockEditor)
         {
-            InjectHandGrab(handGrab);
-            InjectInteractor(interactor);
+            InjectHandGrab(handGrabInteractor);
             InjectHandMaterialPropertyBlockEditor(handMaterialPropertyBlockEditor);
         }
 
-        public void InjectHandGrab(IHandGrabber handGrab)
+        public void InjectHandGrab(IHandGrabInteractor handGrab)
         {
+            _handGrabInteractor = handGrab as UnityEngine.Object;
             HandGrab = handGrab;
-        }
-
-        public void InjectInteractor(IInteractor interactor)
-        {
-            _handGrabInteractor = interactor as MonoBehaviour;
-            Interactor = interactor;
+            Interactor = handGrab as IInteractor;
         }
 
         public void InjectHandMaterialPropertyBlockEditor(MaterialPropertyBlockEditor handMaterialPropertyBlockEditor)

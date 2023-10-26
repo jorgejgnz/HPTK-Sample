@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
  *
@@ -31,7 +31,7 @@ namespace Oculus.Interaction
     public class InteractableUnityEventWrapper : MonoBehaviour
     {
         [SerializeField, Interface(typeof(IInteractableView))]
-        private MonoBehaviour _interactableView;
+        private UnityEngine.Object _interactableView;
         private IInteractableView InteractableView;
 
         [SerializeField]
@@ -94,7 +94,6 @@ namespace Oculus.Interaction
         {
             if (_started)
             {
-                InteractableView.WhenStateChanged -= HandleStateChanged;
                 InteractableView.WhenStateChanged -= HandleStateChanged;
                 InteractableView.WhenInteractorViewAdded -= HandleInteractorViewAdded;
                 InteractableView.WhenInteractorViewRemoved -= HandleInteractorViewRemoved;
@@ -164,7 +163,7 @@ namespace Oculus.Interaction
 
         public void InjectInteractableView(IInteractableView interactableView)
         {
-            _interactableView = interactableView as MonoBehaviour;
+            _interactableView = interactableView as UnityEngine.Object;
             InteractableView = interactableView;
         }
 

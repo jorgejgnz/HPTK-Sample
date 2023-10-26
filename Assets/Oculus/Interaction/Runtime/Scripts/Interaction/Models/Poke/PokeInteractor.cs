@@ -132,13 +132,19 @@ namespace Oculus.Interaction
         private Vector3 _targetTouchPointLocal;
         private Vector3 _easeTouchPointLocal;
 
+        private bool _isRecoiled;
         private bool _isDragging;
         private ProgressCurve _dragEaseCurve;
+        private ProgressCurve _pinningResyncCurve;
         private Vector3 _dragCompareSurfacePointLocal;
         private float _maxDistanceFromFirstTouchPoint;
 
+        private float _recoilVelocityExpansion;
         private float _selectMaxDepth;
         private float _reEnterDepth;
+        private float _lastUpdateTime;
+
+        private Func<float> _timeProvider;
 
         private bool _isPassedSurface;
         public bool IsPassedSurface
@@ -162,13 +168,23 @@ namespace Oculus.Interaction
         private SurfaceHitCache _hitCache;
 
         private Dictionary<PokeInteractable, Matrix4x4> _previousSurfaceTransformMap;
-        private float _previousProgress;
+        private float _previousDragCurveProgress;
+        private float _previousPinningCurveProgress;
+
+        protected override void Awake()
+        {
+            base.Awake();
+            _timeProvider = () => Time.time;
+            _nativeId = 0x506f6b6549746f72;
+        }
 
         protected override void Start()
         {
             base.Start();
             this.AssertField(_pointTransform, nameof(_pointTransform));
+            this.AssertField(_timeProvider, nameof(_timeProvider));
             _dragEaseCurve = new ProgressCurve();
+            _pinningResyncCurve = new ProgressCurve();
             _hitCache = new SurfaceHitCache();
             _previousSurfaceTransformMap = new Dictionary<PokeInteractable, Matrix4x4>();
         }
@@ -190,13 +206,14 @@ namespace Oculus.Interaction
                 _previousSurfaceTransformMap[interactable] =
                     interactable.SurfacePatch.BackingSurface.Transform.worldToLocalMatrix;
             }
+            _lastUpdateTime = _timeProvider();
         }
 
         protected override bool ComputeShouldSelect()
         {
             if (_recoilInteractable != null)
             {
-                float depth = ComputeDepth(_recoilInteractable, Origin);
+                float depth = ComputePokeDepth(_recoilInteractable, Origin);
                 _reEnterDepth = Mathf.Min(depth + _recoilInteractable.RecoilAssist.ReEnterDistance, _reEnterDepth);
                 _hitInteractable = depth > _reEnterDepth ? _recoilInteractable : null;
             }
@@ -231,9 +248,12 @@ namespace Oculus.Interaction
             Vector3 adjustedPokeOrigin = interactable.SurfacePatch.BackingSurface.Transform
                 .TransformPoint(previousLocalPokeOrigin);
 
+            float hoverDistance = interactable == Interactable ?
+                Mathf.Max(interactable.ExitHoverTangent, interactable.ExitHoverNormal) :
+                Mathf.Max(interactable.EnterHoverTangent, interactable.EnterHoverNormal);
+
             float moveDistance = Vector3.Distance(Origin, adjustedPokeOrigin);
-            float maxDistance = moveDistance + Radius +
-                    Mathf.Max(interactable.EnterHoverTangent, interactable.EnterHoverNormal) +
+            float maxDistance = moveDistance + Radius + hoverDistance +
                     _equalDistanceThreshold + interactable.CloseDistanceThreshold;
 
             return interactable.SurfacePatch.ClosestSurfacePoint(Origin, out _, maxDistance);
@@ -253,7 +273,9 @@ namespace Oculus.Interaction
                 bool withinSurface = SurfaceUpdate(_recoilInteractable);
                 if (!withinSurface)
                 {
+                    _isRecoiled = false;
                     _recoilInteractable = null;
+                    _recoilVelocityExpansion = 0;
                     IsPassedSurface = false;
                     return;
                 }
@@ -265,7 +287,9 @@ namespace Oculus.Interaction
                     _previousCandidate = null;
                     _hitInteractable = null;
                     _recoilInteractable = null;
+                    _recoilVelocityExpansion = 0;
                     IsPassedSurface = false;
+                    _isRecoiled = false;
                 }
             }
         }
@@ -298,6 +322,17 @@ namespace Oculus.Interaction
             _previousCandidate = closestInteractable;
 
             return closestInteractable;
+        }
+
+        protected override int ComputeCandidateTiebreaker(PokeInteractable a, PokeInteractable b)
+        {
+            int result = base.ComputeCandidateTiebreaker(a, b);
+            if (result != 0)
+            {
+                return result;
+            }
+
+            return a.TiebreakerScore.CompareTo(b.TiebreakerScore);
         }
 
         private PokeInteractable ComputeSelectCandidate()
@@ -398,7 +433,7 @@ namespace Oculus.Interaction
 
                         if (normalDistanceEqual)
                         {
-                            if (interactable.TiebreakerScore > closestInteractable.TiebreakerScore)
+                            if (ComputeCandidateTiebreaker(interactable, closestInteractable) > 0)
                             {
                                 closestNormalDistance = normalDistance;
                                 closestTangentDistance = tangentDistance;
@@ -412,7 +447,8 @@ namespace Oculus.Interaction
                             continue;
                         }
 
-                        if (normalDistance < closestNormalDistance - interactable.CloseDistanceThreshold)
+                        if (closestInteractable == null ||
+                            normalDistance < closestNormalDistance - closestInteractable.CloseDistanceThreshold)
                         {
                             closestNormalDistance = normalDistance;
                             closestTangentDistance = tangentDistance;
@@ -482,7 +518,7 @@ namespace Oculus.Interaction
 
                     if (Mathf.Abs(normalDistance) < _equalDistanceThreshold)
                     {
-                        if (closestInteractable.TiebreakerScore > interactable.TiebreakerScore)
+                        if (ComputeCandidateTiebreaker(closestInteractable, interactable) > 0)
                         {
                             continue;
                         }
@@ -539,7 +575,7 @@ namespace Oculus.Interaction
             foreach (PokeInteractor pokeInteractor in interactable.Interactors)
             {
                 // Scalar project the poke interactor's position onto the button base's normal vector
-                float normalDistance = ComputeDepth(interactable, pokeInteractor.Origin);
+                float normalDistance = ComputePokeDepth(interactable, pokeInteractor.Origin);
                 minDepth = Mathf.Min(normalDistance, minDepth);
             }
 
@@ -612,8 +648,7 @@ namespace Oculus.Interaction
                         if (normalDistanceEqual)
                         {
                             // Select this interactable if its tiebreakerscore is highest
-                            if (closestInteractable != null && interactable.TiebreakerScore >
-                                closestInteractable.TiebreakerScore)
+                            if (closestInteractable != null && ComputeCandidateTiebreaker(interactable, closestInteractable) > 0)
                             {
                                 closestInteractable = interactable;
                                 closestNormalDistance = normalDistance;
@@ -622,18 +657,16 @@ namespace Oculus.Interaction
                             }
                         }
 
-                        float closeThreshold = interactable.CloseDistanceThreshold;
-                        bool normalDistanceClose =
-                            Mathf.Abs(normalDistance - closestNormalDistance) < closeThreshold;
-
                         // If normal distance is greater than closest normal distance by over closeDistanceThreshold
-                        if (normalDistance > closestNormalDistance + closeThreshold)
+                        if (normalDistance > closestNormalDistance + interactable.CloseDistanceThreshold)
                         {
                             continue;
                         }
 
                         // If normal distance is less than closest normal distance by over closeDistanceThreshold
-                        if(normalDistance < closestNormalDistance - closeThreshold)
+                        // of the best closest interactable's close distance threshold
+                        if(closestInteractable == null || normalDistance < closestNormalDistance -
+                            closestInteractable.CloseDistanceThreshold)
                         {
                             closestInteractable = interactable;
                             closestNormalDistance = normalDistance;
@@ -679,7 +712,9 @@ namespace Oculus.Interaction
                 Vector3 lateralComparePoint = backingHit.Point;
                 _dragCompareSurfacePointLocal = interactable.SurfacePatch.BackingSurface.Transform.InverseTransformPoint(lateralComparePoint);
                 _dragEaseCurve.Copy(interactable.DragThresholds.DragEaseCurve);
+                _pinningResyncCurve.Copy(interactable.PositionPinning.ResyncCurve);
                 _isDragging = false;
+                _isRecoiled = false;
 
                 _maxDistanceFromFirstTouchPoint = 0;
                 _selectMaxDepth = 0;
@@ -692,6 +727,7 @@ namespace Oculus.Interaction
         protected override void HandleDisabled()
         {
             _hitInteractable = null;
+            IsPassedSurface = false;
             base.HandleDisabled();
         }
 
@@ -714,35 +750,31 @@ namespace Oculus.Interaction
         // Returns 0 for where the sphere touches the surface along the normal.
         private float ComputeDistanceAbove(PokeInteractable interactable, Vector3 point)
         {
-            interactable.ClosestBackingSurfaceHit(point, out SurfaceHit hit);
-            Vector3 surfaceToPoint = point - hit.Point;
-            return Vector3.Dot(surfaceToPoint, hit.Normal) - _radius;
+            return SurfaceUtils.ComputeDistanceAbove(interactable.SurfacePatch, point, _radius);
         }
 
         // The distance below a surface along the closest normal. Always positive.
+        [System.Obsolete("This will be removed in a future version of Interaction SDK. Please use SurfaceUtils.ComputeDepth instead")]
         public float ComputeDepth(PokeInteractable interactable, Vector3 point)
         {
-            return Mathf.Max(0f, -ComputeDistanceAbove(interactable, point));
+            return SurfaceUtils.ComputeDepth(interactable.SurfacePatch, point, _radius);
+        }
+
+        private float ComputePokeDepth(PokeInteractable interactable, Vector3 point)
+        {
+            return SurfaceUtils.ComputeDepth(interactable.SurfacePatch, point, _radius);
         }
 
         // The distance from the closest point as computed by the proximity field and surface.
         // Returns the distance to the point without taking into account the surface normal.
         private float ComputeDistanceFrom(PokeInteractable interactable, Vector3 point)
         {
-            interactable.ClosestSurfacePatchHit(point, out SurfaceHit hit);
-            Vector3 surfaceToPoint = point - hit.Point;
-            return surfaceToPoint.magnitude - _radius;
+            return SurfaceUtils.ComputeDistanceFrom(interactable.SurfacePatch, point, _radius);
         }
 
         private float ComputeTangentDistance(PokeInteractable interactable, Vector3 point)
         {
-            interactable.ClosestSurfacePatchHit(point, out SurfaceHit patchHit);
-            interactable.ClosestBackingSurfaceHit(point, out SurfaceHit backingHit);
-            Vector3 proximityToPoint = point - patchHit.Point;
-            Vector3 projOnNormal = Vector3.Dot(proximityToPoint, backingHit.Normal) *
-                backingHit.Normal;
-            Vector3 lateralVec = proximityToPoint - projOnNormal;
-            return Mathf.Max(lateralVec.magnitude - _radius, 0f);
+            return SurfaceUtils.ComputeTangentDistance(interactable.SurfacePatch, point, _radius);
         }
 
         // Returns if poke origin is still considered to be within the surface.
@@ -764,6 +796,9 @@ namespace Oculus.Interaction
                 return false;
             }
 
+            bool wasRecoiled = _isRecoiled;
+            _isRecoiled = _hitInteractable == null && _recoilInteractable != null;
+
             Vector3 closestSurfacePoint = backingHit.Point;
 
             Vector3 positionOnSurfaceLocal =
@@ -771,8 +806,8 @@ namespace Oculus.Interaction
 
             if (interactable.DragThresholds.Enabled)
             {
-                float worldDepthDelta = Mathf.Abs(ComputeDepth(interactable, Origin) -
-                                              ComputeDepth(interactable, _previousPokeOrigin));
+                float worldDepthDelta = Mathf.Abs(ComputePokeDepth(interactable, Origin) -
+                                              ComputePokeDepth(interactable, _previousPokeOrigin));
                 Vector3 positionDeltaLocal = positionOnSurfaceLocal - _previousSurfacePointLocal;
                 Vector3 positionDeltaWorld =
                     interactable.SurfacePatch.BackingSurface.Transform.TransformVector(positionDeltaLocal);
@@ -798,7 +833,7 @@ namespace Oculus.Interaction
                         {
                             _isDragging = true;
                             _dragEaseCurve.Start();
-                            _previousProgress = 0;
+                            _previousDragCurveProgress = 0;
                             _targetTouchPointLocal = positionOnSurfaceLocal;
                         }
                     }
@@ -823,28 +858,50 @@ namespace Oculus.Interaction
             Vector3 pinnedTouchPointLocal = _targetTouchPointLocal;
             if (interactable.PositionPinning.Enabled)
             {
-                Vector3 deltaFromCaptureLocal = pinnedTouchPointLocal - _firstTouchPointLocal;
-                Vector3 deltaFromCaptureWorld =
-                    interactable.SurfacePatch.BackingSurface.Transform.TransformVector(deltaFromCaptureLocal);
-                _maxDistanceFromFirstTouchPoint = Mathf.Max(deltaFromCaptureWorld.magnitude, _maxDistanceFromFirstTouchPoint);
-
-                float deltaAsPercent = 1;
-                if (interactable.PositionPinning.MaxPinDistance != 0f)
+                if (!_isRecoiled)
                 {
-                    deltaAsPercent = Mathf.Clamp01(_maxDistanceFromFirstTouchPoint / interactable.PositionPinning.MaxPinDistance);
-                }
+                    Vector3 deltaFromCaptureLocal = pinnedTouchPointLocal - _firstTouchPointLocal;
+                    Vector3 deltaFromCaptureWorld =
+                        interactable.SurfacePatch.BackingSurface.Transform.TransformVector(deltaFromCaptureLocal);
+                    _maxDistanceFromFirstTouchPoint = Mathf.Max(deltaFromCaptureWorld.magnitude, _maxDistanceFromFirstTouchPoint);
 
-                pinnedTouchPointLocal = _firstTouchPointLocal + deltaFromCaptureLocal * deltaAsPercent;
+                    float deltaAsPercent = 1;
+                    if (interactable.PositionPinning.MaxPinDistance != 0f)
+                    {
+                        deltaAsPercent = Mathf.Clamp01(_maxDistanceFromFirstTouchPoint / interactable.PositionPinning.MaxPinDistance);
+                        deltaAsPercent = interactable.PositionPinning.PinningEaseCurve.Evaluate(deltaAsPercent);
+                    }
+
+                    pinnedTouchPointLocal = _firstTouchPointLocal + deltaFromCaptureLocal * deltaAsPercent;
+                }
+                else
+                {
+                    if (!wasRecoiled) // Entered recoil, begin resync
+                    {
+                        _pinningResyncCurve.Start();
+                        _previousPinningCurveProgress = 0;
+                    }
+
+                    // Apply Pinning Resync Curve
+                    float pinningCurveProgress = _pinningResyncCurve.Progress();
+                    if (pinningCurveProgress != 1f)
+                    {
+                        float deltaProgress = pinningCurveProgress - _previousPinningCurveProgress;
+                        Vector3 delta = pinnedTouchPointLocal - _easeTouchPointLocal;
+                        pinnedTouchPointLocal = _easeTouchPointLocal + deltaProgress / (1f - _previousPinningCurveProgress) * delta;
+                        _previousPinningCurveProgress = pinningCurveProgress;
+                    }
+                }
             }
 
-            float progress = _dragEaseCurve.Progress();
-            if (progress != 1f)
+            // Apply Drag Curve
+            float dragCurveProgress = _dragEaseCurve.Progress();
+            if (dragCurveProgress != 1f)
             {
-                float deltaProgress = progress - _previousProgress;
-
+                float deltaProgress = dragCurveProgress - _previousDragCurveProgress;
                 Vector3 delta = pinnedTouchPointLocal - _easeTouchPointLocal;
-                _easeTouchPointLocal += deltaProgress / (1f - _previousProgress) * delta;
-                _previousProgress = progress;
+                _easeTouchPointLocal += deltaProgress / (1f - _previousDragCurveProgress) * delta;
+                _previousDragCurveProgress = dragCurveProgress;
             }
             else
             {
@@ -864,7 +921,7 @@ namespace Oculus.Interaction
         protected virtual bool ShouldCancel(PokeInteractable interactable)
         {
             if ((interactable.CancelSelectNormal > 0.0f &&
-                ComputeDepth(interactable, Origin) >
+                ComputePokeDepth(interactable, Origin) >
                 interactable.CancelSelectNormal) ||
                 (interactable.CancelSelectTangent > 0.0f &&
                 ComputeTangentDistance(interactable, Origin) >
@@ -878,14 +935,67 @@ namespace Oculus.Interaction
 
         protected virtual bool ShouldRecoil(PokeInteractable interactable)
         {
-            if (interactable.RecoilAssist.Enabled)
+            if (!interactable.RecoilAssist.Enabled)
             {
-                float depth = ComputeDepth(interactable, Origin);
-                if (depth > _selectMaxDepth)
+                return false;
+            }
+
+            float depth = ComputePokeDepth(interactable, Origin);
+            float deltaTime = _timeProvider() - _lastUpdateTime;
+            float recoilExitDistance = interactable.RecoilAssist.ExitDistance;
+
+            if (interactable.RecoilAssist.UseVelocityExpansion)
+            {
+                Vector3 frameDeltaWorld = Origin - _previousPokeOrigin;
+                float normalVelocity = Mathf.Max(0, Vector3.Dot(frameDeltaWorld, -TouchNormal));
+                normalVelocity = deltaTime > 0 ? normalVelocity / deltaTime : 0f;
+
+                float adjustment = Mathf.InverseLerp(
+                    interactable.RecoilAssist.VelocityExpansionMinSpeed,
+                    interactable.RecoilAssist.VelocityExpansionMaxSpeed,
+                    normalVelocity);
+
+                float targetRecoilVelocityExpansion = Mathf.Clamp01(adjustment) *
+                    interactable.RecoilAssist.VelocityExpansionDistance;
+
+                if (targetRecoilVelocityExpansion > _recoilVelocityExpansion)
                 {
-                    _selectMaxDepth = depth;
+                    _recoilVelocityExpansion = targetRecoilVelocityExpansion;
                 }
-                else if (depth < _selectMaxDepth - interactable.RecoilAssist.ExitDistance)
+                else
+                {
+                    float decayRate = interactable.RecoilAssist.VelocityExpansionDecayRate * deltaTime;
+                    _recoilVelocityExpansion = Math.Max(targetRecoilVelocityExpansion,
+                        _recoilVelocityExpansion - decayRate);
+                }
+
+                recoilExitDistance += _recoilVelocityExpansion;
+            }
+
+            if (depth > _selectMaxDepth)
+            {
+                _selectMaxDepth = depth;
+            }
+            else
+            {
+                if (interactable.RecoilAssist.UseDynamicDecay)
+                {
+                    // 1. Compute normalRatio to determine the portion of movement normal to the touch
+                    //      This is the 'dynamic' part.
+                    // 2. Determine a decayFactor as a function of normalRatio.
+                    //      Typically higher normalRatio would mean less decay, while more tangent movement gives more decay
+                    //      The goal here is to prevent premature recoil while scrolling, since your finger will naturally make an arc
+                    // 3. Adjust _selectMaxDepth towards the touch depth proportional to decayFactor
+                    //      This is intended to make it so you have to recoil more/faster before we unselect the touch.
+
+                    Vector3 frameDeltaWorld = Origin - _previousPokeOrigin;
+                    Vector3 normalDeltaWorld = Vector3.Project(frameDeltaWorld, TouchNormal);
+                    float normalRatio = frameDeltaWorld.sqrMagnitude > 0.0000001f ? normalDeltaWorld.magnitude / frameDeltaWorld.magnitude : 1f;
+                    float decayFactor = interactable.RecoilAssist.DynamicDecayCurve.Evaluate(normalRatio);
+                    _selectMaxDepth = Mathf.Lerp(_selectMaxDepth, depth, decayFactor * deltaTime);
+                }
+
+                if (depth < _selectMaxDepth - recoilExitDistance)
                 {
                     _reEnterDepth = depth + interactable.RecoilAssist.ReEnterDistance;
                     return true;
@@ -912,7 +1022,9 @@ namespace Oculus.Interaction
                 _previousCandidate = null;
                 _hitInteractable = null;
                 _recoilInteractable = null;
+                _recoilVelocityExpansion = 0;
                 IsPassedSurface = false;
+                _isRecoiled = false;
                 return;
             }
 
@@ -950,6 +1062,11 @@ namespace Oculus.Interaction
         public void InjectOptionalEqualDistanceThreshold(float equalDistanceThreshold)
         {
             _equalDistanceThreshold = equalDistanceThreshold;
+        }
+
+        public void InjectOptionalTimeProvider(Func<float> timeProvider)
+        {
+            _timeProvider = timeProvider;
         }
 
         #endregion

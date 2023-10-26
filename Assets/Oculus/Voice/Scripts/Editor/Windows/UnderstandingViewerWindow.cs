@@ -18,6 +18,8 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
+using Meta.Voice.TelemetryUtilities;
 using Meta.WitAi;
 using Meta.WitAi.Windows;
 using UnityEngine;
@@ -31,5 +33,15 @@ namespace Oculus.Voice.Windows
         protected override GUIContent Title => VoiceSDKStyles.UnderstandingTitle;
         protected override Texture2D HeaderIcon => VoiceSDKStyles.MainHeader;
         protected override string HeaderUrl => AppVoiceExperienceWitConfigurationEditor.GetSafeAppUrl(witConfiguration, WitTexts.WitAppEndpointType.Understanding);
+        protected override string DocsUrl => VoiceSDKStyles.Texts.VoiceDocsUrl;
+
+        protected override void OnEnable()
+        {
+            Telemetry.LogInstantEvent(Telemetry.TelemetryEventId.OpenUi, new Dictionary<Telemetry.AnnotationKey, string>()
+            {
+                {Telemetry.AnnotationKey.PageId, "Configuration Window"}
+            });
+            base.OnEnable();
+        }
     }
 }

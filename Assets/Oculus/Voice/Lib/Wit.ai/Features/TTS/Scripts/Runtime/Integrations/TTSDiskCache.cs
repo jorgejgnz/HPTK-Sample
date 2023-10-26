@@ -13,10 +13,9 @@ using UnityEngine;
 using Meta.WitAi.TTS.Data;
 using Meta.WitAi.TTS.Events;
 using Meta.WitAi.TTS.Interfaces;
-using Meta.WitAi.TTS.Utilities;
 using Meta.WitAi.Utilities;
-using Meta.WitAi;
 using Meta.WitAi.Requests;
+using Meta.Voice.Audio;
 
 namespace Meta.WitAi.TTS.Integrations
 {
@@ -47,6 +46,17 @@ namespace Meta.WitAi.TTS.Integrations
 
         // All currently performing stream requests
         private Dictionary<string, VRequest> _streamRequests = new Dictionary<string, VRequest>();
+
+        // Cancel all requests
+        protected virtual void OnDestroy()
+        {
+            Dictionary<string, VRequest> requests = _streamRequests;
+            _streamRequests.Clear();
+            foreach (var request in requests.Values)
+            {
+                request.Cancel();
+            }
+        }
 
         /// <summary>
         /// Builds full cache path
@@ -95,7 +105,7 @@ namespace Meta.WitAi.TTS.Integrations
             }
 
             // Return clip path
-            return Path.Combine(directory, clipData.clipID + "." + clipData.audioType.ToString().ToLower());
+            return Path.Combine(directory, clipData.clipID + "." + WitTTSVRequest.GetAudioExtension(clipData.audioType));
         }
 
         /// <summary>
@@ -153,14 +163,13 @@ namespace Meta.WitAi.TTS.Integrations
             string filePath = GetDiskCachePath(clipData);
 
             // Load clip async
-            VRequest request = new VRequest();
-            bool canPerform = request.RequestAudioClip(new Uri(request.CleanUrl(filePath)), (clip, error) =>
-            {
-                // Apply clip
-                clipData.clip = clip;
-                // Call on complete
-                OnStreamComplete(clipData, error);
-            }, WitTTSVRequest.TTSAudioType, true, (progress) => clipData.loadProgress = progress);
+            VRequest request = new VRequest((progress) => clipData.loadProgress = progress);
+            bool canPerform = request.RequestAudioStream(clipData.clipStream, new Uri(request.CleanUrl(filePath)),
+                (clipStream, error) =>
+                {
+                    clipData.clipStream = clipStream;
+                    OnStreamComplete(clipData, error);
+                }, clipData.audioType, clipData.diskCacheSettings.StreamFromDisk);
             if (canPerform)
             {
                 _streamRequests[clipData.clipID] = request;

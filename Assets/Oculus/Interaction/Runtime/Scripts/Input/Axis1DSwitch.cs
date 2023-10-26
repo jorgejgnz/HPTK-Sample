@@ -29,14 +29,14 @@ namespace Oculus.Interaction
     public class Axis1DSwitch : MonoBehaviour, IAxis1D
     {
         [SerializeField, Interface(typeof(IActiveState))]
-        private MonoBehaviour _activeState;
+        private UnityEngine.Object _activeState;
         private IActiveState ActiveState;
 
         [SerializeField, Interface(typeof(IAxis1D))]
-        private MonoBehaviour _axisWhenActive;
+        private UnityEngine.Object _axisWhenActive;
 
         [SerializeField, Interface(typeof(IAxis1D))]
-        private MonoBehaviour _axisWhenInactive;
+        private UnityEngine.Object _axisWhenInactive;
 
         protected IAxis1D AxisWhenActive;
         protected IAxis1D AxisWhenInactive;
@@ -68,25 +68,25 @@ namespace Oculus.Interaction
         {
             InjectActiveState(activeState);
             InjectAxisWhenActive(axisWhenActive);
-            InjectAxisWhenInactive(axisWhenActive);
+            InjectAxisWhenInactive(axisWhenInactive);
         }
 
         public void InjectActiveState(IActiveState activeState)
         {
-            _activeState = activeState as MonoBehaviour;
+            _activeState = activeState as UnityEngine.Object;
             ActiveState = activeState;
         }
 
         private void InjectAxisWhenActive(IAxis1D axisWhenActive)
         {
             AxisWhenActive = axisWhenActive;
-            _axisWhenActive = axisWhenActive as MonoBehaviour;
+            _axisWhenActive = axisWhenActive as UnityEngine.Object;
         }
 
         private void InjectAxisWhenInactive(IAxis1D axisWhenInactive)
         {
             AxisWhenInactive = axisWhenInactive;
-            _axisWhenInactive = axisWhenInactive as MonoBehaviour;
+            _axisWhenInactive = axisWhenInactive as UnityEngine.Object;
         }
 
         #endregion

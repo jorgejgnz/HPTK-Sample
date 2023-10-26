@@ -19,8 +19,8 @@
  */
 
 using System.Collections.Generic;
+using Oculus.Interaction.PoseDetection.Debug;
 using UnityEngine;
-using UnityEngine.Assertions;
 
 namespace Oculus.Interaction
 {
@@ -35,7 +35,7 @@ namespace Oculus.Interaction
 
         [Tooltip("The logic operator will be applied to these IActiveStates.")]
         [SerializeField, Interface(typeof(IActiveState))]
-        private List<MonoBehaviour> _activeStates;
+        private List<UnityEngine.Object> _activeStates;
         private List<IActiveState> ActiveStates;
 
         [Tooltip("IActiveStates will have this boolean logic operator applied.")]
@@ -95,6 +95,19 @@ namespace Oculus.Interaction
             }
         }
 
+        static ActiveStateGroup()
+        {
+            ActiveStateDebugTree.RegisterModel<ActiveStateGroup>(new DebugModel());
+        }
+
+        private class DebugModel : ActiveStateModel<ActiveStateGroup>
+        {
+            protected override IEnumerable<IActiveState> GetChildren(ActiveStateGroup activeState)
+            {
+                return activeState.ActiveStates;
+            }
+        }
+
         #region Inject
 
         public void InjectAllActiveStateGroup(List<IActiveState> activeStates)
@@ -105,7 +118,7 @@ namespace Oculus.Interaction
         public void InjectActiveStates(List<IActiveState> activeStates)
         {
             ActiveStates = activeStates;
-            _activeStates = activeStates.ConvertAll(activeState => activeState as MonoBehaviour);
+            _activeStates = activeStates.ConvertAll(activeState => activeState as UnityEngine.Object);
         }
 
         public void InjectOptionalLogicOperator(ActiveStateGroupLogicOperator logicOperator)

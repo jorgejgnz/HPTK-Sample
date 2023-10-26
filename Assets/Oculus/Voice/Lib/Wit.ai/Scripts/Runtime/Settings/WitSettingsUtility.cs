@@ -58,7 +58,7 @@ namespace Meta.WitAi
             }
             if (!File.Exists(settingsFilePath))
             {
-                Debug.LogWarning($"Wit Settings Utility - Generating new settings file\nPath{settingsFilePath}");
+                VLog.W($"Wit Settings Utility - Generating new settings file\nPath{settingsFilePath}");
                 _settings = new WitSettings();
                 return;
             }
@@ -72,7 +72,7 @@ namespace Meta.WitAi
             // Catch error
             catch (Exception e)
             {
-                Debug.LogError($"Wit Settings Utility - Failed to load settings file\nPath{settingsFilePath}\nError: {e}");
+                VLog.E($"Wit Settings Utility - Failed to load settings file\nPath{settingsFilePath}\nError: {e}");
                 _settings = new WitSettings();
                 return;
             }
@@ -85,7 +85,7 @@ namespace Meta.WitAi
             // Catch error
             catch (Exception e)
             {
-                Debug.LogError($"Wit Settings Utility - Failed to decode settings file\nPath{settingsFilePath}\nError: {e}");
+                VLog.E($"Wit Settings Utility - Failed to decode settings file\nPath{settingsFilePath}\nError: {e}");
                 _settings = new WitSettings();
             }
         }
@@ -104,7 +104,7 @@ namespace Meta.WitAi
             // Catch error
             catch (Exception e)
             {
-                Debug.LogError($"Wit Settings Utility - Failed to encode settings file\nPath{settingsFilePath}\nError: {e}");
+                VLog.E($"Wit Settings Utility - Failed to encode settings file\nPath{settingsFilePath}\nError: {e}");
                 return;
             }
 
@@ -116,7 +116,7 @@ namespace Meta.WitAi
             // Catch error
             catch (Exception e)
             {
-                Debug.LogError($"Wit Settings Utility - Failed to save settings file\nPath{settingsFilePath}\nError: {e}");
+                VLog.E($"Wit Settings Utility - Failed to save settings file\nPath{settingsFilePath}\nError: {e}");
             }
         }
         #endregion

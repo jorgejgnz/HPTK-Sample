@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
  *
@@ -31,7 +31,7 @@ namespace Oculus.Interaction.PoseDetection.Debug
     public class HandShapeDebugVisual : MonoBehaviour
     {
         [SerializeField, Interface(typeof(IFingerFeatureStateProvider))]
-        private MonoBehaviour _fingerFeatureStateProvider;
+        private UnityEngine.Object _fingerFeatureStateProvider;
         private IFingerFeatureStateProvider FingerFeatureStateProvider;
 
         [SerializeField]

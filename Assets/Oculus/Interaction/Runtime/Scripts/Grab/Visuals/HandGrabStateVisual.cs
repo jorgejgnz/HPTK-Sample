@@ -20,7 +20,6 @@
 
 using Oculus.Interaction.Input;
 using UnityEngine;
-using UnityEngine.Assertions;
 
 namespace Oculus.Interaction.HandGrab
 {
@@ -31,7 +30,7 @@ namespace Oculus.Interaction.HandGrab
     {
         [SerializeField]
         [Interface(typeof(IHandGrabState))]
-        private MonoBehaviour _handGrabState;
+        private UnityEngine.Object _handGrabState;
 
         private IHandGrabState HandGrabState;
 
@@ -122,8 +121,8 @@ namespace Oculus.Interaction.HandGrab
 
             if (wristConstraint > 0f)
             {
-                Pose wristLocalPose = GetWristPose(grabTarget.WorldGrabPose, grabSource.WristToGrabPoseOffset);
-                _syntheticHand.LockWristPose(wristLocalPose, wristConstraint,
+                Pose wristPose = grabSource.GetVisualWristPose();
+                _syntheticHand.LockWristPose(wristPose, wristConstraint,
                     SyntheticHand.WristLockMode.Full, true);
                 _isWristFree = false;
             }
@@ -155,14 +154,6 @@ namespace Oculus.Interaction.HandGrab
                 }
                 _syntheticHand.SetFingerFreedom((HandFinger)fingerIndex, fingerFreedom);
             }
-        }
-
-        private Pose GetWristPose(Pose gripPoint, Pose offset)
-        {
-            Pose wristOffset = offset;
-            wristOffset.Invert();
-            gripPoint.Premultiply(wristOffset);
-            return gripPoint;
         }
 
         private bool FreeFingers()
@@ -198,7 +189,7 @@ namespace Oculus.Interaction.HandGrab
         public void InjectHandGrabState(IHandGrabState handGrabState)
         {
             HandGrabState = handGrabState;
-            _handGrabState = handGrabState as MonoBehaviour;
+            _handGrabState = handGrabState as UnityEngine.Object;
         }
 
         public void InjectSyntheticHand(SyntheticHand syntheticHand)

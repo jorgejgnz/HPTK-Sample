@@ -106,13 +106,13 @@ namespace Oculus.Interaction.PoseDetection
 
         [Tooltip("Provided joints will be sourced from this IHand.")]
         [SerializeField, Interface(typeof(IHand))]
-        private MonoBehaviour _hand;
+        private UnityEngine.Object _hand;
         public IHand Hand { get; private set; }
 
         [Tooltip("JointDeltaProvider caches joint deltas to avoid " +
             "unnecessary recomputing of deltas.")]
         [SerializeField, Interface(typeof(IJointDeltaProvider))]
-        private MonoBehaviour _jointDeltaProvider;
+        private UnityEngine.Object _jointDeltaProvider;
 
         [SerializeField]
         private JointRotationFeatureConfigList _featureConfigs;
@@ -367,14 +367,14 @@ namespace Oculus.Interaction.PoseDetection
 
         public void InjectHand(IHand hand)
         {
-            _hand = hand as MonoBehaviour;
+            _hand = hand as UnityEngine.Object;
             Hand = hand;
         }
 
         public void InjectJointDeltaProvider(IJointDeltaProvider jointDeltaProvider)
         {
             JointDeltaProvider = jointDeltaProvider;
-            _jointDeltaProvider = jointDeltaProvider as MonoBehaviour;
+            _jointDeltaProvider = jointDeltaProvider as UnityEngine.Object;
         }
 
         public void InjectOptionalTimeProvider(Func<float> timeProvider)

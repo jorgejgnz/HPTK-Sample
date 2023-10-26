@@ -41,9 +41,6 @@ namespace Oculus.Interaction.DistanceReticles
             }
         }
 
-        [SerializeField, Optional]
-        private Collider[] _colliders;
-
         [SerializeField]
         [Range(0f, 1f)]
         private float _snappiness;
@@ -73,28 +70,12 @@ namespace Oculus.Interaction.DistanceReticles
             return Vector3.Lerp(hitPoint, this.transform.position, _snappiness);
         }
 
-        private Vector3 NearestColliderHit(Ray ray, Collider collider, out float score)
-        {
-            Vector3 centerPosition = collider.bounds.center;
-            Vector3 projectedCenter = ray.origin
-                + Vector3.Project(centerPosition - ray.origin, ray.direction);
-            Vector3 point = collider.ClosestPointOnBounds(projectedCenter);
-            Vector3 originToInteractable = point - ray.origin;
-            score = Vector3.Angle(originToInteractable.normalized, ray.direction);
-
-            return point;
-        }
-
         #region Inject
         public void InjectOptionalRenderer(MeshRenderer renderer)
         {
             _renderer = renderer;
         }
 
-        public void InjectOptionalColliders(Collider[] colliders)
-        {
-            _colliders = colliders;
-        }
         #endregion
     }
 }

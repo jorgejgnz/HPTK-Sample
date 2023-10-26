@@ -8,12 +8,17 @@ public class ObjectManipulator : MonoBehaviour
 {
     OVRInput.Controller controller = OVRInput.Controller.RTouch;
     GameObject hoverObject = null;
+
     GameObject grabObject = null;
+
     // all-purpose timer to use for blending after object is grabbed/released
     float grabTime = 0.0f;
+
     // the grabbed object's transform relative to the controller
     Vector3 localGrabOffset = Vector3.zero;
+
     Quaternion localGrabRotation = Quaternion.identity;
+
     // the camera and grabbing hand's world position when grabbing
     Vector3 camGrabPosition = Vector3.zero;
     Quaternion camGrabRotation = Quaternion.identity;
@@ -40,6 +45,7 @@ public class ObjectManipulator : MonoBehaviour
             passthrough.colorMapEditorBrightness = -1;
             passthrough.colorMapEditorContrast = -1;
         }
+
         StartCoroutine(StartDemo());
         // render these UI elements after the passthrough "hole punch" shader and the brush ring
         if (objectNameLabel) objectNameLabel.font.material.renderQueue = 4600;
@@ -93,6 +99,7 @@ public class ObjectManipulator : MonoBehaviour
             grabObject.GetComponent<GrabObject>().grabbedRotation = grabObject.transform.rotation;
             AssignInstructions(grabObject.GetComponent<GrabObject>());
         }
+
         handGrabPosition = controllerPos;
         handGrabRotation = controllerRot;
         camGrabPosition = Camera.main.transform.position;
@@ -109,8 +116,10 @@ public class ObjectManipulator : MonoBehaviour
                 grabObject.transform.position = handGrabPosition + handGrabRotation * localGrabOffset;
                 grabObject.transform.rotation = handGrabRotation * localGrabRotation;
             }
+
             grabObject.GetComponent<GrabObject>().Release();
         }
+
         grabObject = null;
     }
 
@@ -130,8 +139,10 @@ public class ObjectManipulator : MonoBehaviour
                 passthrough.colorMapEditorBrightness = Mathf.Lerp(-1.0f, 0.0f, normTimer);
                 passthrough.colorMapEditorContrast = Mathf.Lerp(-1.0f, 0.0f, normTimer);
             }
+
             yield return null;
         }
+
         //yield return new WaitForSeconds(1.0f);
         demoObjects.SetActive(true);
         Vector3 objFwd = new Vector3(Camera.main.transform.forward.x, 0, Camera.main.transform.forward.z).normalized;
@@ -157,6 +168,7 @@ public class ObjectManipulator : MonoBehaviour
                 labelPosition = hit.point;
             }
         }
+
         if (objectsHit.Length == 0)
         {
             hoverObject = null;
@@ -194,11 +206,13 @@ public class ObjectManipulator : MonoBehaviour
             else if (grabObject)
             {
                 Vector3 targetPos = controllerPos + (Camera.main.transform.position - controllerPos).normalized * 0.1f;
-                objectInfo.position = Vector3.Lerp(objectInfo.position, targetPos, grabTime); ;
+                objectInfo.position = Vector3.Lerp(objectInfo.position, targetPos, grabTime);
+                ;
                 objectInfo.rotation = Quaternion.LookRotation(objectInfo.position - Camera.main.transform.position);
                 //objectInstructionsLabel.gameObject.SetActive(true);
                 objectInfo.localScale = Vector3.one;
-                if (grabObject.GetComponent<GrabObject>()) showLaser = grabObject.GetComponent<GrabObject>().showLaserWhileGrabbed;
+                if (grabObject.GetComponent<GrabObject>())
+                    showLaser = grabObject.GetComponent<GrabObject>().showLaserWhileGrabbed;
             }
         }
 
@@ -240,7 +254,8 @@ public class ObjectManipulator : MonoBehaviour
                     float targetDist = localGrabOffset.z + thumbstick.y * 0.01f;
                     targetDist = Mathf.Clamp(targetDist, 0.1f, 2.0f);
                     localGrabOffset = Vector3.forward * targetDist;
-                    obj.transform.position = Vector3.Lerp(obj.transform.position, controllerPos + controllerRot * localGrabOffset, grabTime);
+                    obj.transform.position = Vector3.Lerp(obj.transform.position,
+                        controllerPos + controllerRot * localGrabOffset, grabTime);
                     obj.transform.rotation = Quaternion.Lerp(obj.transform.rotation, controllerRot, grabTime);
                     break;
                 case GrabObject.ManipulationType.DollyAttached:
@@ -259,6 +274,7 @@ public class ObjectManipulator : MonoBehaviour
                         rotationOffset -= thumbstick.x;
                         ClampGrabOffset(ref localGrabOffset, thumbstick.y);
                     }
+
                     Vector3 newFwd = obj.GetComponent<GrabObject>().grabbedRotation * Vector3.forward;
                     newFwd = new Vector3(newFwd.x, 0, newFwd.z);
                     obj.transform.rotation = Quaternion.Euler(0, rotationOffset, 0) * Quaternion.LookRotation(newFwd);
@@ -274,9 +290,11 @@ public class ObjectManipulator : MonoBehaviour
                         rotationOffset -= thumbstick.x;
                         ClampGrabOffset(ref localGrabOffset, thumbstick.y);
                     }
+
                     Vector3 newUp = obj.GetComponent<GrabObject>().grabbedRotation * Vector3.up;
                     newUp = new Vector3(newUp.x, 0, newUp.z);
-                    obj.transform.rotation = Quaternion.LookRotation(Vector3.up, Quaternion.Euler(0, rotationOffset, 0) * newUp);
+                    obj.transform.rotation =
+                        Quaternion.LookRotation(Vector3.up, Quaternion.Euler(0, rotationOffset, 0) * newUp);
                     break;
                 case GrabObject.ManipulationType.Menu:
                     Vector3 targetPos = handGrabPosition + (handGrabRotation * Vector3.forward * 0.4f);
@@ -323,6 +341,7 @@ public class ObjectManipulator : MonoBehaviour
         {
             return;
         }
+
         if (controller == OVRInput.Controller.RTouch)
         {
             if (OVRInput.Get(OVRInput.RawButton.LHandTrigger))
@@ -345,6 +364,7 @@ public class ObjectManipulator : MonoBehaviour
         {
             objectNameLabel.text = targetObject.ObjectName;
         }
+
         if (objectInstructionsLabel)
         {
             if (grabObject)

@@ -13,6 +13,7 @@ public class StylusTip : MonoBehaviour
 
     [Header("Settings")]
     [SerializeField] private OVRInput.Handedness m_handedness = OVRInput.Handedness.LeftHanded;
+
     [SerializeField] private GameObject m_breadCrumbPf;
 
     private GameObject m_breadCrumbContainer;
@@ -25,7 +26,9 @@ public class StylusTip : MonoBehaviour
 
     private void Awake()
     {
-        m_controller = m_handedness == OVRInput.Handedness.LeftHanded ? OVRInput.Controller.LTouch : OVRInput.Controller.RTouch;
+        m_controller = m_handedness == OVRInput.Handedness.LeftHanded
+            ? OVRInput.Controller.LTouch
+            : OVRInput.Controller.RTouch;
 
         // Create the bread crumbs
         m_breadCrumbContainer = new GameObject($"BreadCrumbContainer ({m_handedness})");
@@ -45,7 +48,8 @@ public class StylusTip : MonoBehaviour
     private void Update()
     {
         // Update stylus tip position
-        Pose T_device = new Pose(OVRInput.GetLocalControllerPosition(m_controller), OVRInput.GetLocalControllerRotation(m_controller));
+        Pose T_device = new Pose(OVRInput.GetLocalControllerPosition(m_controller),
+            OVRInput.GetLocalControllerRotation(m_controller));
         Pose T_world_device = T_device.GetTransformedBy(m_trackingSpace);
         Pose T_world_stylusTip = GetT_Device_StylusTip(m_controller).GetTransformedBy(T_world_device);
         this.transform.SetPositionAndRotation(T_world_stylusTip.position, T_world_stylusTip.rotation);
@@ -66,35 +70,41 @@ public class StylusTip : MonoBehaviour
 
         float crumbSeparation = 0;
         float distanceToPrevCrumb = Mathf.Infinity;
-        if (m_breadCrumbIndexPrev >= 0) {
+        if (m_breadCrumbIndexPrev >= 0)
+        {
             // Compute next crumb distance to stylus tip
-            distanceToPrevCrumb = (this.transform.position - m_breadCrumbs[m_breadCrumbIndexPrev].transform.position).magnitude;
+            distanceToPrevCrumb = (this.transform.position - m_breadCrumbs[m_breadCrumbIndexPrev].transform.position)
+                .magnitude;
 
             // Compute next crumb separation by averaging the previous and next crumb sizes
             crumbSeparation = (nextCrumbSize + m_breadCrumbs[m_breadCrumbIndexPrev].transform.localScale.x) * 0.5f;
         }
 
         // Determine if a new crumb should drop
-        if (isStylusTipTouching && (distanceToPrevCrumb >= crumbSeparation)) {
+        if (isStylusTipTouching && (distanceToPrevCrumb >= crumbSeparation))
+        {
             // Drop the crumb
             m_breadCrumbIndexPrev = m_breadCrumbIndexCurr;
             m_breadCrumbIndexCurr = (m_breadCrumbIndexCurr + 1) % m_breadCrumbs.Length;
         }
     }
 
-    private static Pose GetT_Device_StylusTip(OVRInput.Controller controller) {
+    private static Pose GetT_Device_StylusTip(OVRInput.Controller controller)
+    {
         // @Note: Only the next controller supports the stylus tip, but we compute the
         // transforms for all controllers so we can draw the tip at the correct location.
         Pose T_device_stylusTip = Pose.identity;
 
-        if (controller == OVRInput.Controller.LTouch || controller == OVRInput.Controller.RTouch) {
+        if (controller == OVRInput.Controller.LTouch || controller == OVRInput.Controller.RTouch)
+        {
             T_device_stylusTip = new Pose(
                 new Vector3(0.0094f, -0.07145f, -0.07565f),
                 Quaternion.Euler(35.305f, 50.988f, 37.901f)
             );
         }
 
-        if (controller == OVRInput.Controller.LTouch) {
+        if (controller == OVRInput.Controller.LTouch)
+        {
             T_device_stylusTip.position.x *= -1;
             T_device_stylusTip.rotation.y *= -1;
             T_device_stylusTip.rotation.z *= -1;

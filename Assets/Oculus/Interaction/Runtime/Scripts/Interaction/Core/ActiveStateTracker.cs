@@ -38,7 +38,7 @@ namespace Oculus.Interaction
     {
         [Tooltip("The IActiveState to be tracked.")]
         [SerializeField, Interface(typeof(IActiveState))]
-        private MonoBehaviour _activeState;
+        private UnityEngine.Object _activeState;
 
         private IActiveState ActiveState;
 
@@ -107,7 +107,7 @@ namespace Oculus.Interaction
 
         public void InjectActiveState(IActiveState activeState)
         {
-            _activeState = activeState as MonoBehaviour;
+            _activeState = activeState as UnityEngine.Object;
             ActiveState = activeState;
         }
 

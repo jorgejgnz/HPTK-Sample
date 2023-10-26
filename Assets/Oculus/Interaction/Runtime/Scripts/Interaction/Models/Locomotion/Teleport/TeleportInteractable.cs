@@ -106,11 +106,11 @@ namespace Oculus.Interaction.Locomotion
 
         [SerializeField, Optional, ConditionalHide("_allowTeleport", true)]
         [Tooltip("An override for the Interactor EqualDistanceThreshold used when comparing the interactable against other interactables that does not allow teleport.")]
-        private int _equalDistanceToBlockerOverride;
+        private float _equalDistanceToBlockerOverride;
         /// <summary>
         /// An override for the Interactor EqualDistanceThreshold used when comparing the interactable against other interactables that does not allow teleport.
         /// </summary>
-        public int EqualDistanceToBlockerOverride
+        public float EqualDistanceToBlockerOverride
         {
             get
             {
@@ -142,16 +142,16 @@ namespace Oculus.Interaction.Locomotion
 
         [SerializeField, Interface(typeof(ISurface))]
         [Tooltip("Surface against which the interactor will check collision with the arc.")]
-        private MonoBehaviour _surface;
+        private UnityEngine.Object _surface;
         public ISurface Surface { get; private set; }
         public IBounds SurfaceBounds { get; private set; }
 
-        [Header("Target")]
+        [Header("Target", order =-1)]
         [SerializeField, Optional]
         [Tooltip("A specific point in space where the player should teleport to.")]
         private Transform _targetPoint;
 
-        [SerializeField]
+        [SerializeField, Optional]
         [Tooltip("When true, the player will also face the direction specified by the target point.")]
         private bool _faceTargetDirection;
         /// <summary>
@@ -169,7 +169,7 @@ namespace Oculus.Interaction.Locomotion
             }
         }
 
-        [SerializeField]
+        [SerializeField, Optional]
         [Tooltip("When true, instead of aligning the players feet to the TargetPoint it will align the head.")]
         private bool _eyeLevel;
         /// <summary>
@@ -187,8 +187,6 @@ namespace Oculus.Interaction.Locomotion
             }
         }
 
-        protected bool _started;
-
         protected override void Awake()
         {
             base.Awake();
@@ -203,7 +201,6 @@ namespace Oculus.Interaction.Locomotion
             this.AssertField(Surface, nameof(Surface));
             this.EndStart(ref _started);
         }
-
 
         public bool IsInRange(Pose origin, float maxSqrDistance)
         {
@@ -270,7 +267,7 @@ namespace Oculus.Interaction.Locomotion
         }
         public void InjectSurface(ISurface surface)
         {
-            _surface = surface as MonoBehaviour;
+            _surface = surface as UnityEngine.Object;
             Surface = surface;
             SurfaceBounds = surface as IBounds;
         }

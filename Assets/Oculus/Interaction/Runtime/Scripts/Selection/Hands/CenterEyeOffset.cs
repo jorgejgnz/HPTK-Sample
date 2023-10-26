@@ -26,7 +26,7 @@ namespace Oculus.Interaction
     public class CenterEyeOffset : MonoBehaviour
     {
         [SerializeField, Interface(typeof(IHmd))]
-        private MonoBehaviour _hmd;
+        private UnityEngine.Object _hmd;
         public IHmd Hmd { get; private set; }
 
         [SerializeField]
@@ -112,7 +112,7 @@ namespace Oculus.Interaction
         public void InjectHmd(IHmd hmd)
         {
             Hmd = hmd;
-            _hmd = Hmd as MonoBehaviour;
+            _hmd = hmd as UnityEngine.Object;
         }
 
         #endregion

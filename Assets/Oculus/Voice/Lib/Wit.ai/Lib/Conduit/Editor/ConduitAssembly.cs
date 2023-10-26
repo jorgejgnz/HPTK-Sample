@@ -41,7 +41,7 @@ namespace Meta.Conduit.Editor
 
         public IEnumerable<MethodInfo> GetMethods()
         {
-            return this._assembly.GetTypes().SelectMany(type => type.GetMethods());
+            return this._assembly.GetTypes().SelectMany(type => type.GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic));
         }
 
         public Type GetType(string name)

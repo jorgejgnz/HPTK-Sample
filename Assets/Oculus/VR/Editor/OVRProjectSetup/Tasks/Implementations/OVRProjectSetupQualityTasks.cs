@@ -29,8 +29,8 @@ internal static class OVRProjectSetupQualityTasks
 
     private static int GetRecommendedPixelLightCount(BuildTargetGroup buildTargetGroup)
         => buildTargetGroup == BuildTargetGroup.Standalone
-        ? RecommendedPixelLightCountStandalone
-        : RecommendedPixelLightCountAndroid;
+            ? RecommendedPixelLightCountStandalone
+            : RecommendedPixelLightCountAndroid;
 
     static OVRProjectSetupQualityTasks()
     {
@@ -40,25 +40,28 @@ internal static class OVRProjectSetupQualityTasks
         OVRProjectSetup.AddTask(
             level: OVRProjectSetup.TaskLevel.Recommended,
             group: taskGroup,
-            isDone: buildTargetGroup => QualitySettings.pixelLightCount <= GetRecommendedPixelLightCount(buildTargetGroup),
-            conditionalMessage: buildTargetGroup => $"Set maximum pixel lights count to {GetRecommendedPixelLightCount(buildTargetGroup)}",
+            isDone: buildTargetGroup =>
+                QualitySettings.pixelLightCount <= GetRecommendedPixelLightCount(buildTargetGroup),
+            conditionalMessage: buildTargetGroup =>
+                $"Set maximum pixel lights count to {GetRecommendedPixelLightCount(buildTargetGroup)}",
             fix: buildTargetGroup => QualitySettings.pixelLightCount = GetRecommendedPixelLightCount(buildTargetGroup),
-            conditionalFixMessage: buildTargetGroup => $"QualitySettings.pixelLightCount = {GetRecommendedPixelLightCount(buildTargetGroup)}"
-            );
+            conditionalFixMessage: buildTargetGroup =>
+                $"QualitySettings.pixelLightCount = {GetRecommendedPixelLightCount(buildTargetGroup)}"
+        );
 
         // [Recommended] Set Texture Quality to Full Res
         OVRProjectSetup.AddTask(
-	        level: OVRProjectSetup.TaskLevel.Recommended,
-	        group: taskGroup,
-	        message: "Set Texture Quality to Full Res",
+            level: OVRProjectSetup.TaskLevel.Recommended,
+            group: taskGroup,
+            message: "Set Texture Quality to Full Res",
 #if UNITY_2022_2_OR_NEWER // masterTextureLimit has become obsolete with 2022.2
-	        isDone: buildTargetGroup => QualitySettings.globalTextureMipmapLimit == 0,
-	        fix: buildTargetGroup => QualitySettings.globalTextureMipmapLimit = 0,
-	        fixMessage: "QualitySettings.globalTextureMipmapLimit = 0"
+            isDone: buildTargetGroup => QualitySettings.globalTextureMipmapLimit == 0,
+            fix: buildTargetGroup => QualitySettings.globalTextureMipmapLimit = 0,
+            fixMessage: "QualitySettings.globalTextureMipmapLimit = 0"
 #else
-	        isDone: buildTargetGroup => QualitySettings.masterTextureLimit == 0,
-	        fix: buildTargetGroup => QualitySettings.masterTextureLimit = 0,
-	        fixMessage: "QualitySettings.masterTextureLimit = 0"
+            isDone: buildTargetGroup => QualitySettings.masterTextureLimit == 0,
+            fix: buildTargetGroup => QualitySettings.masterTextureLimit = 0,
+            fixMessage: "QualitySettings.masterTextureLimit = 0"
 #endif
         );
 
@@ -74,13 +77,15 @@ internal static class OVRProjectSetupQualityTasks
 
         // Texture compression : Use ASTC
         OVRProjectSetup.AddTask(
-	        level: OVRProjectSetup.TaskLevel.Recommended,
-	        group: taskGroup,
-	        platform: BuildTargetGroup.Android,
-	        isDone: group => EditorUserBuildSettings.androidBuildSubtarget == MobileTextureSubtarget.ASTC || EditorUserBuildSettings.androidBuildSubtarget == MobileTextureSubtarget.ETC2,
-	        message: "Optimize Texture Compression : For GPU performance, please use ETC2. In some cases, ASTC may produce better visuals and is also a viable solution.",
-	        fix: group => EditorUserBuildSettings.androidBuildSubtarget = MobileTextureSubtarget.ETC2,
-	        fixMessage: "EditorUserBuildSettings.androidBuildSubtarget = MobileTextureSubtarget.ETC2"
-	    );
+            level: OVRProjectSetup.TaskLevel.Recommended,
+            group: taskGroup,
+            platform: BuildTargetGroup.Android,
+            isDone: group => EditorUserBuildSettings.androidBuildSubtarget == MobileTextureSubtarget.ASTC ||
+                             EditorUserBuildSettings.androidBuildSubtarget == MobileTextureSubtarget.ETC2,
+            message: "Optimize Texture Compression : For GPU performance, please use ETC2. In some cases, " +
+                     "ASTC may produce better visuals and is also a viable solution",
+            fix: group => EditorUserBuildSettings.androidBuildSubtarget = MobileTextureSubtarget.ETC2,
+            fixMessage: "EditorUserBuildSettings.androidBuildSubtarget = MobileTextureSubtarget.ETC2"
+        );
     }
 }

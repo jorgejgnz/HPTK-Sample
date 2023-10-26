@@ -9,6 +9,8 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEditor.SceneManagement;
 using Meta.WitAi.Data.Configuration;
 
 namespace Meta.WitAi.Windows
@@ -50,14 +52,54 @@ namespace Meta.WitAi.Windows
             {
                 SetConfiguration(newConfigIndex);
             }
+            else
+            {
+                SetConfiguration(WitConfigurationUtility.WitConfigs.Length > 0 ? 0 : -1);
+            }
         }
+
+        // Reset configuration
+        protected virtual void ResetConfiguration()
+        {
+            // Get previous config
+            WitConfiguration config = witConfiguration;
+
+            // Refresh configuration list
+            WitConfigurationUtility.ReloadConfigurationData();
+
+            // Apply configuration
+            SetConfiguration(config);
+        }
+
+        protected override void OnEnable()
+        {
+            base.OnEnable();
+            EditorSceneManager.sceneOpened += OnSceneOpen;
+            EditorSceneManager.sceneSaved += OnSceneSaved;
+            ResetConfiguration();
+        }
+        protected override void OnDisable()
+        {
+            base.OnDisable();
+            EditorSceneManager.sceneOpened -= OnSceneOpen;
+            EditorSceneManager.sceneSaved -= OnSceneSaved;
+        }
+
+        private void OnSceneOpen(Scene scene, OpenSceneMode mode)
+        {
+            ResetConfiguration();
+        }
+        private void OnSceneSaved(Scene scene)
+        {
+            ResetConfiguration();
+        }
+
         protected override void LayoutContent()
         {
             // Reload if config is removed
             if (witConfiguration == null && witConfigIndex != -1)
             {
-                WitConfigurationUtility.ReloadConfigurationData();
-                SetConfiguration(-1);
+                ResetConfiguration();
             }
 
             // Layout popup
@@ -88,9 +130,6 @@ namespace Meta.WitAi.Windows
                 {
                     // Apply configuration
                     SetConfiguration(newIndex);
-
-                    // Refresh app info
-                    newConfiguration.RefreshAppInfo();
                 }
             }
 

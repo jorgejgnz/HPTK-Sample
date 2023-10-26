@@ -43,49 +43,51 @@ internal static class OVRProjectSetupXRTasks
 
     static OVRProjectSetupXRTasks()
     {
-	    OVRProjectSetup.AddTask(
-		    conditionalValidity: buildTargetGroup => OVRProjectSetupUtils.PackageManagerListAvailable,
-		    level: OVRProjectSetup.TaskLevel.Required,
-		    group: XRTaskGroup,
-		    isDone: buildTargetGroup => OVRProjectSetupUtils.IsPackageInstalled(OculusXRPackageName),
-		    message: "The Oculus XR Plug-in package must be installed",
-		    fix: buildTargetGroup => OVRProjectSetupUtils.InstallPackage(OculusXRPackageName),
-		    fixMessage: $"Install {OculusXRPackageName} package"
-	    );
+        OVRProjectSetup.AddTask(
+            conditionalValidity: buildTargetGroup => OVRProjectSetupUtils.PackageManagerListAvailable,
+            level: OVRProjectSetup.TaskLevel.Required,
+            group: XRTaskGroup,
+            isDone: buildTargetGroup => OVRProjectSetupUtils.IsPackageInstalled(OculusXRPackageName),
+            message: "The Oculus XR Plug-in package must be installed",
+            fix: buildTargetGroup => OVRProjectSetupUtils.InstallPackage(OculusXRPackageName),
+            fixMessage: $"Install {OculusXRPackageName} package"
+        );
 
-	    OVRProjectSetup.AddTask(
-		    conditionalValidity: buildTargetGroup => OVRProjectSetupUtils.PackageManagerListAvailable,
-		    level: OVRProjectSetup.TaskLevel.Required,
-		    group: XRTaskGroup,
-		    isDone: buildTargetGroup => OVRProjectSetupUtils.IsPackageInstalled(XRPluginManagementPackageName),
-		    message: "The XR Plug-in Management package must be installed",
-		    fix: buildTargetGroup => OVRProjectSetupUtils.InstallPackage(XRPluginManagementPackageName),
-		    fixMessage: $"Install {XRPluginManagementPackageName} package"
-	    );
+        OVRProjectSetup.AddTask(
+            conditionalValidity: buildTargetGroup => OVRProjectSetupUtils.PackageManagerListAvailable,
+            level: OVRProjectSetup.TaskLevel.Required,
+            group: XRTaskGroup,
+            isDone: buildTargetGroup => OVRProjectSetupUtils.IsPackageInstalled(XRPluginManagementPackageName),
+            message: "The XR Plug-in Management package must be installed",
+            fix: buildTargetGroup => OVRProjectSetupUtils.InstallPackage(XRPluginManagementPackageName),
+            fixMessage: $"Install {XRPluginManagementPackageName} package"
+        );
 
-	    OVRProjectSetup.AddTask(
-		    conditionalValidity: buildTargetGroup => OVRProjectSetupUtils.PackageManagerListAvailable,
-		    level: OVRProjectSetup.TaskLevel.Recommended,
-		    group: XRTaskGroup,
-		    isDone: buildTargetGroup => !OVRProjectSetupUtils.IsPackageInstalled(UnityXRPackage),
-		    message: "Unity's OpenXR Plugin is not recommended when using the Oculus SDK, please use Oculus XR Plug-in instead",
-		    fix: buildTargetGroup => OVRProjectSetupUtils.UninstallPackage(UnityXRPackage),
-		    fixMessage: $"Remove the {UnityXRPackage} package"
-	    );
+        OVRProjectSetup.AddTask(
+            conditionalValidity: buildTargetGroup => OVRProjectSetupUtils.PackageManagerListAvailable,
+            level: OVRProjectSetup.TaskLevel.Recommended,
+            group: XRTaskGroup,
+            isDone: buildTargetGroup => !OVRProjectSetupUtils.IsPackageInstalled(UnityXRPackage),
+            message: "Unity's OpenXR Plugin is not recommended when using the Oculus SDK, " +
+                     "please use Oculus XR Plug-in instead",
+            fix: buildTargetGroup => OVRProjectSetupUtils.UninstallPackage(UnityXRPackage),
+            fixMessage: $"Remove the {UnityXRPackage} package"
+        );
 
-	    AddXrPluginManagementTasks();
+        AddXrPluginManagementTasks();
     }
 
     private static void AddXrPluginManagementTasks()
     {
 #if USING_XR_MANAGEMENT && USING_XR_SDK_OCULUS
         OVRProjectSetup.AddTask(
-            conditionalValidity: buildTargetGroup => OVRProjectSetupUtils.IsPackageInstalled(XRPluginManagementPackageName),
+            conditionalValidity: buildTargetGroup =>
+                OVRProjectSetupUtils.IsPackageInstalled(XRPluginManagementPackageName),
             level: OVRProjectSetup.TaskLevel.Required,
             group: XRTaskGroup,
             isDone: buildTargetGroup =>
             {
-	            var settings = GetXRGeneralSettingsForBuildTarget(buildTargetGroup, false);
+                var settings = GetXRGeneralSettingsForBuildTarget(buildTargetGroup, false);
                 if (settings == null)
                 {
                     return false;
@@ -104,11 +106,11 @@ internal static class OVRProjectSetupXRTasks
             message: "Oculus must be added to the XR Plugin active loaders",
             fix: buildTargetGroup =>
             {
-	            var settings = GetXRGeneralSettingsForBuildTarget(buildTargetGroup, true);
-	            if (settings == null)
-	            {
-		            throw new OVRConfigurationTaskException("Could not find XR Plugin Manager settings");
-	            }
+                var settings = GetXRGeneralSettingsForBuildTarget(buildTargetGroup, true);
+                if (settings == null)
+                {
+                    throw new OVRConfigurationTaskException("Could not find XR Plugin Manager settings");
+                }
 
                 var loadersList = AssetDatabase.FindAssets($"t: {nameof(OculusLoader)}")
                     .Select(AssetDatabase.GUIDToAssetPath)
@@ -132,29 +134,40 @@ internal static class OVRProjectSetupXRTasks
     }
 
 #if USING_XR_MANAGEMENT && USING_XR_SDK_OCULUS
-    private static UnityEngine.XR.Management.XRGeneralSettings GetXRGeneralSettingsForBuildTarget(BuildTargetGroup buildTargetGroup, bool create)
+    private static UnityEngine.XR.Management.XRGeneralSettings GetXRGeneralSettingsForBuildTarget(
+        BuildTargetGroup buildTargetGroup, bool create)
     {
-	    var settings = XRGeneralSettingsPerBuildTarget.XRGeneralSettingsForBuildTarget(buildTargetGroup);
-	    if (!create || settings != null)
-	    {
-		    return settings;
-	    }
+        var settings = XRGeneralSettingsPerBuildTarget.XRGeneralSettingsForBuildTarget(buildTargetGroup);
+        if (!create || settings != null)
+        {
+            return settings;
+        }
 
-	    // Method A : Reflection
-	    // Hardcoded name of the method we're trying to call
-	    // May require maintenance here to align with newer versions of the UnityEngine.XR.Management plugin
-	    const string getOrCreateMethodName = "GetOrCreate";
-	    var getOrCreateMethod = typeof(XRGeneralSettingsPerBuildTarget).GetMethod(getOrCreateMethodName,
-		    BindingFlags.Static | BindingFlags.NonPublic);
-	    getOrCreateMethod?.Invoke(null, null);
+        // we have to create these settings ourselves as
+        // long as Unity doesn't expose the internal function
+        // XRGeneralSettingsPerBuildTarget.GetOrCreate()
+        var settingsKey = UnityEngine.XR.Management.XRGeneralSettings.k_SettingsKey;
+        EditorBuildSettings.TryGetConfigObject<XRGeneralSettingsPerBuildTarget>(
+            settingsKey, out var settingsPerBuildTarget);
 
-	    EditorBuildSettings.TryGetConfigObject<XRGeneralSettingsPerBuildTarget>(UnityEngine.XR.Management.XRGeneralSettings.k_SettingsKey, out var buildTargetSettings);
-	    if (buildTargetSettings != null && !buildTargetSettings.HasManagerSettingsForBuildTarget(buildTargetGroup))
-	    {
-		    buildTargetSettings.CreateDefaultManagerSettingsForBuildTarget(buildTargetGroup);
-	    }
-	    settings = XRGeneralSettingsPerBuildTarget.XRGeneralSettingsForBuildTarget(buildTargetGroup);
-	    return settings;
+        if (settingsPerBuildTarget == null)
+        {
+            settingsPerBuildTarget = ScriptableObject.CreateInstance<XRGeneralSettingsPerBuildTarget>();
+            if (!AssetDatabase.IsValidFolder("Assets/XR"))
+                AssetDatabase.CreateFolder("Assets", "XR");
+            const string assetPath = "Assets/XR/XRGeneralSettingsPerBuildTarget.asset";
+            AssetDatabase.CreateAsset(settingsPerBuildTarget, assetPath);
+            AssetDatabase.SaveAssets();
+
+            EditorBuildSettings.AddConfigObject(settingsKey, settingsPerBuildTarget, true);
+        }
+
+        if (!settingsPerBuildTarget.HasManagerSettingsForBuildTarget(buildTargetGroup))
+        {
+            settingsPerBuildTarget.CreateDefaultManagerSettingsForBuildTarget(buildTargetGroup);
+        }
+
+        return XRGeneralSettingsPerBuildTarget.XRGeneralSettingsForBuildTarget(buildTargetGroup);
     }
 #endif
 }

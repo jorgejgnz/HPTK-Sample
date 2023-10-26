@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
  *
@@ -39,22 +39,22 @@ internal static class OVRProjectSetupPhysicsTasks
 
         // [Recommended] Sleep Threshold >= 0.005f
         OVRProjectSetup.AddTask(
-	        level: OVRProjectSetup.TaskLevel.Recommended,
-	        group: OVRProjectSetup.TaskGroup.Physics,
-	        isDone: group => Physics.sleepThreshold >= 0.005f,
-	        message: $"Use Sleep Threshold above or equal to 0.005",
-	        fix: group => Physics.sleepThreshold = 0.005f,
-	        fixMessage: "Physics.sleepThreshold = 0.005f"
+            level: OVRProjectSetup.TaskLevel.Recommended,
+            group: OVRProjectSetup.TaskGroup.Physics,
+            isDone: group => Physics.sleepThreshold >= 0.005f,
+            message: $"Use Sleep Threshold above or equal to 0.005",
+            fix: group => Physics.sleepThreshold = 0.005f,
+            fixMessage: "Physics.sleepThreshold = 0.005f"
         );
 
         // [Recommended] Default Solver Iterations <= 8
         OVRProjectSetup.AddTask(
-	        level: OVRProjectSetup.TaskLevel.Recommended,
-	        group: OVRProjectSetup.TaskGroup.Physics,
-	        isDone: group => Physics.defaultSolverIterations <= 8,
-	        message: $"Use Default Solver Iteration below or equal to 8",
-	        fix: group => Physics.defaultSolverIterations = 8,
-	        fixMessage: "Physics.defaultSolverIterations = 8"
+            level: OVRProjectSetup.TaskLevel.Recommended,
+            group: OVRProjectSetup.TaskGroup.Physics,
+            isDone: group => Physics.defaultSolverIterations <= 8,
+            message: $"Use Default Solver Iteration below or equal to 8",
+            fix: group => Physics.defaultSolverIterations = 8,
+            fixMessage: "Physics.defaultSolverIterations = 8"
         );
     }
 }

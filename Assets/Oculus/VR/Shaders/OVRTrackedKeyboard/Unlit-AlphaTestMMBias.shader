@@ -44,7 +44,7 @@ SubShader {
             float4 _MainTex_ST;
             fixed _Cutoff;
             half _MainTexMMBias;
-            
+
             v2f vert (appdata_t v)
             {
                 v2f o;

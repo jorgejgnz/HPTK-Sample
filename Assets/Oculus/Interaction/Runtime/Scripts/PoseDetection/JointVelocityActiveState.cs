@@ -124,18 +124,18 @@ namespace Oculus.Interaction.PoseDetection
 
         [Tooltip("Provided joints will be sourced from this IHand.")]
         [SerializeField, Interface(typeof(IHand))]
-        private MonoBehaviour _hand;
+        private UnityEngine.Object _hand;
         public IHand Hand { get; private set; }
 
         [Tooltip("JointDeltaProvider caches joint deltas to avoid " +
             "unnecessary recomputing of deltas.")]
         [SerializeField, Interface(typeof(IJointDeltaProvider))]
-        private MonoBehaviour _jointDeltaProvider;
+        private UnityEngine.Object _jointDeltaProvider;
         public IJointDeltaProvider JointDeltaProvider { get; private set; }
 
         [Tooltip("Reference to the Hmd providing the HeadAxis pose.")]
         [SerializeField, Optional, Interface(typeof(IHmd))]
-        private MonoBehaviour _hmd;
+        private UnityEngine.Object _hmd;
         public IHmd Hmd { get; private set; }
 
         [SerializeField]
@@ -433,14 +433,14 @@ namespace Oculus.Interaction.PoseDetection
 
         public void InjectHand(IHand hand)
         {
-            _hand = hand as MonoBehaviour;
+            _hand = hand as UnityEngine.Object;
             Hand = hand;
         }
 
         public void InjectJointDeltaProvider(IJointDeltaProvider jointDeltaProvider)
         {
             JointDeltaProvider = jointDeltaProvider;
-            _jointDeltaProvider = jointDeltaProvider as MonoBehaviour;
+            _jointDeltaProvider = jointDeltaProvider as UnityEngine.Object;
         }
 
         public void InjectOptionalTimeProvider(Func<float> timeProvider)
@@ -451,7 +451,7 @@ namespace Oculus.Interaction.PoseDetection
 
         public void InjectOptionalHmd(IHmd hmd)
         {
-            _hmd = hmd as MonoBehaviour;
+            _hmd = hmd as UnityEngine.Object;
             Hmd = hmd;
         }
 

@@ -34,7 +34,11 @@ namespace Oculus.Voice.Inspectors
         // Override with voice sdk header
         protected override Texture2D HeaderIcon => VoiceSDKStyles.MainHeader;
         public override string HeaderUrl => GetSafeAppUrl(Configuration, WitTexts.WitAppEndpointType.Settings);
+        protected override string DocsUrl => VoiceSDKStyles.Texts.VoiceDocsUrl;
         protected override string OpenButtonLabel => IsBuiltInConfiguration(Configuration) ? VoiceSDKStyles.Texts.BuiltInAppBtnLabel : base.OpenButtonLabel;
+
+        // Disable server functionality for built in configurations
+        protected override bool _disableServerPost => IsBuiltInConfiguration(Configuration);
 
         // Use to determine if built in configuration
         public static bool IsBuiltInConfiguration(WitConfiguration witConfiguration)

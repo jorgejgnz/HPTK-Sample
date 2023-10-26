@@ -31,7 +31,7 @@ namespace Oculus.Interaction.Input
     public class ControllerRef : MonoBehaviour, IController, IActiveState
     {
         [SerializeField, Interface(typeof(IController))]
-        private MonoBehaviour _controller;
+        private UnityEngine.Object _controller;
         private IController Controller;
 
         protected virtual void Awake()
@@ -88,7 +88,7 @@ namespace Oculus.Interaction.Input
 
         public void InjectController(IController controller)
         {
-            _controller = controller as MonoBehaviour;
+            _controller = controller as UnityEngine.Object;
             Controller = controller;
         }
 

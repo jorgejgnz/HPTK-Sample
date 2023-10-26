@@ -28,383 +28,393 @@ using System.Runtime.InteropServices;
 /// <summary>
 /// Plays tactile effects on a tracked VR controller.
 /// </summary>
+[HelpURL("https://developer.oculus.com/reference/unity/latest/class_o_v_r_haptics")]
 public static class OVRHaptics
 {
-	public readonly static OVRHapticsChannel[] Channels;
-	public readonly static OVRHapticsChannel LeftChannel;
-	public readonly static OVRHapticsChannel RightChannel;
+    public readonly static OVRHapticsChannel[] Channels;
+    public readonly static OVRHapticsChannel LeftChannel;
+    public readonly static OVRHapticsChannel RightChannel;
 
-	private readonly static OVRHapticsOutput[] m_outputs;
+    private readonly static OVRHapticsOutput[] m_outputs;
 
-	static OVRHaptics()
-	{
-		Config.Load();
+    static OVRHaptics()
+    {
+        Config.Load();
 
-		m_outputs = new OVRHapticsOutput[]
-		{
-			new OVRHapticsOutput((uint)OVRPlugin.Controller.LTouch),
-			new OVRHapticsOutput((uint)OVRPlugin.Controller.RTouch),
-		};
+        m_outputs = new OVRHapticsOutput[]
+        {
+            new OVRHapticsOutput((uint)OVRPlugin.Controller.LTouch),
+            new OVRHapticsOutput((uint)OVRPlugin.Controller.RTouch),
+        };
 
-		Channels = new OVRHapticsChannel[]
-		{
-			LeftChannel = new OVRHapticsChannel(0),
-			RightChannel = new OVRHapticsChannel(1),
-		};
-	}
+        Channels = new OVRHapticsChannel[]
+        {
+            LeftChannel = new OVRHapticsChannel(0),
+            RightChannel = new OVRHapticsChannel(1),
+        };
+    }
 
-	/// <summary>
-	/// Determines the target format for haptics data on a specific device.
-	/// </summary>
-	public static class Config
-	{
-		public static int SampleRateHz { get; private set; }
-		public static int SampleSizeInBytes { get; private set; }
-		public static int MinimumSafeSamplesQueued { get; private set; }
-		public static int MinimumBufferSamplesCount { get; private set; }
-		public static int OptimalBufferSamplesCount { get; private set; }
-		public static int MaximumBufferSamplesCount { get; private set; }
+    /// <summary>
+    /// Determines the target format for haptics data on a specific device.
+    /// </summary>
+    public static class Config
+    {
+        public static int SampleRateHz { get; private set; }
+        public static int SampleSizeInBytes { get; private set; }
+        public static int MinimumSafeSamplesQueued { get; private set; }
+        public static int MinimumBufferSamplesCount { get; private set; }
+        public static int OptimalBufferSamplesCount { get; private set; }
+        public static int MaximumBufferSamplesCount { get; private set; }
 
-		static Config()
-		{
-			Load();
-		}
+        static Config()
+        {
+            Load();
+        }
 
-		public static void Load()
-		{
-			OVRPlugin.HapticsDesc desc = OVRPlugin.GetControllerHapticsDesc((uint)OVRPlugin.Controller.RTouch);
+        public static void Load()
+        {
+            OVRPlugin.HapticsDesc desc = OVRPlugin.GetControllerHapticsDesc((uint)OVRPlugin.Controller.RTouch);
 
-			SampleRateHz = desc.SampleRateHz;
-			SampleSizeInBytes = desc.SampleSizeInBytes;
-			MinimumSafeSamplesQueued = desc.MinimumSafeSamplesQueued;
-			MinimumBufferSamplesCount = desc.MinimumBufferSamplesCount;
-			OptimalBufferSamplesCount = desc.OptimalBufferSamplesCount;
-			MaximumBufferSamplesCount = desc.MaximumBufferSamplesCount;
-		}
-	}
+            SampleRateHz = desc.SampleRateHz;
+            SampleSizeInBytes = desc.SampleSizeInBytes;
+            MinimumSafeSamplesQueued = desc.MinimumSafeSamplesQueued;
+            MinimumBufferSamplesCount = desc.MinimumBufferSamplesCount;
+            OptimalBufferSamplesCount = desc.OptimalBufferSamplesCount;
+            MaximumBufferSamplesCount = desc.MaximumBufferSamplesCount;
+        }
+    }
 
-	/// <summary>
-	/// A track of haptics data that can be mixed or sequenced with another track.
-	/// </summary>
-	public class OVRHapticsChannel
-	{
-		private OVRHapticsOutput m_output;
+    /// <summary>
+    /// A track of haptics data that can be mixed or sequenced with another track.
+    /// </summary>
+    public class OVRHapticsChannel
+    {
+        private OVRHapticsOutput m_output;
 
-		/// <summary>
-		/// Constructs a channel targeting the specified output.
-		/// </summary>
-		public OVRHapticsChannel(uint outputIndex)
-		{
-			m_output = m_outputs[outputIndex];
-		}
+        /// <summary>
+        /// Constructs a channel targeting the specified output.
+        /// </summary>
+        public OVRHapticsChannel(uint outputIndex)
+        {
+            m_output = m_outputs[outputIndex];
+        }
 
-		/// <summary>
-		/// Cancels any currently-playing clips and immediatly plays the specified clip instead.
-		/// </summary>
-		public void Preempt(OVRHapticsClip clip)
-		{
-			m_output.Preempt(clip);
-		}
+        /// <summary>
+        /// Cancels any currently-playing clips and immediatly plays the specified clip instead.
+        /// </summary>
+        public void Preempt(OVRHapticsClip clip)
+        {
+            m_output.Preempt(clip);
+        }
 
-		/// <summary>
-		/// Enqueues the specified clip to play after any currently-playing clips finish.
-		/// </summary>
-		public void Queue(OVRHapticsClip clip)
-		{
-			m_output.Queue(clip);
-		}
+        /// <summary>
+        /// Enqueues the specified clip to play after any currently-playing clips finish.
+        /// </summary>
+        public void Queue(OVRHapticsClip clip)
+        {
+            m_output.Queue(clip);
+        }
 
-		/// <summary>
-		/// Adds the specified clip to play simultaneously to the currently-playing clip(s).
-		/// </summary>
-		public void Mix(OVRHapticsClip clip)
-		{
-			m_output.Mix(clip);
-		}
+        /// <summary>
+        /// Adds the specified clip to play simultaneously to the currently-playing clip(s).
+        /// </summary>
+        public void Mix(OVRHapticsClip clip)
+        {
+            m_output.Mix(clip);
+        }
 
-		/// <summary>
-		/// Cancels any currently-playing clips.
-		/// </summary>
-		public void Clear()
-		{
-			m_output.Clear();
-		}
-	}
+        /// <summary>
+        /// Cancels any currently-playing clips.
+        /// </summary>
+        public void Clear()
+        {
+            m_output.Clear();
+        }
+    }
 
-	private class OVRHapticsOutput
-	{
-		private class ClipPlaybackTracker
-		{
-			public int ReadCount { get; set; }
-			public OVRHapticsClip Clip { get; set; }
+    private class OVRHapticsOutput
+    {
+        private class ClipPlaybackTracker
+        {
+            public int ReadCount { get; set; }
+            public OVRHapticsClip Clip { get; set; }
 
-			public ClipPlaybackTracker(OVRHapticsClip clip)
-			{
-				Clip = clip;
-			}
-		}
+            public ClipPlaybackTracker(OVRHapticsClip clip)
+            {
+                Clip = clip;
+            }
+        }
 
-		private bool m_lowLatencyMode = true;
-		private bool m_paddingEnabled = true;
-		private int m_prevSamplesQueued = 0;
-		private float m_prevSamplesQueuedTime = 0;
-		private int m_numPredictionHits = 0;
-		private int m_numPredictionMisses = 0;
-		private int m_numUnderruns = 0;
-		private List<ClipPlaybackTracker> m_pendingClips = new List<ClipPlaybackTracker>();
-		private uint m_controller = 0;
-		private OVRNativeBuffer m_nativeBuffer = new OVRNativeBuffer(OVRHaptics.Config.MaximumBufferSamplesCount * OVRHaptics.Config.SampleSizeInBytes);
-		private OVRHapticsClip m_paddingClip = new OVRHapticsClip();
-		private int PrevSampleRateHz = -1;
+        private bool m_lowLatencyMode = true;
+        private bool m_paddingEnabled = true;
+        private int m_prevSamplesQueued = 0;
+        private float m_prevSamplesQueuedTime = 0;
+        private int m_numPredictionHits = 0;
+        private int m_numPredictionMisses = 0;
+        private int m_numUnderruns = 0;
+        private List<ClipPlaybackTracker> m_pendingClips = new List<ClipPlaybackTracker>();
+        private uint m_controller = 0;
 
-		public OVRHapticsOutput(uint controller)
-		{
+        private OVRNativeBuffer m_nativeBuffer =
+            new OVRNativeBuffer(OVRHaptics.Config.MaximumBufferSamplesCount * OVRHaptics.Config.SampleSizeInBytes);
+
+        private OVRHapticsClip m_paddingClip = new OVRHapticsClip();
+        private int PrevSampleRateHz = -1;
+
+        public OVRHapticsOutput(uint controller)
+        {
 #if UNITY_ANDROID
-			m_paddingEnabled = false;
+            m_paddingEnabled = false;
 #endif
-			m_controller = controller;
-		}
+            m_controller = controller;
+        }
 
-		/// <summary>
-		/// The system calls this each frame to update haptics playback.
-		/// </summary>
-		public void Process()
-		{
-			if (OVRHaptics.Config.SampleRateHz == 0)
-			{
-				if(PrevSampleRateHz != 0)
-				{
-					Debug.Log("Unable to process a controller whose SampleRateHz is 0 now.");
-					PrevSampleRateHz = 0;
-				}
-				return;
-			}
-			PrevSampleRateHz = OVRHaptics.Config.SampleRateHz;
+        /// <summary>
+        /// The system calls this each frame to update haptics playback.
+        /// </summary>
+        public void Process()
+        {
+            if (OVRHaptics.Config.SampleRateHz == 0)
+            {
+                if (PrevSampleRateHz != 0)
+                {
+                    Debug.Log("Unable to process a controller whose SampleRateHz is 0 now.");
+                    PrevSampleRateHz = 0;
+                }
 
-			// Resize the native buffer if the Config changes
-			if (m_nativeBuffer.GetCapacity() != Config.MaximumBufferSamplesCount * Config.SampleSizeInBytes)
-			{
-				m_nativeBuffer.Reset(Config.MaximumBufferSamplesCount * Config.SampleSizeInBytes);
-			}
+                return;
+            }
 
-			var hapticsState = OVRPlugin.GetControllerHapticsState(m_controller);
+            PrevSampleRateHz = OVRHaptics.Config.SampleRateHz;
 
-			float elapsedTime = Time.realtimeSinceStartup - m_prevSamplesQueuedTime;
-			if (m_prevSamplesQueued > 0)
-			{
-				int expectedSamples = m_prevSamplesQueued - (int)(elapsedTime * OVRHaptics.Config.SampleRateHz + 0.5f);
-				if (expectedSamples < 0)
-					expectedSamples = 0;
+            // Resize the native buffer if the Config changes
+            if (m_nativeBuffer.GetCapacity() != Config.MaximumBufferSamplesCount * Config.SampleSizeInBytes)
+            {
+                m_nativeBuffer.Reset(Config.MaximumBufferSamplesCount * Config.SampleSizeInBytes);
+            }
 
-				if ((hapticsState.SamplesQueued - expectedSamples) == 0)
-					m_numPredictionHits++;
-				else
-					m_numPredictionMisses++;
+            var hapticsState = OVRPlugin.GetControllerHapticsState(m_controller);
 
-				//Debug.Log(hapticsState.SamplesAvailable + "a " + hapticsState.SamplesQueued + "q " + expectedSamples + "e "
-				//+ "Prediction Accuracy: " + m_numPredictionHits / (float)(m_numPredictionMisses + m_numPredictionHits));
+            float elapsedTime = Time.realtimeSinceStartup - m_prevSamplesQueuedTime;
+            if (m_prevSamplesQueued > 0)
+            {
+                int expectedSamples = m_prevSamplesQueued - (int)(elapsedTime * OVRHaptics.Config.SampleRateHz + 0.5f);
+                if (expectedSamples < 0)
+                    expectedSamples = 0;
 
-				if ((expectedSamples > 0) && (hapticsState.SamplesQueued == 0))
-				{
-					m_numUnderruns++;
-					//Debug.LogError("Samples Underrun (" + m_controller + " #" + m_numUnderruns + ") -"
-					//        + " Expected: " + expectedSamples
-					//        + " Actual: " + hapticsState.SamplesQueued);
-				}
+                if ((hapticsState.SamplesQueued - expectedSamples) == 0)
+                    m_numPredictionHits++;
+                else
+                    m_numPredictionMisses++;
 
-				m_prevSamplesQueued = hapticsState.SamplesQueued;
-				m_prevSamplesQueuedTime = Time.realtimeSinceStartup;
-			}
+                //Debug.Log(hapticsState.SamplesAvailable + "a " + hapticsState.SamplesQueued + "q " + expectedSamples + "e "
+                //+ "Prediction Accuracy: " + m_numPredictionHits / (float)(m_numPredictionMisses + m_numPredictionHits));
 
-			int desiredSamplesCount = OVRHaptics.Config.OptimalBufferSamplesCount;
-			if (m_lowLatencyMode)
-			{
-				float sampleRateMs = 1000.0f / (float)OVRHaptics.Config.SampleRateHz;
-				float elapsedMs = elapsedTime * 1000.0f;
-				int samplesNeededPerFrame = (int)Mathf.Ceil(elapsedMs / sampleRateMs);
-				int lowLatencySamplesCount = OVRHaptics.Config.MinimumSafeSamplesQueued + samplesNeededPerFrame;
+                if ((expectedSamples > 0) && (hapticsState.SamplesQueued == 0))
+                {
+                    m_numUnderruns++;
+                    //Debug.LogError("Samples Underrun (" + m_controller + " #" + m_numUnderruns + ") -"
+                    //        + " Expected: " + expectedSamples
+                    //        + " Actual: " + hapticsState.SamplesQueued);
+                }
 
-				if (lowLatencySamplesCount < desiredSamplesCount)
-					desiredSamplesCount = lowLatencySamplesCount;
-			}
+                m_prevSamplesQueued = hapticsState.SamplesQueued;
+                m_prevSamplesQueuedTime = Time.realtimeSinceStartup;
+            }
 
-			if (hapticsState.SamplesQueued > desiredSamplesCount)
-				return;
+            int desiredSamplesCount = OVRHaptics.Config.OptimalBufferSamplesCount;
+            if (m_lowLatencyMode)
+            {
+                float sampleRateMs = 1000.0f / (float)OVRHaptics.Config.SampleRateHz;
+                float elapsedMs = elapsedTime * 1000.0f;
+                int samplesNeededPerFrame = (int)Mathf.Ceil(elapsedMs / sampleRateMs);
+                int lowLatencySamplesCount = OVRHaptics.Config.MinimumSafeSamplesQueued + samplesNeededPerFrame;
 
-			if (desiredSamplesCount > OVRHaptics.Config.MaximumBufferSamplesCount)
-				desiredSamplesCount = OVRHaptics.Config.MaximumBufferSamplesCount;
-			if (desiredSamplesCount > hapticsState.SamplesAvailable)
-				desiredSamplesCount = hapticsState.SamplesAvailable;
+                if (lowLatencySamplesCount < desiredSamplesCount)
+                    desiredSamplesCount = lowLatencySamplesCount;
+            }
 
-			int acquiredSamplesCount = 0;
-			int clipIndex = 0;
-			while(acquiredSamplesCount < desiredSamplesCount && clipIndex < m_pendingClips.Count)
-			{
-				int numSamplesToCopy = desiredSamplesCount - acquiredSamplesCount;
-				int remainingSamplesInClip = m_pendingClips[clipIndex].Clip.Count - m_pendingClips[clipIndex].ReadCount;
-				if (numSamplesToCopy > remainingSamplesInClip)
-					numSamplesToCopy = remainingSamplesInClip;
+            if (hapticsState.SamplesQueued > desiredSamplesCount)
+                return;
 
-				if (numSamplesToCopy > 0)
-				{
-					int numBytes = numSamplesToCopy * OVRHaptics.Config.SampleSizeInBytes;
-					int dstOffset = acquiredSamplesCount * OVRHaptics.Config.SampleSizeInBytes;
-					int srcOffset = m_pendingClips[clipIndex].ReadCount * OVRHaptics.Config.SampleSizeInBytes;
-					Marshal.Copy(m_pendingClips[clipIndex].Clip.Samples, srcOffset, m_nativeBuffer.GetPointer(dstOffset), numBytes);
+            if (desiredSamplesCount > OVRHaptics.Config.MaximumBufferSamplesCount)
+                desiredSamplesCount = OVRHaptics.Config.MaximumBufferSamplesCount;
+            if (desiredSamplesCount > hapticsState.SamplesAvailable)
+                desiredSamplesCount = hapticsState.SamplesAvailable;
 
-					m_pendingClips[clipIndex].ReadCount += numSamplesToCopy;
-					acquiredSamplesCount += numSamplesToCopy;
-				}
+            int acquiredSamplesCount = 0;
+            int clipIndex = 0;
+            while (acquiredSamplesCount < desiredSamplesCount && clipIndex < m_pendingClips.Count)
+            {
+                int numSamplesToCopy = desiredSamplesCount - acquiredSamplesCount;
+                int remainingSamplesInClip = m_pendingClips[clipIndex].Clip.Count - m_pendingClips[clipIndex].ReadCount;
+                if (numSamplesToCopy > remainingSamplesInClip)
+                    numSamplesToCopy = remainingSamplesInClip;
 
-				clipIndex++;
-			}
+                if (numSamplesToCopy > 0)
+                {
+                    int numBytes = numSamplesToCopy * OVRHaptics.Config.SampleSizeInBytes;
+                    int dstOffset = acquiredSamplesCount * OVRHaptics.Config.SampleSizeInBytes;
+                    int srcOffset = m_pendingClips[clipIndex].ReadCount * OVRHaptics.Config.SampleSizeInBytes;
+                    Marshal.Copy(m_pendingClips[clipIndex].Clip.Samples, srcOffset,
+                        m_nativeBuffer.GetPointer(dstOffset), numBytes);
 
-			for (int i = m_pendingClips.Count - 1; i >= 0 && m_pendingClips.Count > 0; i--)
-			{
-				if (m_pendingClips[i].ReadCount >= m_pendingClips[i].Clip.Count)
-					m_pendingClips.RemoveAt(i);
-			}
+                    m_pendingClips[clipIndex].ReadCount += numSamplesToCopy;
+                    acquiredSamplesCount += numSamplesToCopy;
+                }
 
-			if (m_paddingEnabled)
-			{
-				int desiredPadding = desiredSamplesCount - (hapticsState.SamplesQueued + acquiredSamplesCount);
-				if (desiredPadding < (OVRHaptics.Config.MinimumBufferSamplesCount - acquiredSamplesCount))
-					desiredPadding = (OVRHaptics.Config.MinimumBufferSamplesCount - acquiredSamplesCount);
-				if (desiredPadding > hapticsState.SamplesAvailable)
-					desiredPadding = hapticsState.SamplesAvailable;
+                clipIndex++;
+            }
 
-				if (desiredPadding > 0)
-				{
-					int numBytes = desiredPadding * OVRHaptics.Config.SampleSizeInBytes;
-					int dstOffset = acquiredSamplesCount * OVRHaptics.Config.SampleSizeInBytes;
-					int srcOffset = 0;
-					Marshal.Copy(m_paddingClip.Samples, srcOffset, m_nativeBuffer.GetPointer(dstOffset), numBytes);
+            for (int i = m_pendingClips.Count - 1; i >= 0 && m_pendingClips.Count > 0; i--)
+            {
+                if (m_pendingClips[i].ReadCount >= m_pendingClips[i].Clip.Count)
+                    m_pendingClips.RemoveAt(i);
+            }
 
-					acquiredSamplesCount += desiredPadding;
-				}
-			}
+            if (m_paddingEnabled)
+            {
+                int desiredPadding = desiredSamplesCount - (hapticsState.SamplesQueued + acquiredSamplesCount);
+                if (desiredPadding < (OVRHaptics.Config.MinimumBufferSamplesCount - acquiredSamplesCount))
+                    desiredPadding = (OVRHaptics.Config.MinimumBufferSamplesCount - acquiredSamplesCount);
+                if (desiredPadding > hapticsState.SamplesAvailable)
+                    desiredPadding = hapticsState.SamplesAvailable;
 
-			if (acquiredSamplesCount > 0)
-			{
-				OVRPlugin.HapticsBuffer hapticsBuffer;
-				hapticsBuffer.Samples = m_nativeBuffer.GetPointer();
-				hapticsBuffer.SamplesCount = acquiredSamplesCount;
+                if (desiredPadding > 0)
+                {
+                    int numBytes = desiredPadding * OVRHaptics.Config.SampleSizeInBytes;
+                    int dstOffset = acquiredSamplesCount * OVRHaptics.Config.SampleSizeInBytes;
+                    int srcOffset = 0;
+                    Marshal.Copy(m_paddingClip.Samples, srcOffset, m_nativeBuffer.GetPointer(dstOffset), numBytes);
 
-				OVRPlugin.SetControllerHaptics(m_controller, hapticsBuffer);
+                    acquiredSamplesCount += desiredPadding;
+                }
+            }
 
-				hapticsState = OVRPlugin.GetControllerHapticsState(m_controller);
-				m_prevSamplesQueued = hapticsState.SamplesQueued;
-				m_prevSamplesQueuedTime = Time.realtimeSinceStartup;
-			}
-		}
+            if (acquiredSamplesCount > 0)
+            {
+                OVRPlugin.HapticsBuffer hapticsBuffer;
+                hapticsBuffer.Samples = m_nativeBuffer.GetPointer();
+                hapticsBuffer.SamplesCount = acquiredSamplesCount;
 
-		/// <summary>
-		/// Immediately plays the specified clip without waiting for any currently-playing clip to finish.
-		/// </summary>
-		public void Preempt(OVRHapticsClip clip)
-		{
-			m_pendingClips.Clear();
-			m_pendingClips.Add(new ClipPlaybackTracker(clip));
-		}
+                OVRPlugin.SetControllerHaptics(m_controller, hapticsBuffer);
 
-		/// <summary>
-		/// Enqueues the specified clip to play after any currently-playing clip finishes.
-		/// </summary>
-		public void Queue(OVRHapticsClip clip)
-		{
-			m_pendingClips.Add(new ClipPlaybackTracker(clip));
-		}
+                hapticsState = OVRPlugin.GetControllerHapticsState(m_controller);
+                m_prevSamplesQueued = hapticsState.SamplesQueued;
+                m_prevSamplesQueuedTime = Time.realtimeSinceStartup;
+            }
+        }
 
-		/// <summary>
-		/// Adds the samples from the specified clip to the ones in the currently-playing clip(s).
-		/// </summary>
-		public void Mix(OVRHapticsClip clip)
-		{
-			int numClipsToMix = 0;
-			int numSamplesToMix = 0;
-			int numSamplesRemaining = clip.Count;
+        /// <summary>
+        /// Immediately plays the specified clip without waiting for any currently-playing clip to finish.
+        /// </summary>
+        public void Preempt(OVRHapticsClip clip)
+        {
+            m_pendingClips.Clear();
+            m_pendingClips.Add(new ClipPlaybackTracker(clip));
+        }
 
-			while (numSamplesRemaining > 0 && numClipsToMix < m_pendingClips.Count)
-			{
-				int numSamplesRemainingInClip = m_pendingClips[numClipsToMix].Clip.Count - m_pendingClips[numClipsToMix].ReadCount;
-				numSamplesRemaining -= numSamplesRemainingInClip;
-				numSamplesToMix += numSamplesRemainingInClip;
-				numClipsToMix++;
-			}
+        /// <summary>
+        /// Enqueues the specified clip to play after any currently-playing clip finishes.
+        /// </summary>
+        public void Queue(OVRHapticsClip clip)
+        {
+            m_pendingClips.Add(new ClipPlaybackTracker(clip));
+        }
 
-			if (numSamplesRemaining > 0)
-			{
-				numSamplesToMix += numSamplesRemaining;
-				numSamplesRemaining = 0;
-			}
+        /// <summary>
+        /// Adds the samples from the specified clip to the ones in the currently-playing clip(s).
+        /// </summary>
+        public void Mix(OVRHapticsClip clip)
+        {
+            int numClipsToMix = 0;
+            int numSamplesToMix = 0;
+            int numSamplesRemaining = clip.Count;
 
-			if (numClipsToMix > 0)
-			{
-				OVRHapticsClip mixClip = new OVRHapticsClip(numSamplesToMix);
+            while (numSamplesRemaining > 0 && numClipsToMix < m_pendingClips.Count)
+            {
+                int numSamplesRemainingInClip =
+                    m_pendingClips[numClipsToMix].Clip.Count - m_pendingClips[numClipsToMix].ReadCount;
+                numSamplesRemaining -= numSamplesRemainingInClip;
+                numSamplesToMix += numSamplesRemainingInClip;
+                numClipsToMix++;
+            }
 
-				OVRHapticsClip a = clip;
-				int aReadCount = 0;
+            if (numSamplesRemaining > 0)
+            {
+                numSamplesToMix += numSamplesRemaining;
+                numSamplesRemaining = 0;
+            }
 
-				for (int i = 0; i < numClipsToMix; i++)
-				{
-					OVRHapticsClip b = m_pendingClips[i].Clip;
-					for(int bReadCount = m_pendingClips[i].ReadCount; bReadCount < b.Count; bReadCount++)
-					{
-						if (OVRHaptics.Config.SampleSizeInBytes == 1)
-						{
-							byte sample = 0; // TODO support multi-byte samples
-							if ((aReadCount < a.Count) && (bReadCount < b.Count))
-							{
-								sample = (byte)(Mathf.Clamp(a.Samples[aReadCount] + b.Samples[bReadCount], 0, System.Byte.MaxValue)); // TODO support multi-byte samples
-								aReadCount++;
-							}
-							else if (bReadCount < b.Count)
-							{
-								sample = b.Samples[bReadCount]; // TODO support multi-byte samples
-							}
+            if (numClipsToMix > 0)
+            {
+                OVRHapticsClip mixClip = new OVRHapticsClip(numSamplesToMix);
 
-							mixClip.WriteSample(sample); // TODO support multi-byte samples
-						}
-					}
-				}
+                OVRHapticsClip a = clip;
+                int aReadCount = 0;
 
-				while (aReadCount < a.Count)
-				{
-					if (OVRHaptics.Config.SampleSizeInBytes == 1)
-					{
-						mixClip.WriteSample(a.Samples[aReadCount]); // TODO support multi-byte samples
-					}
-					aReadCount++;
-				}
+                for (int i = 0; i < numClipsToMix; i++)
+                {
+                    OVRHapticsClip b = m_pendingClips[i].Clip;
+                    for (int bReadCount = m_pendingClips[i].ReadCount; bReadCount < b.Count; bReadCount++)
+                    {
+                        if (OVRHaptics.Config.SampleSizeInBytes == 1)
+                        {
+                            byte sample = 0; // TODO support multi-byte samples
+                            if ((aReadCount < a.Count) && (bReadCount < b.Count))
+                            {
+                                sample = (byte)(Mathf.Clamp(a.Samples[aReadCount] + b.Samples[bReadCount], 0,
+                                    System.Byte.MaxValue)); // TODO support multi-byte samples
+                                aReadCount++;
+                            }
+                            else if (bReadCount < b.Count)
+                            {
+                                sample = b.Samples[bReadCount]; // TODO support multi-byte samples
+                            }
 
-				m_pendingClips[0] = new ClipPlaybackTracker(mixClip);
-				for (int i = 1; i < numClipsToMix; i++)
-				{
-					m_pendingClips.RemoveAt(1);
-				}
-			}
-			else
-			{
-				m_pendingClips.Add(new ClipPlaybackTracker(clip));
-			}
-		}
+                            mixClip.WriteSample(sample); // TODO support multi-byte samples
+                        }
+                    }
+                }
 
-		public void Clear()
-		{
-			m_pendingClips.Clear();
-		}
-	}
+                while (aReadCount < a.Count)
+                {
+                    if (OVRHaptics.Config.SampleSizeInBytes == 1)
+                    {
+                        mixClip.WriteSample(a.Samples[aReadCount]); // TODO support multi-byte samples
+                    }
 
-	/// <summary>
-	/// The system calls this each frame to update haptics playback.
-	/// </summary>
-	public static void Process()
-	{
-		Config.Load();
+                    aReadCount++;
+                }
 
-		for (int i = 0; i < m_outputs.Length; i++)
-		{
-			m_outputs[i].Process();
-		}
-	}
+                m_pendingClips[0] = new ClipPlaybackTracker(mixClip);
+                for (int i = 1; i < numClipsToMix; i++)
+                {
+                    m_pendingClips.RemoveAt(1);
+                }
+            }
+            else
+            {
+                m_pendingClips.Add(new ClipPlaybackTracker(clip));
+            }
+        }
+
+        public void Clear()
+        {
+            m_pendingClips.Clear();
+        }
+    }
+
+    /// <summary>
+    /// The system calls this each frame to update haptics playback.
+    /// </summary>
+    public static void Process()
+    {
+        Config.Load();
+
+        for (int i = 0; i < m_outputs.Length; i++)
+        {
+            m_outputs[i].Process();
+        }
+    }
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
  *
@@ -25,11 +25,17 @@ using UnityEngine;
 
 public class OVRConfigurationTaskException : Exception
 {
- 	public OVRConfigurationTaskException() { }
+    public OVRConfigurationTaskException()
+    {
+    }
 
     public OVRConfigurationTaskException(string message)
-        : base(message) { }
+        : base(message)
+    {
+    }
 
     public OVRConfigurationTaskException(string message, Exception inner)
-        : base(message, inner) { }
+        : base(message, inner)
+    {
+    }
 }

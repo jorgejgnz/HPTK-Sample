@@ -30,7 +30,7 @@ namespace Oculus.Interaction.Throw
     public class ControllerPoseInputDevice : MonoBehaviour, IPoseInputDevice
     {
         [SerializeField, Interface(typeof(IController))]
-        private MonoBehaviour _controller;
+        private UnityEngine.Object _controller;
         public IController Controller { get; private set; }
 
         public bool IsInputValid =>
@@ -80,7 +80,7 @@ namespace Oculus.Interaction.Throw
 
         public void InjectController(IController controller)
         {
-            _controller = controller as MonoBehaviour;
+            _controller = controller as UnityEngine.Object;
             Controller = controller;
         }
 

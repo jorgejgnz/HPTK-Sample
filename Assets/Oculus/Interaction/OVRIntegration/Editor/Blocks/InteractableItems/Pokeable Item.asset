@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 35c4ad19f06c67e44a2d7ba8d05f31b7, type: 3}
+  m_Name: Pokeable Item
+  m_EditorClassIdentifier: 
+  id: 5838e892-31a4-4f65-a415-dc108aefa14c
+  version: 1
+  blockName: Pokeable Item
+  description: Poke an item with your hands index fingers
+  sdk: 0
+  thumbnail: {fileID: 2800000, guid: 552e268e6438dd1498f5cd04fa8f27e7, type: 3}
+  displayOnContentTab: 1
+  experimental: 1
+  order: 0
+  prefab: {fileID: 5222706132779339912, guid: 7aec9913f7f564a05883130bcdaf2347, type: 3}
+  dependencies:
+  - 27673ac1-cdb0-443f-a07d-6ff1d34daeca
+  isSingleton: 0

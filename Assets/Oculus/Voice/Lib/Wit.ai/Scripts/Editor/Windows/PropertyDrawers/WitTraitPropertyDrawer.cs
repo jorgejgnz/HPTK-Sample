@@ -8,9 +8,11 @@
 
 using UnityEditor;
 using System.Reflection;
+using Meta.WitAi.Data.Info;
 
 namespace Meta.WitAi.Windows
 {
+    [CustomPropertyDrawer(typeof(WitTraitInfo))]
     public class WitTraitPropertyDrawer : WitPropertyDrawer
     {
         // Use name value for title if possible

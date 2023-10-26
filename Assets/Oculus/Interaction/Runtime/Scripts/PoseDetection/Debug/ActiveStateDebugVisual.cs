@@ -26,7 +26,7 @@ namespace Oculus.Interaction.PoseDetection.Debug
     {
         [Tooltip("The IActiveState to debug.")]
         [SerializeField, Interface(typeof(IActiveState))]
-        private MonoBehaviour _activeState;
+        private UnityEngine.Object _activeState;
         private IActiveState ActiveState { get; set; }
 
         [Tooltip("The renderer used for the color change.")]

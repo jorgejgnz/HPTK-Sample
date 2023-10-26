@@ -68,7 +68,6 @@ namespace Oculus.Platform
       User_CancelRecordingForReportFlow              = 0x03E0D149,
       User_GetLinkedAccounts                         = 0x5793F456,
       User_GetUserCapabilities                       = 0x121C317C,
-      User_LaunchProfile                             = 0x0A397297,
       User_LaunchReportFlow                          = 0x5662A011,
       User_LaunchReportFlow2                         = 0x7F835863,
       User_NewEntitledTestUser                       = 0x11741F03,
@@ -94,14 +93,6 @@ namespace Oculus.Platform
           message = new MessageWithAbuseReportRecording(messageHandle);
           break;
 
-        case MessageTypeInternal.Cal_FinalizeApplication:
-          message = new MessageWithCalApplicationFinalized(messageHandle);
-          break;
-
-        case MessageTypeInternal.Cal_GetSuggestedApplications:
-          message = new MessageWithCalApplicationSuggestionList(messageHandle);
-          break;
-
         case MessageTypeInternal.Application_ExecuteCoordinatedLaunch:
         case MessageTypeInternal.Cal_ProposeApplication:
         case MessageTypeInternal.Colocation_RequestMap:
@@ -121,7 +112,6 @@ namespace Oculus.Platform
         case MessageTypeInternal.RichPresence_SetLobbySession:
         case MessageTypeInternal.RichPresence_SetMatchSession:
         case MessageTypeInternal.User_CancelRecordingForReportFlow:
-        case MessageTypeInternal.User_LaunchProfile:
         case MessageTypeInternal.User_TestUserCreateDeviceManifest:
         case MessageTypeInternal.Voip_ReportAppVoipSessions:
           message = new Message(messageHandle);
@@ -185,15 +175,6 @@ namespace Oculus.Platform
         case MessageTypeInternal.Party_Invite:
         case MessageTypeInternal.Party_Join:
           message = new MessageWithPartyID(messageHandle);
-          break;
-
-        case MessageTypeInternal.Room_CreateOrUpdateAndJoinNamed:
-          message = new MessageWithRoomUnderViewerRoom(messageHandle);
-          break;
-
-        case MessageTypeInternal.Room_GetNamedRooms:
-        case MessageTypeInternal.Room_GetSocialRooms:
-          message = new MessageWithRoomList(messageHandle);
           break;
 
         case MessageTypeInternal.Avatar_UpdateMetaData:

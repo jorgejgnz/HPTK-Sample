@@ -34,7 +34,8 @@ namespace Oculus.Interaction.Surfaces
 
         [Tooltip("The clippers that will be used to clip the Cylinder Surface.")]
         [SerializeField, Interface(typeof(ICylinderClipper))]
-        private List<MonoBehaviour> _clippers;
+        private List<UnityEngine.Object> _clippers = new List<UnityEngine.Object>();
+        private List<ICylinderClipper> Clippers { get; set; }
 
         public Transform Transform => _cylinderSurface.Transform;
 
@@ -42,11 +43,15 @@ namespace Oculus.Interaction.Surfaces
 
         public Cylinder Cylinder => _cylinderSurface.Cylinder;
 
-        public IEnumerable<ICylinderClipper> GetClippers()
+        public IReadOnlyList<ICylinderClipper> GetClippers()
         {
-            foreach (var clipper in _clippers)
+            if (Clippers != null)
             {
-                yield return clipper as ICylinderClipper;
+                return Clippers;
+            }
+            else
+            {
+                return _clippers.ConvertAll(clipper => clipper as ICylinderClipper);
             }
         }
 
@@ -57,10 +62,15 @@ namespace Oculus.Interaction.Surfaces
                    hit.Point.Approximately(clamped.Point, EPSILON);
         }
 
+        protected virtual void Awake()
+        {
+            Clippers = _clippers.ConvertAll(clipper => clipper as ICylinderClipper);
+        }
+
         protected virtual void Start()
         {
             this.AssertField(_cylinderSurface, nameof(_cylinderSurface));
-            this.AssertCollectionItems(_clippers, nameof(_clippers));
+            this.AssertCollectionItems(Clippers, nameof(Clippers));
         }
 
         public bool GetClipped(out CylinderSegment clipped)
@@ -73,9 +83,10 @@ namespace Oculus.Interaction.Surfaces
             float bottom = float.MinValue;
             float top = float.MaxValue;
 
-            foreach (var clipperMono in _clippers)
+            IReadOnlyList<ICylinderClipper> clippers = GetClippers();
+            for (int i = 0; i < clippers.Count; i++)
             {
-                ICylinderClipper clipper = clipperMono as ICylinderClipper;
+                ICylinderClipper clipper = clippers[i];
                 if (clipper == null ||
                     !clipper.GetCylinderSegment(out CylinderSegment segment))
                 {
@@ -208,8 +219,9 @@ namespace Oculus.Interaction.Surfaces
 
         public void InjectClippers(IEnumerable<ICylinderClipper> clippers)
         {
-            _clippers = new List<MonoBehaviour>(
-                clippers.Select(c => c as MonoBehaviour));
+            _clippers = new List<UnityEngine.Object>(
+                clippers.Select(c => c as UnityEngine.Object));
+            Clippers = clippers.ToList();
         }
 
         #endregion

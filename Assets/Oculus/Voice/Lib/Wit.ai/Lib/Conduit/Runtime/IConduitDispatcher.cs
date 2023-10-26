@@ -6,6 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+using System;
+
 namespace Meta.Conduit
 {
     /// <summary>
@@ -37,5 +39,13 @@ namespace Meta.Conduit
         /// <returns>True if all invocations succeeded. False if at least one failed or no callbacks were found.</returns>
         bool InvokeAction(IParameterProvider parameterProvider, string actionId, bool relaxed, float confidence = 1f,
             bool partial = false);
+        
+        /// <summary>
+        /// True if all the error handlers are called and received the action ID and exception.
+        /// </summary>
+        /// <param name="actionId">ID of action that failed to execute</param>
+        /// <param name="exception">Exception containing the error message</param>
+        /// <returns></returns>
+        bool InvokeError( string actionId, Exception exception = null);
     }
 }

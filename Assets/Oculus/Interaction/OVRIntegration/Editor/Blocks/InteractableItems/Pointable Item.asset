@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 35c4ad19f06c67e44a2d7ba8d05f31b7, type: 3}
+  m_Name: Pointable Item
+  m_EditorClassIdentifier: 
+  id: 76a013d1-7c16-4a60-9c1b-79b3691c0438
+  version: 1
+  blockName: Pointable Item
+  description: Point to an item with your hands
+  sdk: 0
+  thumbnail: {fileID: 2800000, guid: a52e4695e8816e7469e599e85dfae681, type: 3}
+  displayOnContentTab: 1
+  experimental: 1
+  order: 0
+  prefab: {fileID: 2578649584656450288, guid: 09afcf33928494372befbc553eb0fc43, type: 3}
+  dependencies:
+  - bc3f7b21-a55c-4cf7-b9c6-78d4341573a4
+  isSingleton: 0

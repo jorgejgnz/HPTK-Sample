@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3fb198b2fc4bbcb4999ac10ef4f0ad3b, type: 3}
+  m_Name: Synthetic Hands
+  m_EditorClassIdentifier: 
+  id: 6b67162c-2460-4766-a931-980388647573
+  version: 1
+  blockName: Synthetic Hands
+  description: Adds synthetic hands
+  sdk: 0
+  thumbnail: {fileID: 2800000, guid: 876b2885201ff5e46876cfe9ea588452, type: 3}
+  displayOnContentTab: 1
+  experimental: 1
+  order: 0
+  prefab: {fileID: 6128136802436501766, guid: 81b0c6f02d961984eb074b9834c049ae, type: 3}
+  dependencies:
+  - 0393ca30-f2a9-4865-a40f-f9a68d01c3a9
+  isSingleton: 1
+  _handsBlockId: 0393ca30-f2a9-4865-a40f-f9a68d01c3a9
+  _uOIAssetsHandsBlockId: 8b26b298-7bf4-490e-b245-a039c0184303
+  _leftHand: {fileID: 6128136802436501766, guid: 81b0c6f02d961984eb074b9834c049ae,
+    type: 3}
+  _rightHand: {fileID: 4655985016907794440, guid: 392af43851d822242be5b1ae72b35b46,
+    type: 3}

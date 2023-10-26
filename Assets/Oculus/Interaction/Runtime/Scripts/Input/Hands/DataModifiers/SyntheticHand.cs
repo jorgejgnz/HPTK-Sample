@@ -38,7 +38,7 @@ namespace Oculus.Interaction.Input
         }
 
         [SerializeField]
-        private ProgressCurve _wristPositionLockCurve = new ProgressCurve();
+        private ProgressCurve _wristPositionLockCurve;
         [SerializeField]
         private ProgressCurve _wristPositionUnlockCurve;
         [SerializeField]
@@ -84,18 +84,18 @@ namespace Oculus.Interaction.Input
 
         protected override void Start()
         {
-            base.Start();
-
+            this.BeginStart(ref _started, () => base.Start());
             for (int i = 0; i < FingersMetadata.HAND_JOINT_IDS.Length; i++)
             {
                 _jointLockProgressCurves[i] = new ProgressCurve(_jointLockCurve);
                 _jointUnlockProgressCurves[i] = new ProgressCurve(_jointUnlockCurve);
             }
+            this.EndStart(ref _started);
         }
 
         protected override void Apply(HandDataAsset data)
         {
-            if (!data.IsDataValid || !data.IsTracked || !data.IsHighConfidence)
+            if (!Started || !data.IsDataValid || !data.IsTracked || !data.IsHighConfidence)
             {
                 data.IsConnected = false;
                 data.RootPoseOrigin = PoseOrigin.None;
@@ -364,7 +364,8 @@ namespace Oculus.Interaction.Input
         /// <param name="skipAnimation">Whether to skip the animation curve for this override.</param>
         public void LockWristPose(Pose wristPose, float overrideFactor = 1f, WristLockMode lockMode = WristLockMode.Full, bool worldPose = false, bool skipAnimation = false)
         {
-            Pose desiredWristPose = (worldPose && TrackingToWorldTransformer != null ) ? TrackingToWorldTransformer.ToTrackingPose(wristPose) : wristPose;
+            Pose desiredWristPose = (worldPose && TrackingToWorldTransformer != null ) ?
+                TrackingToWorldTransformer.ToTrackingPose(wristPose): wristPose;
 
             if ((lockMode & WristLockMode.Position) != 0)
             {

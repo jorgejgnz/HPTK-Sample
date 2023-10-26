@@ -13,7 +13,7 @@ Shader "Unlit/OverwriteAlpha"
         ZTest Always
         ZWrite Off
         // we want to keep the color buffer as is, but override the alpha
-        Blend Zero One, One Zero 
+        Blend Zero One, One Zero
 
         Pass
         {

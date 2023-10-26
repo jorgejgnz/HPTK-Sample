@@ -25,75 +25,114 @@ namespace Oculus.Interaction.Locomotion
 {
     public class LocomotionTurnerInteractorVisual : MonoBehaviour
     {
+        [Header("Input")]
         [SerializeField]
         private LocomotionTurnerInteractor _turner;
+        [SerializeField, Optional]
+        private TurnerEventBroadcaster _broadcaster;
+        [SerializeField, Optional]
+        private Transform _lookAt;
 
-        [SerializeField, Optional, Interface(typeof(IAxis1D))]
-        private MonoBehaviour _progress;
-        private IAxis1D Progress;
+        [SerializeField, Interface(typeof(IAxis1D)), Optional]
+        private UnityEngine.Object _progress;
+        private IAxis1D Progress { get; set; }
 
-        [SerializeField, Interface(typeof(IActiveState)), Optional]
-        private MonoBehaviour _highlight;
-        private IActiveState Highlight;
+        [Header("Visual renderers")]
+        [SerializeField]
+        private Transform _root;
+        [SerializeField]
+        private Renderer _leftArrow;
+        [SerializeField]
+        private Renderer _rightArrow;
+        [SerializeField]
+        private TubeRenderer _leftRail;
+        [SerializeField]
+        private TubeRenderer _rightRail;
+        [SerializeField]
+        private TubeRenderer _leftTrail;
+        [SerializeField]
+        private TubeRenderer _rightTrail;
 
         [SerializeField]
-        private Transform _ring;
+        private MaterialPropertyBlockEditor _leftMaterialBlock;
         [SerializeField]
-        private Transform _pointer;
+        private MaterialPropertyBlockEditor _rightMaterialBlock;
 
+        [Header("Visual parameters")]
         [SerializeField]
-        private float _signalsDistance = 0.1f;
-        public float SignalsDistance
+        private float _verticalOffset = 0.02f;
+        public float VerticalOffset
         {
-            get
-            {
-                return _signalsDistance;
-            }
-            set
-            {
-                _signalsDistance = value;
-            }
+            get => _verticalOffset;
+            set => _verticalOffset = value;
         }
 
-        [SerializeField, Optional]
-        private Renderer _ringRenderer;
-        [SerializeField, Optional]
-        private Renderer _pointerRenderer;
+        [SerializeField]
+        private float _radius = 0.07f;
+        [SerializeField]
+        private float _margin = 2f;
+        [SerializeField]
+        private float _trailLength = 15f;
+        [SerializeField]
+        private float _maxAngle = 45f;
+        [SerializeField]
+        private float _railGap = 0.005f;
+        [SerializeField]
+        private float _squeezeLength = 5f;
 
-        private Vector3 _originalPointerScale;
-        private bool _highlighted;
+        [SerializeField]
+        private Color _disabledColor = new Color(1f, 1f, 1f, 0.2f);
+        public Color DisabledColor
+        {
+            get => _disabledColor;
+            set => _disabledColor = value;
+        }
 
-        private static readonly Vector3 TINY_SCALE_FACTOR = new Vector3(0.4f, 0.4f, 0.4f);
-        private static readonly Quaternion RING_ROTATION = Quaternion.Euler(0f, 90f, 180f);
+        [SerializeField]
+        private Color _enabledColor = new Color(1f, 1f, 1f, 0.6f);
+        public Color EnabledColor
+        {
+            get => _enabledColor;
+            set => _enabledColor = value;
+        }
 
-        private static readonly int _highlightShaderID = Shader.PropertyToID("_Highlight");
+        [SerializeField]
+        private Color _highligtedColor = new Color(1f, 1f, 1f, 1f);
+        public Color HighligtedColor
+        {
+            get => _highligtedColor;
+            set => _highligtedColor = value;
+        }
+
+
+        private const float _degreesPerSegment = 1f;
+
+        private static readonly Quaternion _rotationCorrectionLeft = Quaternion.Euler(0f, -90f, 0f);
+        private static readonly int _colorShaderPropertyID = Shader.PropertyToID("_Color");
 
         protected bool _started;
 
         protected virtual void Awake()
         {
             Progress = _progress as IAxis1D;
-            Highlight = _highlight as IActiveState;
         }
 
         protected virtual void Start()
         {
             this.BeginStart(ref _started);
             this.AssertField(_turner, nameof(_turner));
-            this.AssertField(_ring, nameof(_ring));
-            this.AssertField(_pointer, nameof(_pointer));
+            this.AssertField(_root, nameof(_root));
+            this.AssertField(_leftTrail, nameof(_leftTrail));
+            this.AssertField(_rightTrail, nameof(_rightTrail));
+            this.AssertField(_leftArrow, nameof(_leftArrow));
+            this.AssertField(_rightArrow, nameof(_rightArrow));
+            this.AssertField(_leftRail, nameof(_leftRail));
+            this.AssertField(_rightRail, nameof(_rightRail));
 
-            _originalPointerScale = _pointer.localScale;
+            this.AssertField(_leftMaterialBlock, nameof(_leftMaterialBlock));
+            this.AssertField(_rightMaterialBlock, nameof(_rightMaterialBlock));
 
-            if (_ringRenderer == null)
-            {
-                _ring.TryGetComponent(out _ringRenderer);
-            }
-
-            if (_pointerRenderer == null)
-            {
-                _pointer.TryGetComponent(out _pointerRenderer);
-            }
+            InitializeVisuals();
             this.EndStart(ref _started);
         }
 
@@ -119,71 +158,196 @@ namespace Oculus.Interaction.Locomotion
         {
             if (stateArgs.NewState == InteractorState.Disabled)
             {
-                _ringRenderer.enabled = false;
-                _pointerRenderer.enabled = false;
+                _leftTrail.enabled = false;
+                _rightTrail.enabled = false;
+                _leftArrow.enabled = false;
+                _rightArrow.enabled = false;
+                _leftRail.enabled = false;
+                _rightRail.enabled = false;
             }
-            else
+            else if (stateArgs.PreviousState == InteractorState.Disabled)
             {
-                _ringRenderer.enabled = true;
-                _pointerRenderer.enabled = true;
-
+                _leftTrail.enabled = true;
+                _rightTrail.enabled = true;
+                _leftArrow.enabled = true;
+                _rightArrow.enabled = true;
+                _leftRail.enabled = true;
+                _rightRail.enabled = true;
             }
+        }
+
+        private void InitializeVisuals()
+        {
+            TubePoint[] trailPoints = InitializeSegment(new Vector2(_margin, _maxAngle + _squeezeLength));
+            _leftTrail.RenderTube(trailPoints, Space.Self);
+            _rightTrail.RenderTube(trailPoints, Space.Self);
+
+            TubePoint[] railPoints = InitializeSegment(new Vector2(_margin, _maxAngle));
+            _leftRail.RenderTube(railPoints, Space.Self);
+            _rightRail.RenderTube(railPoints, Space.Self);
         }
 
         private void HandleTurnerPostprocessed()
         {
-            UpdatePoses();
-            UpdateScale();
-            UpdateHighlight();
-        }
-
-        private void UpdatePoses()
-        {
-            Pose origin = _turner.MidPoint;
-            float offset = _turner.Value();
-
-            _ring.SetPositionAndRotation(
-                origin.position,
-                origin.rotation * RING_ROTATION);
-
-            _pointer.SetPositionAndRotation(
-                _turner.Origin.position,
-                Quaternion.LookRotation(offset < 0 ? -origin.right : origin.right, origin.up));
-        }
-
-        private void UpdateScale()
-        {
-            if (Highlight != null && Highlight.Active)
-            {
-                _pointer.localScale = _originalPointerScale;
-            }
-            else
-            {
-                float pointerScaleFactor = Progress != null ? Progress.Value() : 1f;
-                _pointer.localScale = Vector3.Lerp(_originalPointerScale, TINY_SCALE_FACTOR, pointerScaleFactor);
-            }
-        }
-
-        private void UpdateHighlight()
-        {
-            if (Highlight == null
-                || Highlight.Active == _highlighted)
+            if (_turner.State == InteractorState.Disabled)
             {
                 return;
             }
+            UpdatePose();
+            UpdateArrows();
+            UpdateColors();
+        }
 
-            _highlighted = Highlight.Active;
-            float highlightFactor = _highlighted ? 1f : 0f;
-            _ringRenderer.material.SetFloat(_highlightShaderID, highlightFactor);
-            _pointerRenderer.material.SetFloat(_highlightShaderID, highlightFactor);
+        private void UpdatePose()
+        {
+            Pose origin = _turner.MidPoint;
+            Vector3 forward = origin.forward;
+            if (_lookAt != null)
+            {
+                forward = Vector3.ProjectOnPlane(origin.position - _lookAt.position, origin.up).normalized;
+            }
+            Vector3 position = origin.position - forward * _radius + origin.up * _verticalOffset;
+            Quaternion rotation = Quaternion.LookRotation(forward, origin.up);
+
+            _root.SetPositionAndRotation(position, rotation);
+        }
+
+        private void UpdateArrows()
+        {
+            float value = _turner.Value();
+            float angle = Mathf.Lerp(0f, _maxAngle, Mathf.Abs(value));
+            bool isLeft = value < 0;
+            bool follow = ShouldFollowArrow();
+            float squeeze = 0f;
+            if (Progress != null)
+            {
+                squeeze = Mathf.Lerp(0f, _squeezeLength, Progress.Value());
+            }
+
+            _rightRail.enabled = !isLeft;
+            _leftRail.enabled = isLeft;
+
+            angle = Mathf.Max(angle, _trailLength);
+
+            UpdateArrowPosition(isLeft ? _trailLength : angle + squeeze, _rightArrow.transform);
+            RotateTrail(follow && !isLeft ? angle - _trailLength : 0f, _rightTrail);
+            UpdateTrail(isLeft ? _trailLength : (follow ? _trailLength : angle) + squeeze, _rightTrail);
+
+            UpdateArrowPosition(!isLeft ? -_trailLength : -angle - squeeze, _leftArrow.transform);
+            RotateTrail(follow && isLeft ? -angle + _trailLength : 0f, _leftTrail);
+            UpdateTrail(!isLeft ? _trailLength : (follow ? _trailLength : angle) + squeeze, _leftTrail);
+
+            UpdateRail(angle, squeeze, isLeft ? _leftRail : _rightRail);
+        }
+
+        private void UpdateArrowPosition(float angle, Transform arrow)
+        {
+            Quaternion rotation = Quaternion.AngleAxis(angle, Vector3.up);
+            arrow.localPosition = rotation * Vector3.forward * _radius;
+            arrow.localRotation = rotation * _rotationCorrectionLeft;
+        }
+
+        private void RotateTrail(float angle, TubeRenderer trail)
+        {
+            trail.transform.localRotation = Quaternion.AngleAxis(angle, Vector3.up);
+        }
+
+        private void UpdateTrail(float angle, TubeRenderer trail)
+        {
+            float max = _maxAngle + _squeezeLength;
+            float segmentLenght = trail.TotalLength;
+            float start = -100;
+            float end = (max - angle - _margin) / max;
+
+            trail.StartFadeThresold = segmentLenght * start;
+            trail.EndFadeThresold = segmentLenght * end;
+            trail.InvertThreshold = false;
+            trail.RedrawFadeThresholds();
+        }
+
+        private void UpdateRail(float angle, float extra, TubeRenderer rail)
+        {
+            float segmentLenght = rail.TotalLength;
+            float start = (angle - _trailLength - _margin) / _maxAngle;
+            float end = (_maxAngle - angle - extra - _margin) / _maxAngle;
+
+            float gap = _railGap + rail.Feather;
+            rail.StartFadeThresold = segmentLenght * start - gap;
+            rail.EndFadeThresold = segmentLenght * end - gap;
+            rail.InvertThreshold = true;
+            rail.RedrawFadeThresholds();
+        }
+
+        private void UpdateColors()
+        {
+            bool isSelection = _turner.State == InteractorState.Select;
+            if (_turner.Value() > 0)
+            {
+                _leftMaterialBlock.MaterialPropertyBlock.SetColor(_colorShaderPropertyID, _disabledColor);
+                _rightMaterialBlock.MaterialPropertyBlock.SetColor(_colorShaderPropertyID, isSelection ? _highligtedColor : _enabledColor);
+            }
+            else
+            {
+                _leftMaterialBlock.MaterialPropertyBlock.SetColor(_colorShaderPropertyID, isSelection ? _highligtedColor : _enabledColor);
+                _rightMaterialBlock.MaterialPropertyBlock.SetColor(_colorShaderPropertyID, _disabledColor);
+            }
+            _leftMaterialBlock.UpdateMaterialPropertyBlock();
+            _rightMaterialBlock.UpdateMaterialPropertyBlock();
+        }
+
+        private bool ShouldFollowArrow()
+        {
+            if (_broadcaster != null)
+            {
+                return _broadcaster.TurnMethod == TurnerEventBroadcaster.TurnMode.Snap;
+            }
+            return true;
+        }
+
+        private TubePoint[] InitializeSegment(Vector2 minMax)
+        {
+            float lowLimit = minMax.x;
+            float upLimit = minMax.y;
+            int segments = Mathf.RoundToInt(Mathf.Repeat(upLimit - lowLimit, 360f) / _degreesPerSegment);
+            TubePoint[] tubePoints = new TubePoint[segments];
+            float segmentLenght = 1f / segments;
+            for (int i = 0; i < segments; i++)
+            {
+                Quaternion rotation = Quaternion.AngleAxis(-i * _degreesPerSegment - lowLimit, Vector3.up);
+                tubePoints[i] = new TubePoint()
+                {
+                    position = rotation * Vector3.forward * _radius,
+                    rotation = rotation * _rotationCorrectionLeft,
+                    relativeLength = i * segmentLenght
+                };
+            }
+            return tubePoints;
         }
 
         #region Inject
-        public void InjectAllLocomotionTurnerInteractorVisual(LocomotionTurnerInteractor turner, Transform ring, Transform pointer)
+
+        public void InjectAllLocomotionTurnerInteractorArrowsVisual(
+            LocomotionTurnerInteractor turner, Transform root, Renderer leftArrow, Renderer rightArrow,
+            TubeRenderer leftRail, TubeRenderer rightRail, TubeRenderer leftTrail, TubeRenderer rightTrail,
+            MaterialPropertyBlockEditor leftMaterialBlock, MaterialPropertyBlockEditor rightMaterialBlock,
+            float radius, float margin, float trailLength, float maxAngle, float railGap, float squeezeLength)
         {
             InjectTurner(turner);
-            InjectRing(ring);
-            InjectPointer(pointer);
+            InjectRoot(root);
+            InjectLeftArrow(leftArrow);
+            InjectRightArrow(rightArrow);
+            InjectLeftRail(leftRail);
+            InjectRightRail(rightRail);
+            InjectLeftTrail(leftTrail);
+            InjectRightTrail(rightTrail);
+            InjectLeftMaterialBlock(leftMaterialBlock);
+            InjectRightMaterialBlock(rightMaterialBlock);
+            InjectRadius(radius);
+            InjectMargin(margin);
+            InjectTrailLength(trailLength);
+            InjectMaxAngle(maxAngle);
+            InjectRailGap(railGap);
+            InjectSqueezeLength(squeezeLength);
         }
 
         public void InjectTurner(LocomotionTurnerInteractor turner)
@@ -191,37 +355,82 @@ namespace Oculus.Interaction.Locomotion
             _turner = turner;
         }
 
-        public void InjectRing(Transform leftRing)
+        public void InjectRoot(Transform root)
         {
-            _ring = leftRing;
+            _root = root;
+        }
+        public void InjectLeftArrow(Renderer leftArrow)
+        {
+            _leftArrow = leftArrow;
+        }
+        public void InjectRightArrow(Renderer rightArrow)
+        {
+            _rightArrow = rightArrow;
+        }
+        public void InjectLeftRail(TubeRenderer leftRail)
+        {
+            _leftRail = leftRail;
+        }
+        public void InjectRightRail(TubeRenderer rightRail)
+        {
+            _rightRail = rightRail;
+        }
+        public void InjectLeftTrail(TubeRenderer leftTrail)
+        {
+            _leftTrail = leftTrail;
+        }
+        public void InjectRightTrail(TubeRenderer rightTrail)
+        {
+            _rightTrail = rightTrail;
+        }
+        public void InjectLeftMaterialBlock(MaterialPropertyBlockEditor leftMaterialBlock)
+        {
+            _leftMaterialBlock = leftMaterialBlock;
+        }
+        public void InjectRightMaterialBlock(MaterialPropertyBlockEditor rightMaterialBlock)
+        {
+            _rightMaterialBlock = rightMaterialBlock;
+        }
+        public void InjectRadius(float radius)
+        {
+            _radius = radius;
+        }
+        public void InjectMargin(float margin)
+        {
+            _margin = margin;
+        }
+        public void InjectTrailLength(float trailLength)
+        {
+            _trailLength = trailLength;
+        }
+        public void InjectMaxAngle(float maxAngle)
+        {
+            _maxAngle = maxAngle;
+        }
+        public void InjectRailGap(float railGap)
+        {
+            _railGap = railGap;
+        }
+        public void InjectSqueezeLength(float squeezeLength)
+        {
+            _squeezeLength = squeezeLength;
         }
 
-        public void InjectPointer(Transform pointer)
+        public void InjectOptionalBroadcaster(TurnerEventBroadcaster broadcaster)
         {
-            _pointer = pointer;
+            _broadcaster = broadcaster;
         }
-
-        public void InjectOptionalHighlight(IActiveState highlight)
+        public void InjectOptionalLookAt(Transform lookAt)
         {
-            _highlight = highlight as MonoBehaviour;
-            Highlight = highlight;
-        }
-
-        public void InjectOptionalRingRenderer(Renderer ringRenderer)
-        {
-            _ringRenderer = ringRenderer;
-        }
-
-        public void InjectOptionalPointerRenderer(Renderer pointerRenderer)
-        {
-            _pointerRenderer = pointerRenderer;
+            _lookAt = lookAt;
         }
 
         public void InjectOptionalProgress(IAxis1D progress)
         {
-            _progress = progress as MonoBehaviour;
+            _progress = progress as UnityEngine.Object;
             Progress = progress;
         }
+
         #endregion
     }
 }

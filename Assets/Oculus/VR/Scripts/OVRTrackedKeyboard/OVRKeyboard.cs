@@ -26,69 +26,71 @@ using UnityEngine;
 
 public static class OVRKeyboard
 {
-	public struct TrackedKeyboardState
-	{
-		public bool isPositionValid;
-		public bool isPositionTracked;
-		public bool isOrientationValid;
-		public bool isOrientationTracked;
-		public Vector3 position;
-		public Quaternion rotation;
-		public double timeInSeconds;
-	}
+    public struct TrackedKeyboardState
+    {
+        public bool isPositionValid;
+        public bool isPositionTracked;
+        public bool isOrientationValid;
+        public bool isOrientationTracked;
+        public Vector3 position;
+        public Quaternion rotation;
+        public double timeInSeconds;
+    }
 
-	public struct TrackedKeyboardInfo
-	{
-		public string Name;
-		public UInt64 Identifier;
-		public Vector3 Dimensions;
-		public OVRPlugin.TrackedKeyboardFlags KeyboardFlags;
-		public OVRPlugin.TrackedKeyboardPresentationStyles SupportedPresentationStyles;
-	}
+    public struct TrackedKeyboardInfo
+    {
+        public string Name;
+        public UInt64 Identifier;
+        public Vector3 Dimensions;
+        public OVRPlugin.TrackedKeyboardFlags KeyboardFlags;
+        public OVRPlugin.TrackedKeyboardPresentationStyles SupportedPresentationStyles;
+    }
 
-	public static TrackedKeyboardState GetKeyboardState()
-	{
-		TrackedKeyboardState keyboardState;
+    public static TrackedKeyboardState GetKeyboardState()
+    {
+        TrackedKeyboardState keyboardState;
 
-		OVRPlugin.KeyboardState keyboardStatePlugin;
-		OVRPlugin.GetKeyboardState(OVRPlugin.Step.Render, out keyboardStatePlugin);
-		keyboardState.timeInSeconds = keyboardStatePlugin.PoseState.Time;
+        OVRPlugin.KeyboardState keyboardStatePlugin;
+        OVRPlugin.GetKeyboardState(OVRPlugin.Step.Render, out keyboardStatePlugin);
+        keyboardState.timeInSeconds = keyboardStatePlugin.PoseState.Time;
 
-		OVRPose nodePose = keyboardStatePlugin.PoseState.Pose.ToOVRPose();
-		keyboardState.position = nodePose.position;
-		keyboardState.rotation = nodePose.orientation;
+        OVRPose nodePose = keyboardStatePlugin.PoseState.Pose.ToOVRPose();
+        keyboardState.position = nodePose.position;
+        keyboardState.rotation = nodePose.orientation;
 
-		keyboardState.isPositionValid      = (keyboardStatePlugin.PositionValid      == OVRPlugin.Bool.True);
-		keyboardState.isPositionTracked    = (keyboardStatePlugin.PositionTracked    == OVRPlugin.Bool.True);
-		keyboardState.isOrientationValid   = (keyboardStatePlugin.OrientationValid   == OVRPlugin.Bool.True);
-		keyboardState.isOrientationTracked = (keyboardStatePlugin.OrientationTracked == OVRPlugin.Bool.True);
+        keyboardState.isPositionValid = (keyboardStatePlugin.PositionValid == OVRPlugin.Bool.True);
+        keyboardState.isPositionTracked = (keyboardStatePlugin.PositionTracked == OVRPlugin.Bool.True);
+        keyboardState.isOrientationValid = (keyboardStatePlugin.OrientationValid == OVRPlugin.Bool.True);
+        keyboardState.isOrientationTracked = (keyboardStatePlugin.OrientationTracked == OVRPlugin.Bool.True);
 
-		return keyboardState;
-	}
+        return keyboardState;
+    }
 
-	// Query for information about the system keyboards.
-	public static bool GetSystemKeyboardInfo(OVRPlugin.TrackedKeyboardQueryFlags keyboardQueryFlags, out TrackedKeyboardInfo keyboardInfo)
-	{
-		keyboardInfo = default(TrackedKeyboardInfo);
+    // Query for information about the system keyboards.
+    public static bool GetSystemKeyboardInfo(OVRPlugin.TrackedKeyboardQueryFlags keyboardQueryFlags,
+        out TrackedKeyboardInfo keyboardInfo)
+    {
+        keyboardInfo = default(TrackedKeyboardInfo);
 
-		OVRPlugin.KeyboardDescription keyboardDescription;
-		if(OVRPlugin.GetSystemKeyboardDescription(keyboardQueryFlags, out keyboardDescription))
-		{
-			keyboardInfo.Name = Encoding.UTF8.GetString(keyboardDescription.Name).TrimEnd('\0');
-			keyboardInfo.Identifier = keyboardDescription.TrackedKeyboardId;
-			keyboardInfo.Dimensions = new Vector3(keyboardDescription.Dimensions.x, keyboardDescription.Dimensions.y, keyboardDescription.Dimensions.z);
-			keyboardInfo.KeyboardFlags = keyboardDescription.KeyboardFlags;
-			keyboardInfo.SupportedPresentationStyles = keyboardDescription.SupportedPresentationStyles;
-			return true;
-		}
-		else
-		{
-			return false;
-		}
-	}
+        OVRPlugin.KeyboardDescription keyboardDescription;
+        if (OVRPlugin.GetSystemKeyboardDescription(keyboardQueryFlags, out keyboardDescription))
+        {
+            keyboardInfo.Name = Encoding.UTF8.GetString(keyboardDescription.Name).TrimEnd('\0');
+            keyboardInfo.Identifier = keyboardDescription.TrackedKeyboardId;
+            keyboardInfo.Dimensions = new Vector3(keyboardDescription.Dimensions.x, keyboardDescription.Dimensions.y,
+                keyboardDescription.Dimensions.z);
+            keyboardInfo.KeyboardFlags = keyboardDescription.KeyboardFlags;
+            keyboardInfo.SupportedPresentationStyles = keyboardDescription.SupportedPresentationStyles;
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
 
-	public static bool StopKeyboardTracking(TrackedKeyboardInfo keyboardInfo)
-	{
-		return OVRPlugin.StopKeyboardTracking();
-	}
+    public static bool StopKeyboardTracking(TrackedKeyboardInfo keyboardInfo)
+    {
+        return OVRPlugin.StopKeyboardTracking();
+    }
 }

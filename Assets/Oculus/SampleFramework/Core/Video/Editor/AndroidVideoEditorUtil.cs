@@ -6,9 +6,14 @@ using System.IO;
 
 public class AndroidVideoEditorUtil
 {
-    private static readonly string videoPlayerFileName = "Assets/Oculus/SampleFramework/Core/Video/Plugins/Android/java/com/oculus/videoplayer/NativeVideoPlayer.java";
-    private static readonly string audio360PluginPath = "Assets/Oculus/SampleFramework/Core/Video/Plugins/Android/Audio360/audio360.aar";
-    private static readonly string audio360Exo218PluginPath = "Assets/Oculus/SampleFramework/Core/Video/Plugins/Android/Audio360/audio360-exo218.aar";
+    private static readonly string videoPlayerFileName =
+        "Assets/Oculus/SampleFramework/Core/Video/Plugins/Android/java/com/oculus/videoplayer/NativeVideoPlayer.java";
+
+    private static readonly string audio360PluginPath =
+        "Assets/Oculus/SampleFramework/Core/Video/Plugins/Android/Audio360/audio360.aar";
+
+    private static readonly string audio360Exo218PluginPath =
+        "Assets/Oculus/SampleFramework/Core/Video/Plugins/Android/Audio360/audio360-exo218.aar";
 
     [MenuItem("Oculus/Samples/Video/Enable Native Android Video Player")]
     public static void EnableNativeVideoPlayer()
@@ -44,7 +49,7 @@ public class AndroidVideoEditorUtil
         properties.Save();
 
         // Set the API level to 31
-        PlayerSettings.Android.targetSdkVersion = (AndroidSdkVersions) 31;
+        PlayerSettings.Android.targetSdkVersion = (AndroidSdkVersions)31;
     }
 
     [MenuItem("Oculus/Samples/Video/Disable Native Android Video Player")]
@@ -78,6 +83,5 @@ public class AndroidVideoEditorUtil
             template.RemoveAndroidSetting("sourceSets.main.java.srcDir");
             template.Save();
         }
-
     }
 }

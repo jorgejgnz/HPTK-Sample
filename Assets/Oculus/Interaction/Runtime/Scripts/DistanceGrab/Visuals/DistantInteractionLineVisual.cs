@@ -25,7 +25,7 @@ namespace Oculus.Interaction.DistanceReticles
     public abstract class DistantInteractionLineVisual : MonoBehaviour
     {
         [SerializeField, Interface(typeof(IDistanceInteractor))]
-        private MonoBehaviour _distanceInteractor;
+        private UnityEngine.Object _distanceInteractor;
         public IDistanceInteractor DistanceInteractor { get; protected set; }
 
         [SerializeField]
@@ -219,7 +219,7 @@ namespace Oculus.Interaction.DistanceReticles
 
         public void InjectDistanceInteractor(IDistanceInteractor interactor)
         {
-            _distanceInteractor = interactor as MonoBehaviour;
+            _distanceInteractor = interactor as UnityEngine.Object;
             DistanceInteractor = interactor;
         }
 

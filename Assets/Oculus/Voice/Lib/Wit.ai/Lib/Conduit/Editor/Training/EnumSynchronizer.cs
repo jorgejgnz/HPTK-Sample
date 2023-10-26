@@ -64,7 +64,7 @@ namespace Meta.Conduit.Editor
                 completionCallback?.Invoke(false, "Failed to obtain entities from service");
                 yield break;
             }
-            
+
             var localEnumNames = manifest.Entities.Select(entity => entity.ID).ToList();
             const float missingProgressProgressMaxRange = 0.5f;
             var namesProgressIncrement = (missingProgressProgressMaxRange - _progress) / witEntityNames.Count;
@@ -150,7 +150,7 @@ namespace Meta.Conduit.Editor
                 {
                     completionCallback(true, "");
                 }
-                
+
                 yield break;
             }
 
@@ -160,10 +160,10 @@ namespace Meta.Conduit.Editor
             yield return AddValuesToWit(manifestEntity.Name, delta,
                 delegate(bool success, string data)
                 {
-                    result = success; 
+                    result = success;
                     witData = data;
                 });
-            
+
             if (!result)
             {
                 completionCallback(false, $"Failed to add values to Wit.Ai\n{witData}");
@@ -189,7 +189,7 @@ namespace Meta.Conduit.Editor
             // Wit entity not found
             if (!witIncomingEntity.HasValue)
             {
-                Debug.LogError($"Enum Synchronizer - Failed to find {entityName} entity on Wit.AI");
+                VLog.E($"Enum Synchronizer - Failed to find {entityName} entity on Wit.AI");
                 yield break;
             }
 
@@ -197,7 +197,7 @@ namespace Meta.Conduit.Editor
             var entityEnumName = ConduitUtilities.GetEntityEnumName(entityName);
 
             var keywords = witIncomingEntity.Value.keywords.Select(keyword => new WitKeyword(keyword)).ToList();
-            
+
             // Generate wrapper
             var wrapper = new EnumCodeWrapper(_fileIo, entityEnumName, entityEnumName, keywords, DEFAULT_NAMESPACE);
 
@@ -231,13 +231,13 @@ namespace Meta.Conduit.Editor
             {
                 newValues.Add(keyword);
             }
-            
+
             foreach (var changedValue in delta.Changed)
             {
                 var keyword = new WitKeyword(changedValue.Keyword, changedValue.AllSynonyms.ToList());
                 newValues.Add(keyword);
             }
-            
+
             enumWrapper.AddValues(newValues);
             enumWrapper.WriteToFile();
             return true;
@@ -251,7 +251,7 @@ namespace Meta.Conduit.Editor
 
             if (assemblies.Count() != 1)
             {
-                Debug.LogError($"Expected one assembly for type {qualifiedTypeName} but found {assemblies.Count()}");
+                VLog.E($"Expected one assembly for type {qualifiedTypeName} but found {assemblies.Count()}");
                 throw new InvalidOperationException();
             }
 
@@ -274,7 +274,7 @@ namespace Meta.Conduit.Editor
             {
                 return null;
             }
-            
+
             _assemblyWalker.GetSourceCode(enumType, out string sourceFile, out bool singleUnit);
             if (!singleUnit)
             {
@@ -315,6 +315,12 @@ namespace Meta.Conduit.Editor
 
             foreach (var keyword in witEntity.keywords)
             {
+                if (witEntityKeywords.ContainsKey(keyword.keyword))
+                {
+                    VLog.W($"Duplicate keyword {keyword.keyword} was found in entity {incomingEntity.Value.name}. Verify entities on Wit.Ai");
+                    continue;
+                }
+                
                 witEntityKeywords.Add(keyword.keyword, new WitKeyword(keyword));
             }
 
@@ -345,13 +351,13 @@ namespace Meta.Conduit.Editor
             {
                 var synonymsDelta = GetKeywordsDelta(manifestEntityKeywords[commonKeyword],
                     witEntityKeywords[commonKeyword]);
-                
+
                 if(!synonymsDelta.IsEmpty)
                 {
                     delta.Changed.Add(synonymsDelta);
                 }
             }
-           
+
             return delta;
         }
 
@@ -361,7 +367,7 @@ namespace Meta.Conduit.Editor
             {
                 throw new InvalidOperationException("Mismatching keywords when checking for synonyms delta");
             }
-            
+
             var delta = new KeywordsDelta()
             {
                 Keyword = localEntityKeyword.keyword,
@@ -369,7 +375,7 @@ namespace Meta.Conduit.Editor
                 WitOnlySynonyms = new HashSet<string>(),
                 AllSynonyms = new HashSet<string>()
             };
-            
+
             foreach (var witSynonym in witEntityKeyword.synonyms)
             {
                 delta.AllSynonyms.Add(witSynonym);
@@ -417,7 +423,7 @@ namespace Meta.Conduit.Editor
                     errorBuilder.AppendLine($"Failed to add keyword ({keyword.keyword}) to Wit.Ai. Error: {requestError}");
                     continue;
                 }
-                
+
                 yield return new WaitUntil(()=> requestComplete || !string.IsNullOrEmpty(requestError));
             }
 
@@ -428,7 +434,7 @@ namespace Meta.Conduit.Editor
                     var request = _requestFactory.CreateWitSyncVRequest(_configuration);
                     var requestError = "";
                     var requestComplete = false;
-                    
+
                     if (!request.RequestAddSynonym(entityName, changedKeyword.Keyword, synonym,
                             (result, error) =>
                             {
@@ -445,7 +451,7 @@ namespace Meta.Conduit.Editor
                         errorBuilder.AppendLine($"Failed to add synonym ({synonym}) to keyword ({changedKeyword.Keyword}) on Wit.Ai. Error: {requestError}");
                         continue;
                     }
-                    
+
                     yield return new WaitUntil(()=> requestComplete || !string.IsNullOrEmpty(requestError));
                 }
             }
@@ -463,7 +469,7 @@ namespace Meta.Conduit.Editor
 
                     if (!string.IsNullOrEmpty(error))
                     {
-                        Debug.LogError($"Failed to query Wit Entities\nError: {error}");
+                        VLog.E($"Failed to query Wit Entities\nError: {error}");
                         callBack(null);
                         return;
                     }
@@ -499,7 +505,7 @@ namespace Meta.Conduit.Editor
                 VLog.E($"Failed to get entity {manifestEntityName}");
                 callBack(null);
             }
-                
+
             yield return new WaitUntil(() => requestCompleted);
         }
     }

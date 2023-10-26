@@ -31,6 +31,9 @@ namespace Oculus.Interaction.Grab.GrabSurfaces.Editor
     {
         private BoxBoundsHandle _boxHandle = new BoxBoundsHandle();
         private BoxGrabSurface _surface;
+        private Transform _relativeTo;
+
+        private SerializedProperty _relativeToProperty;
 
         private void OnEnable()
         {
@@ -39,66 +42,86 @@ namespace Oculus.Interaction.Grab.GrabSurfaces.Editor
             _boxHandle.axes = PrimitiveBoundsHandle.Axes.X | PrimitiveBoundsHandle.Axes.Z;
 
             _surface = (target as BoxGrabSurface);
+            _relativeToProperty = serializedObject.FindProperty("_relativeTo");
+        }
+
+        public override void OnInspectorGUI()
+        {
+            base.OnInspectorGUI();
+            _relativeTo = _relativeToProperty.objectReferenceValue as Transform;
         }
 
         public void OnSceneGUI()
         {
-            DrawRotator(_surface);
-            DrawBoxEditor(_surface);
-            DrawSlider(_surface);
+            if (_relativeTo == null)
+            {
+                return;
+            }
+
+            DrawRotator(_surface, _relativeTo);
+            DrawBoxEditor(_surface, _relativeTo);
+            DrawSlider(_surface, _relativeTo);
 
             if (Event.current.type == EventType.Repaint)
             {
-                DrawSnapLines(_surface);
+                DrawSnapLines(_surface, _relativeTo);
             }
         }
 
-        private void DrawSnapLines(BoxGrabSurface surface)
+        private void DrawSnapLines(BoxGrabSurface surface, Transform relativeTo)
         {
             Handles.color = EditorConstants.PRIMARY_COLOR;
+            Vector3 size = surface.GetSize(relativeTo);
+            Quaternion rotation = surface.GetRotation(relativeTo);
+            Vector3 surfacePosition = surface.GetReferencePose(relativeTo).position;
+            float widthOffset = surface.GetWidthOffset(relativeTo);
+            Vector4 snapOffset = surface.GetSnapOffset(relativeTo);
+            Vector3 rightAxis = rotation * Vector3.right;
+            Vector3 forwardAxis = rotation * Vector3.forward;
+            Vector3 forwardOffset = forwardAxis * size.z;
 
-            Vector3 rightAxis = surface.Rotation * Vector3.right;
-            Vector3 forwardAxis = surface.Rotation * Vector3.forward;
-            Vector3 forwardOffset = forwardAxis * surface.Size.z;
-
-            Vector3 bottomLeft = surface.transform.position - rightAxis * surface.Size.x * (1f - surface.WidthOffset);
-            Vector3 bottomRight = surface.transform.position + rightAxis * surface.Size.x * (surface.WidthOffset);
+            Vector3 bottomLeft = surfacePosition - rightAxis * size.x * (1f - widthOffset);
+            Vector3 bottomRight = surfacePosition + rightAxis * size.x * (widthOffset);
             Vector3 topLeft = bottomLeft + forwardOffset;
             Vector3 topRight = bottomRight + forwardOffset;
 
-            Handles.DrawLine(bottomLeft + rightAxis * surface.SnapOffset.y, bottomRight + rightAxis * surface.SnapOffset.x);
-            Handles.DrawLine(topLeft - rightAxis * surface.SnapOffset.x, topRight - rightAxis * surface.SnapOffset.y);
-            Handles.DrawLine(bottomLeft - forwardAxis * surface.SnapOffset.z, topLeft - forwardAxis * surface.SnapOffset.w);
-            Handles.DrawLine(bottomRight + forwardAxis * surface.SnapOffset.w, topRight + forwardAxis * surface.SnapOffset.z);
+            Handles.DrawLine(bottomLeft + rightAxis * snapOffset.y, bottomRight + rightAxis * snapOffset.x);
+            Handles.DrawLine(topLeft - rightAxis * snapOffset.x, topRight - rightAxis * snapOffset.y);
+            Handles.DrawLine(bottomLeft - forwardAxis * snapOffset.z, topLeft - forwardAxis * snapOffset.w);
+            Handles.DrawLine(bottomRight + forwardAxis * snapOffset.w, topRight + forwardAxis * snapOffset.z);
         }
 
-        private void DrawSlider(BoxGrabSurface surface)
+        private void DrawSlider(BoxGrabSurface surface, Transform relativeTo)
         {
             Handles.color = EditorConstants.PRIMARY_COLOR;
-
+            Vector3 size = surface.GetSize(relativeTo);
+            Quaternion rotation = surface.GetRotation(relativeTo);
+            Vector3 surfacePosition = surface.GetReferencePose(relativeTo).position;
+            float widthOffset = surface.GetWidthOffset(relativeTo);
+            Vector4 snapOffset = surface.GetSnapOffset(relativeTo);
             EditorGUI.BeginChangeCheck();
-            Vector3 rightDir = surface.Rotation * Vector3.right;
-            Vector3 forwardDir = surface.Rotation * Vector3.forward;
-            Vector3 bottomRight = surface.transform.position
-                + rightDir * surface.Size.x * (surface.WidthOffset);
-            Vector3 bottomLeft = surface.transform.position
-                - rightDir * surface.Size.x * (1f - surface.WidthOffset);
-            Vector3 topRight = bottomRight + forwardDir * surface.Size.z;
+            Vector3 rightDir = rotation * Vector3.right;
+            Vector3 forwardDir = rotation * Vector3.forward;
+            Vector3 bottomRight = surfacePosition
+                + rightDir * size.x * (widthOffset);
+            Vector3 bottomLeft = surfacePosition
+                - rightDir * size.x * (1f - widthOffset);
+            Vector3 topRight = bottomRight + forwardDir * size.z;
 
-            Vector3 rightHandle = DrawOffsetHandle(bottomRight + rightDir * surface.SnapOffset.x, rightDir);
-            Vector3 leftHandle = DrawOffsetHandle(bottomLeft + rightDir * surface.SnapOffset.y, -rightDir);
-            Vector3 topHandle = DrawOffsetHandle(topRight + forwardDir * surface.SnapOffset.z, forwardDir);
-            Vector3 bottomHandle = DrawOffsetHandle(bottomRight + forwardDir * surface.SnapOffset.w, -forwardDir);
+            Vector3 rightHandle = DrawOffsetHandle(bottomRight + rightDir * snapOffset.x, rightDir);
+            Vector3 leftHandle = DrawOffsetHandle(bottomLeft + rightDir * snapOffset.y, -rightDir);
+            Vector3 topHandle = DrawOffsetHandle(topRight + forwardDir * snapOffset.z, forwardDir);
+            Vector3 bottomHandle = DrawOffsetHandle(bottomRight + forwardDir * snapOffset.w, -forwardDir);
 
             if (EditorGUI.EndChangeCheck())
             {
                 Undo.RecordObject(surface, "Change Offset Box");
-                Vector4 offset = surface.SnapOffset;
+                Vector4 offset = snapOffset;
                 offset.x = DistanceToHandle(bottomRight, rightHandle, rightDir);
                 offset.y = DistanceToHandle(bottomLeft, leftHandle, rightDir);
                 offset.z = DistanceToHandle(topRight, topHandle, forwardDir);
                 offset.w = DistanceToHandle(bottomRight, bottomHandle, forwardDir);
-                surface.SnapOffset = offset;
+                surface.SetSnapOffset(offset, relativeTo);
             }
         }
 
@@ -118,26 +141,28 @@ namespace Oculus.Interaction.Grab.GrabSurfaces.Editor
             return distance;
         }
 
-        private void DrawRotator(BoxGrabSurface surface)
+        private void DrawRotator(BoxGrabSurface surface, Transform relativeTo)
         {
             EditorGUI.BeginChangeCheck();
-            Quaternion rotation = Handles.RotationHandle(surface.Rotation, surface.transform.position);
+            Quaternion rotation = Handles.RotationHandle(
+                surface.GetRotation(relativeTo),
+                surface.GetReferencePose(relativeTo).position);
             if (EditorGUI.EndChangeCheck())
             {
                 Undo.RecordObject(surface, "Change Rotation Box");
-                surface.Rotation = rotation;
+                surface.SetRotation(rotation, relativeTo);
             }
         }
 
-        private void DrawBoxEditor(BoxGrabSurface surface)
+        private void DrawBoxEditor(BoxGrabSurface surface, Transform relativeTo)
         {
-            Quaternion rot = surface.Rotation;
-            Vector3 size = surface.Size;
-
-            Vector3 snapP = surface.transform.position;
+            Quaternion rot = surface.GetRotation(relativeTo);
+            Vector3 size = surface.GetSize(relativeTo);
+            float widthOffset = surface.GetWidthOffset(relativeTo);
+            Vector3 snapP = surface.GetReferencePose(relativeTo).position;
 
             _boxHandle.size = size;
-            float widthPos = Mathf.Lerp(-size.x * 0.5f, size.x * 0.5f, surface.WidthOffset);
+            float widthPos = Mathf.Lerp(-size.x * 0.5f, size.x * 0.5f, widthOffset);
             _boxHandle.center = new Vector3(widthPos, 0f, size.z * 0.5f);
 
             Matrix4x4 handleMatrix = Matrix4x4.TRS(
@@ -154,9 +179,13 @@ namespace Oculus.Interaction.Grab.GrabSurfaces.Editor
                 {
                     Undo.RecordObject(surface, "Change Box Properties");
 
-                    surface.Size = _boxHandle.size;
+                    surface.SetSize(_boxHandle.size, relativeTo);
                     float width = _boxHandle.size.x;
-                    surface.WidthOffset = width != 0f ? (_boxHandle.center.x + width * 0.5f) / width : 0f;
+                    if (width != 0f)
+                    {
+                        width = (_boxHandle.center.x + width * 0.5f) / width;
+                    }
+                    surface.SetWidthOffset(width, relativeTo);
                 }
             }
         }

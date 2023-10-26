@@ -31,12 +31,8 @@ namespace Oculus.Interaction.Editor
 
         private SerializedProperty _offsetPositionProperty;
         private SerializedProperty _rotationProperty;
-        private SerializedProperty _relativeTransformProperty;
 
         private Pose _cachedPose;
-
-        private static readonly Quaternion LEFT_MIRROR_ROTATION = Quaternion.Euler(180f, 0f, 0f);
-
 
         private void Awake()
         {
@@ -44,7 +40,6 @@ namespace Oculus.Interaction.Editor
 
             _offsetPositionProperty = serializedObject.FindProperty("_offset");
             _rotationProperty = serializedObject.FindProperty("_rotation");
-            _relativeTransformProperty = serializedObject.FindProperty("_relativeTransform");
         }
 
         public override void OnInspectorGUI()
@@ -55,23 +50,6 @@ namespace Oculus.Interaction.Editor
             Vector3 euler = EditorGUILayout.Vector3Field("Rotation", _rotationProperty.quaternionValue.eulerAngles);
             _rotationProperty.quaternionValue = Quaternion.Euler(euler);
 
-            EditorGUILayout.PropertyField(_relativeTransformProperty);
-            Transform gripPoint = _relativeTransformProperty.objectReferenceValue as Transform;
-            if (gripPoint != null)
-            {
-                Pose offset;
-                if (gripPoint != _wristOffset.transform)
-                {
-                    offset = _wristOffset.transform.Delta(gripPoint);
-                }
-                else
-                {
-                    offset = _wristOffset.transform.GetPose(Space.Self);
-                }
-                _rotationProperty.quaternionValue = LEFT_MIRROR_ROTATION * offset.rotation;
-                _offsetPositionProperty.vector3Value = LEFT_MIRROR_ROTATION * offset.position;
-            }
-
             serializedObject.ApplyModifiedProperties();
         }
 
@@ -81,7 +59,6 @@ namespace Oculus.Interaction.Editor
             _cachedPose.rotation = _wristOffset.Rotation;
 
             Pose wristPose = _wristOffset.transform.GetPose();
-            wristPose.rotation = wristPose.rotation * LEFT_MIRROR_ROTATION;
             _cachedPose.Postmultiply(wristPose);
             DrawAxis(_cachedPose);
         }

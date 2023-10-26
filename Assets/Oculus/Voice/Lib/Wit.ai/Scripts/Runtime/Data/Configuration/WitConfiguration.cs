@@ -9,8 +9,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 using Meta.WitAi.Configuration;
-using Meta.WitAi;
 using Meta.WitAi.Data.Info;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -33,7 +34,12 @@ namespace Meta.WitAi.Data.Configuration
         /// Application info
         /// </summary>
         [FormerlySerializedAs("application")]
-        [SerializeField] private WitAppInfo _appInfo;
+        [SerializeField] private WitAppInfo _appInfo;   //to be replaced by _configData
+
+        /// <summary>
+        /// Configuration data about the app.
+        /// </summary>
+        [SerializeField] private WitConfigurationAssetData[] _configData;
 
         /// <summary>
         /// Configuration id
@@ -69,7 +75,11 @@ namespace Meta.WitAi.Data.Configuration
         /// <summary>
         /// The assemblies that we want to exclude from Conduit.
         /// </summary>
-        [SerializeField] public List<string> excludedAssemblies = new List<string>();
+        [SerializeField] public List<string> excludedAssemblies = new List<string>
+        {
+            "Oculus.Voice.Demo, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+            "Meta.WitAi.Samples, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"
+        };
 
         [Tooltip("When true, Conduit will attempt to match incoming requests by type when no exact matches are found. This increases tolerance but reduces runtime performance.")]
         [SerializeField] public bool relaxedResolution;
@@ -119,6 +129,20 @@ namespace Meta.WitAi.Data.Configuration
             endpointConfiguration = new WitEndpointConfig();
         }
 
+        /// <summary>
+        /// Refreshes the individual data components of the configuration.
+        /// </summary>
+        public void UpdateDataAssets()
+        {
+            #if UNITY_EDITOR
+            RefreshPlugins();
+            #endif
+
+            foreach (WitConfigurationAssetData data in _configData)
+            {
+                data.Refresh(this);
+            }
+        }
         // Logger invalid warnings
         private const string INVALID_APP_ID_NO_CLIENT_TOKEN = "App Info Not Set - No Client Token";
         private const string INVALID_APP_ID_WITH_CLIENT_TOKEN =
@@ -164,21 +188,24 @@ namespace Meta.WitAi.Data.Configuration
         /// Returns application info
         /// </summary>
         public WitAppInfo GetApplicationInfo() => _appInfo;
+
+        /// <summary>
+        /// Returns all the configuration data for this app.
+        /// </summary>
+        /// <returns></returns>
+        public WitConfigurationAssetData[] GetConfigData()
+        {
+            if (_configData == null)
+            {
+                _configData = Array.Empty<WitConfigurationAssetData>();
+            }
+            return _configData;
+        }
+
         /// <summary>
         /// Return endpoint override
         /// </summary>
-        public WitRequestEndpointOverride GetEndpointOverrides()
-        {
-            WitRequestEndpointOverride endpoint = new WitRequestEndpointOverride();
-            if (endpointConfiguration != null)
-            {
-                endpoint.uriScheme = endpointConfiguration.uriScheme;
-                endpoint.authority = endpointConfiguration.authority;
-                endpoint.port = endpointConfiguration.port;
-                endpoint.witApiVersion = endpointConfiguration.witApiVersion;
-            }
-            return endpoint;
-        }
+        public IWitRequestEndpointInfo GetEndpointInfo() => endpointConfiguration;
         /// <summary>
         /// Returns client access token
         /// </summary>
@@ -212,6 +239,14 @@ namespace Meta.WitAi.Data.Configuration
             _appInfo = newInfo;
             SaveConfiguration();
         }
+
+        /// <summary>
+        /// Saves the plugin-specific data for this WitConfiguration
+        /// </summary>
+        public void SetConfigData(WitConfigurationAssetData[] configData)
+        {
+            _configData = configData;
+        }
         // Save this configuration asset
         private void SaveConfiguration()
         {
@@ -221,6 +256,36 @@ namespace Meta.WitAi.Data.Configuration
             #else
             AssetDatabase.SaveAssets();
             #endif
+        }
+
+        private void RefreshPlugins()
+        {
+            Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+
+            // Find all derived data types
+            List<Type> dataPlugins =  typeof(WitConfigurationAssetData).GetSubclassTypes();
+
+            // Create instances of the types and register them
+            List<WitConfigurationAssetData> newConfigs = new List<WitConfigurationAssetData>();
+            var configurationAssetPath = AssetDatabase.GetAssetPath(this);
+            foreach (Type dataType in dataPlugins)
+            {
+
+                // Grab existing if present
+                var plugin = (WitConfigurationAssetData)AssetDatabase.LoadAssetAtPath(configurationAssetPath, dataType);
+                // Generate instance & add to asset
+                if (plugin == null)
+                {
+                    plugin = (WitConfigurationAssetData)CreateInstance(dataType);
+                    plugin.name = dataType.Name;
+                    AssetDatabase.AddObjectToAsset(plugin, configurationAssetPath);
+                    AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(plugin));
+                    plugin = (WitConfigurationAssetData)AssetDatabase.LoadAssetAtPath(configurationAssetPath, dataType);
+                }
+                newConfigs.Add(plugin);
+            }
+            SetConfigData(newConfigs.ToArray());
+            AssetDatabase.SaveAssets();
         }
         #endif
         #endregion

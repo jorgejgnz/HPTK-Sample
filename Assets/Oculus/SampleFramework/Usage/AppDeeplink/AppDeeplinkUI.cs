@@ -56,7 +56,8 @@ public class AppDeeplinkUI : MonoBehaviour
         if (Application.platform == RuntimePlatform.Android)
         {
             // retrieve + update launch details
-            Oculus.Platform.Models.LaunchDetails launchDetails = Oculus.Platform.ApplicationLifecycle.GetLaunchDetails();
+            Oculus.Platform.Models.LaunchDetails
+                launchDetails = Oculus.Platform.ApplicationLifecycle.GetLaunchDetails();
             uiLaunchType.GetComponentInChildren<Text>().text = "LaunchType: " + launchDetails.LaunchType;
             uiLaunchSource.GetComponentInChildren<Text>().text = "LaunchSource: " + launchDetails.LaunchSource;
             uiDeepLinkMessage.GetComponentInChildren<Text>().text = "DeeplinkMessage: " + launchDetails.DeeplinkMessage;
@@ -72,6 +73,7 @@ public class AppDeeplinkUI : MonoBehaviour
             {
                 DebugUIBuilder.instance.Show();
             }
+
             inMenu = !inMenu;
         }
     }
@@ -100,7 +102,7 @@ public class AppDeeplinkUI : MonoBehaviour
     void LaunchOtherApp()
     {
         ulong appId;
-        if(ulong.TryParse(deeplinkAppId.GetComponentInChildren<Text>().text, out appId))
+        if (ulong.TryParse(deeplinkAppId.GetComponentInChildren<Text>().text, out appId))
         {
             Debug.Log(string.Format("LaunchOtherApp({0})", appId));
             var options = new Oculus.Platform.ApplicationOptions();

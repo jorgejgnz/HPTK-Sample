@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0e3df96a2504a0085121315689deb30, type: 3}
+  m_Name: Dictation - Sample
+  m_EditorClassIdentifier: 
+  title: Dictation Sample
+  description: A simple dictation example that shows activation & continuous wit
+    powered dictation.
+  tileImage: {fileID: 2800000, guid: 2891b87fce4e6014fb1b139272e49719, type: 3}
+  screenshot: {fileID: 0}
+  sceneReference: {fileID: 102900000, guid: 3a8c4fc64087e144b845d1afe890c5ba, type: 3}
+  packageSampleName: Dictation
+  sampleSetId: Voice SDK Samples
+  priority: 100

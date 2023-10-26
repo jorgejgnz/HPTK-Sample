@@ -20,23 +20,23 @@ namespace Meta.Conduit
         /// <inheritdoc/>
         public Manifest LoadManifest(string manifestLocalPath)
         {
-            int extIndex = manifestLocalPath.LastIndexOf('.');
-            string ignoreEnd = extIndex == -1 ? manifestLocalPath : manifestLocalPath.Substring(0, extIndex);
-            TextAsset jsonFile = Resources.Load<TextAsset>(ignoreEnd);
+            var extIndex = manifestLocalPath.LastIndexOf('.');
+            var ignoreEnd = extIndex == -1 ? manifestLocalPath : manifestLocalPath.Substring(0, extIndex);
+            var jsonFile = Resources.Load<TextAsset>(ignoreEnd);
             if (jsonFile == null)
             {
                 VLog.E($"Conduit Error - No Manifest found at Resources/{manifestLocalPath}");
                 return null;
             }
 
-            string rawJson = jsonFile.text;
+            var rawJson = jsonFile.text;
             return LoadManifestFromString(rawJson);
         }
 
         /// <inheritdoc/>
         public Manifest LoadManifestFromString(string manifestText)
         {
-            var manifest = JsonConvert.DeserializeObject<Manifest>(manifestText);
+            var manifest = JsonConvert.DeserializeObject<Manifest>(manifestText, null, true);
             if (manifest.ResolveActions())
             {
                 VLog.D($"Successfully Loaded Conduit manifest");

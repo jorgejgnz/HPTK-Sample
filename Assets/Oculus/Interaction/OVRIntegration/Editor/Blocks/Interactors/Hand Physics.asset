@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 19a09f7256be84eb8ab26345b8184b29, type: 3}
+  m_Name: Hand Physics
+  m_EditorClassIdentifier: 
+  id: 5d47ae98-1ed8-4753-ac7f-c41012479e3d
+  version: 1
+  blockName: Hand Phyiscs
+  description: Internal block for enabling hand phyiscs
+  sdk: 0
+  thumbnail: {fileID: 0}
+  displayOnContentTab: 0
+  experimental: 1
+  order: 0
+  prefab: {fileID: 7147530562734519490, guid: 5fc002002ecb74800b33f4b96a147701, type: 3}
+  dependencies:
+  - 4187448e-9c2a-4021-ad92-fb65840f2721
+  isSingleton: 1
+  _handsBlockId: 0393ca30-f2a9-4865-a40f-f9a68d01c3a9

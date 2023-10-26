@@ -18,9 +18,8 @@
  * limitations under the License.
  */
 
-using UnityEngine;
-using UnityEngine.Assertions;
 using System;
+using UnityEngine;
 using UnityEngine.Serialization;
 
 namespace Oculus.Interaction.Grab.GrabSurfaces
@@ -52,12 +51,11 @@ namespace Oculus.Interaction.Grab.GrabSurfaces
         [Range(0f, 360f)]
         [FormerlySerializedAs("angle")]
         public float arcLength = 360f;
-
     }
 
     /// <summary>
     /// This type of surface defines a cylinder in which the grip pose is valid around an object.
-    /// An angle can be used to constrain the cylinder and not use a full circle.
+    /// An angle and offset can be used to constrain the cylinder and not use a full circle.
     /// The radius is automatically specified as the distance from the axis of the cylinder to the original grip position.
     /// </summary>
     [Serializable]
@@ -66,121 +64,27 @@ namespace Oculus.Interaction.Grab.GrabSurfaces
         [SerializeField]
         protected CylinderSurfaceData _data = new CylinderSurfaceData();
 
-        /// <summary>
-        /// Getter for the data-only version of this surface. Used so it can be stored when created
-        /// at Play-Mode.
-        /// </summary>
-        public CylinderSurfaceData Data
-        {
-            get
-            {
-                return _data;
-            }
-            set
-            {
-                _data = value;
-            }
-        }
-
         [SerializeField]
+        [Tooltip("Transform used as a reference to measure the local data of the grab surface")]
         private Transform _relativeTo;
 
-        [SerializeField]
-        [FormerlySerializedAs("_gripPoint")]
-        private Transform _referencePoint;
-
+        private Pose RelativePose => PoseUtils.DeltaScaled(_relativeTo, this.transform);
+        private const float Epsilon = 0.000001f;
         /// <summary>
-        /// Direction from the axis of the cylinder to the original grip position.
+        /// The reference pose of the surface. It defines the radius of the cylinder
+        /// as the point from the relative transform to the reference pose to ensure
+        /// that the cylinder covers this pose.
         /// </summary>
-        public Vector3 OriginalDir
+        /// <param name="relativeTo">The reference transform to apply the surface to</param>
+        /// <returns>Pose in world space</returns>
+        public Pose GetReferencePose(Transform relativeTo)
         {
-            get
-            {
-                if (_referencePoint == null)
-                {
-                    return Vector3.forward;
-                }
-                return Vector3.ProjectOnPlane(_referencePoint.transform.position - StartPoint, Direction).normalized;
-            }
-        }
-
-        public Vector3 StartArcDir
-        {
-            get
-            {
-                return Quaternion.AngleAxis(ArcOffset, Direction) * OriginalDir;
-            }
+            return PoseUtils.GlobalPoseScaled(relativeTo, RelativePose);
         }
 
         /// <summary>
-        /// Direction from the axis of the cylinder to the maximum angle allowance.
+        /// Degrees from the starting radius from which the arc section starts
         /// </summary>
-        public Vector3 EndArcDir
-        {
-            get
-            {
-                return Quaternion.AngleAxis(ArcLength, Direction) * StartArcDir;
-            }
-        }
-
-        /// <summary>
-        /// Base cap of the cylinder, in world coordinates.
-        /// </summary>
-        public Vector3 StartPoint
-        {
-            get
-            {
-                if (_relativeTo != null)
-                {
-                    return _relativeTo.TransformPoint(_data.startPoint);
-                }
-                else
-                {
-                    return _data.startPoint;
-                }
-            }
-            set
-            {
-                if (_relativeTo != null)
-                {
-                    _data.startPoint = _relativeTo.InverseTransformPoint(value);
-                }
-                else
-                {
-                    _data.startPoint = value;
-                }
-            }
-        }
-
-        /// <summary>
-        /// End cap of the cylinder, in world coordinates.
-        /// </summary>
-        public Vector3 EndPoint
-        {
-            get
-            {
-                if (_relativeTo != null)
-                {
-                    return _relativeTo.TransformPoint(_data.endPoint);
-                }
-                else
-                {
-                    return _data.endPoint;
-                }
-            }
-            set
-            {
-                if (_relativeTo != null)
-                {
-                    _data.endPoint = _relativeTo.InverseTransformPoint(value);
-                }
-                else
-                {
-                    _data.endPoint = value;
-                }
-            }
-        }
-
         public float ArcOffset
         {
             get
@@ -201,7 +105,7 @@ namespace Oculus.Interaction.Grab.GrabSurfaces
         }
 
         /// <summary>
-        /// The maximum angle for the surface of the cylinder, starting from the original grip position.
+        /// The maximum angle for the surface of the cylinder, starting from the ArcOffset.
         /// To invert the direction of the angle, swap the caps order.
         /// </summary>
         public float ArcLength
@@ -224,215 +128,312 @@ namespace Oculus.Interaction.Grab.GrabSurfaces
         }
 
         /// <summary>
-        /// The generated radius of the cylinder.
-        /// Represents the distance from the axis of the cylinder to the original grip position.
+        /// The direction of the main radius of the cylinder. This is the
+        /// radius from the center of the cylinder to the reference position.
         /// </summary>
-        public float Radius
+        private Vector3 LocalPerpendicularDir
         {
             get
             {
-                if (_referencePoint == null)
-                {
-                    return 0f;
-                }
-                Vector3 start = StartPoint;
-                Vector3 projectedPoint = start + Vector3.Project(_referencePoint.position - start, Direction);
-                return Vector3.Distance(projectedPoint, _referencePoint.position);
+                return Vector3.ProjectOnPlane(RelativePose.position - _data.startPoint, LocalDirection).normalized;
             }
         }
 
         /// <summary>
-        /// The direction of the central axis of the cylinder.
+        /// The direction of the central axis of the cylinder in local space.
         /// </summary>
-        public Vector3 Direction
+        private Vector3 LocalDirection
         {
             get
             {
-                Vector3 dir = (EndPoint - StartPoint);
-                if (dir.sqrMagnitude == 0f)
+                Vector3 dir = (_data.endPoint - _data.startPoint);
+                if (dir.sqrMagnitude <= Epsilon)
                 {
-                    return _relativeTo ? _relativeTo.up : Vector3.up;
+                    return Vector3.up;
                 }
                 return dir.normalized;
             }
         }
 
-        private float Height
+        /// <summary>
+        /// Direction from the axis of the cylinder to the original grip position.
+        /// </summary>
+        /// <param name="relativeTo">The reference transform to apply the surface to</param>
+        /// <returns>Direction in world space</returns>
+        public Vector3 GetPerpendicularDir(Transform relativeTo)
         {
-            get
-            {
-                return (EndPoint - StartPoint).magnitude;
-            }
+            return relativeTo.TransformDirection(LocalPerpendicularDir);
+        }
+
+        /// <summary>
+        /// Direction from the axis of the cylinder to the minimum angle allowance.
+        /// </summary>
+        /// <param name="relativeTo">The reference transform to apply the surface to</param>
+        /// <returns>Direction in world space</returns>
+        public Vector3 GetStartArcDir(Transform relativeTo)
+        {
+            Vector3 localStartArcDir = Quaternion.AngleAxis(ArcOffset, LocalDirection) * LocalPerpendicularDir;
+            return relativeTo.TransformDirection(localStartArcDir);
+        }
+
+        /// <summary>
+        /// Direction from the axis of the cylinder to the maximum angle allowance.
+        /// </summary>
+        /// <param name="relativeTo">The reference transform to apply the surface to</param>
+        /// <returns>Direction in world space</returns>
+        public Vector3 GetEndArcDir(Transform relativeTo)
+        {
+            Vector3 localEndArcDir = Quaternion.AngleAxis(ArcLength, LocalDirection) *
+                Quaternion.AngleAxis(ArcOffset, LocalDirection) * LocalPerpendicularDir;
+            return relativeTo.TransformDirection(localEndArcDir);
+        }
+
+        /// <summary>
+        /// Base cap of the cylinder, in world coordinates.
+        /// </summary>
+        /// <param name="relativeTo">The reference transform to apply the surface to</param>
+        /// <returns>Position in world space</returns>
+        public Vector3 GetStartPoint(Transform relativeTo)
+        {
+            return relativeTo.TransformPoint(_data.startPoint);
+        }
+        public void SetStartPoint(Vector3 point, Transform relativeTo)
+        {
+            _data.startPoint = relativeTo.InverseTransformPoint(point);
+        }
+
+        /// <summary>
+        /// End cap of the cylinder, in world coordinates.
+        /// </summary>
+        /// <param name="relativeTo">The reference transform to apply the surface to</param>
+        /// <returns>Position in world space</returns>
+        public Vector3 GetEndPoint(Transform relativeTo)
+        {
+            return relativeTo.TransformPoint(_data.endPoint);
+        }
+        public void SetEndPoint(Vector3 point, Transform relativeTo)
+        {
+            _data.endPoint = relativeTo.InverseTransformPoint(point);
+        }
+
+        /// <summary>
+        /// The generated radius of the cylinder.
+        /// Represents the distance from the axis of the cylinder to the original grip position.
+        /// </summary>
+        /// <param name="relativeTo">The reference transform to apply the surface to</param>
+        /// <returns>Distance in world space</returns>
+        public float GetRadius(Transform relativeTo)
+        {
+            Vector3 start = GetStartPoint(relativeTo);
+            Pose referencePose = GetReferencePose(relativeTo);
+            Vector3 direction = GetDirection(relativeTo);
+            Vector3 projectedPoint = start + Vector3.Project(referencePose.position - start, direction);
+            return Vector3.Distance(projectedPoint, referencePose.position);
+        }
+
+        /// <summary>
+        /// Direction of the cylinder, from the start cap to the end cap.
+        /// </summary>
+        /// <param name="relativeTo">The reference transform to apply the surface to</param>
+        /// <returns>Direction in world space</returns>
+        public Vector3 GetDirection(Transform relativeTo)
+        {
+            return relativeTo.TransformDirection(LocalDirection);
+        }
+
+        /// <summary>
+        /// Length of the cylinder, from the start cap to the end cap.
+        /// </summary>
+        /// <param name="relativeTo">The reference transform to apply the surface to</param>
+        /// <returns>Distance in world space</returns>
+        private float GetHeight(Transform relativeTo)
+        {
+            Vector3 start = GetStartPoint(relativeTo);
+            Vector3 end = GetEndPoint(relativeTo);
+            return Vector3.Distance(start, end);
         }
 
         /// <summary>
         /// The rotation of the central axis of the cylinder.
         /// </summary>
-        private Quaternion Rotation
+        /// <param name="relativeTo">The reference transform to apply the surface to</param>
+        /// <returns>Rotation in world space</returns>
+        private Quaternion GetRotation(Transform relativeTo)
         {
-            get
+            if (_data.startPoint == _data.endPoint)
             {
-                if (_data.startPoint == _data.endPoint)
-                {
-                    return Quaternion.LookRotation(Vector3.forward);
-                }
-                return Quaternion.LookRotation(OriginalDir, Direction);
+                return relativeTo.rotation;
             }
+            return relativeTo.rotation * Quaternion.LookRotation(LocalPerpendicularDir, LocalDirection);
         }
 
         #region editor events
-        private void Reset()
+        protected virtual void Reset()
         {
-            _referencePoint = this.transform;
-            _relativeTo = this.GetComponentInParent<Rigidbody>()?.transform;
+            _relativeTo = this.GetComponentInParent<IRelativeToRef>()?.RelativeTo;
         }
         #endregion
 
         protected virtual void Start()
         {
-            this.AssertField(_relativeTo, nameof(_relativeTo));
-            this.AssertField(_referencePoint, nameof(_referencePoint));
             this.AssertField(_data, nameof(_data));
+            this.AssertField(_relativeTo, nameof(_relativeTo));
         }
 
-        public Pose MirrorPose(in Pose pose)
+        public Pose MirrorPose(in Pose pose, Transform relativeTo)
         {
-            Vector3 normal = Quaternion.Inverse(_relativeTo.rotation) * OriginalDir;
-            Vector3 tangent = Quaternion.Inverse(_relativeTo.rotation) * Direction;
+            Vector3 normal = Quaternion.Inverse(relativeTo.rotation) * GetPerpendicularDir(relativeTo);
+            Vector3 tangent = Quaternion.Inverse(relativeTo.rotation) * GetDirection(relativeTo);
 
             return pose.MirrorPoseRotation(normal, tangent);
         }
 
-        private Vector3 PointAltitude(Vector3 point)
+        private Vector3 PointAltitude(Vector3 point, Transform relativeTo)
         {
-            Vector3 start = StartPoint;
-            Vector3 projectedPoint = start + Vector3.Project(point - start, Direction);
+            Vector3 start = GetStartPoint(relativeTo);
+            Vector3 direction = GetDirection(relativeTo);
+            Vector3 projectedPoint = start + Vector3.Project(point - start, direction);
             return projectedPoint;
         }
 
 
-        public GrabPoseScore CalculateBestPoseAtSurface(in Pose targetPose, in Pose reference, out Pose bestPose, in PoseMeasureParameters scoringModifier)
+        public GrabPoseScore CalculateBestPoseAtSurface(in Pose targetPose, out Pose bestPose,
+            in PoseMeasureParameters scoringModifier, Transform relativeTo)
         {
-            return GrabPoseHelper.CalculateBestPoseAtSurface(targetPose, reference, out bestPose,
-                scoringModifier, MinimalTranslationPoseAtSurface, MinimalRotationPoseAtSurface);
+            return GrabPoseHelper.CalculateBestPoseAtSurface(targetPose, out bestPose,
+                scoringModifier, relativeTo,
+                MinimalTranslationPoseAtSurface,
+                MinimalRotationPoseAtSurface);
         }
 
         public IGrabSurface CreateMirroredSurface(GameObject gameObject)
         {
             CylinderGrabSurface surface = gameObject.AddComponent<CylinderGrabSurface>();
-            surface.Data = _data.Mirror();
+            surface._data = _data.Mirror();
             return surface;
         }
 
         public IGrabSurface CreateDuplicatedSurface(GameObject gameObject)
         {
             CylinderGrabSurface surface = gameObject.AddComponent<CylinderGrabSurface>();
-            surface.Data = _data;
+            surface._data = _data.Clone() as CylinderSurfaceData;
             return surface;
         }
 
-        protected Vector3 NearestPointInSurface(Vector3 targetPosition)
+        protected Vector3 NearestPointInSurface(Vector3 targetPosition, Transform relativeTo)
         {
-            Vector3 start = StartPoint;
-            Vector3 dir = Direction;
+            Vector3 start = GetStartPoint(relativeTo);
+            Vector3 dir = GetDirection(relativeTo);
             Vector3 projectedVector = Vector3.Project(targetPosition - start, dir);
-
-            if (projectedVector.magnitude > Height)
+            float height = GetHeight(relativeTo);
+            if (projectedVector.magnitude > height)
             {
-                projectedVector = projectedVector.normalized * Height;
+                projectedVector = projectedVector.normalized * height;
             }
             if (Vector3.Dot(projectedVector, dir) < 0f)
             {
                 projectedVector = Vector3.zero;
             }
 
-            Vector3 projectedPoint = StartPoint + projectedVector;
+            Vector3 projectedPoint = start + projectedVector;
             Vector3 targetDirection = Vector3.ProjectOnPlane((targetPosition - projectedPoint), dir).normalized;
-            //clamp of the surface
-            float desiredAngle = Mathf.Repeat(Vector3.SignedAngle(StartArcDir, targetDirection, dir), 360f);
+
+            Vector3 startArcDir = GetStartArcDir(relativeTo);
+            float desiredAngle = Mathf.Repeat(Vector3.SignedAngle(startArcDir, targetDirection, dir), 360f);
             if (desiredAngle > ArcLength)
             {
                 if (Mathf.Abs(desiredAngle - ArcLength) >= Mathf.Abs(360f - desiredAngle))
                 {
-                    targetDirection = StartArcDir;
+                    targetDirection = startArcDir;
                 }
                 else
                 {
-                    targetDirection = EndArcDir;
+                    targetDirection = GetEndArcDir(relativeTo);
                 }
             }
-            Vector3 surfacePoint = projectedPoint + targetDirection * Radius;
+            Vector3 surfacePoint = projectedPoint + targetDirection * GetRadius(relativeTo);
             return surfacePoint;
         }
 
-        public bool CalculateBestPoseAtSurface(Ray targetRay, in Pose recordedPose, out Pose bestPose)
+        public bool CalculateBestPoseAtSurface(Ray targetRay, out Pose bestPose,
+            Transform relativeTo)
         {
-            Vector3 lineToCylinder = StartPoint - targetRay.origin;
+            Pose recordedPose = GetReferencePose(relativeTo);
+            Vector3 start = GetStartPoint(relativeTo);
+            Vector3 direction = GetDirection(relativeTo);
+            Vector3 lineToCylinder = start - targetRay.origin;
 
-            float perpendiculiarity = Vector3.Dot(targetRay.direction, Direction);
+            float perpendiculiarity = Vector3.Dot(targetRay.direction, direction);
             float rayToLineDiff = Vector3.Dot(lineToCylinder, targetRay.direction);
-            float cylinderToLineDiff = Vector3.Dot(lineToCylinder, Direction);
+            float cylinderToLineDiff = Vector3.Dot(lineToCylinder, direction);
 
             float determinant = 1f / (perpendiculiarity * perpendiculiarity - 1f);
 
             float lineOffset = (perpendiculiarity * cylinderToLineDiff - rayToLineDiff) * determinant;
             float cylinderOffset = (cylinderToLineDiff - perpendiculiarity * rayToLineDiff) * determinant;
 
+            float radius = GetRadius(relativeTo);
             Vector3 pointInLine = targetRay.origin + targetRay.direction * lineOffset;
-            Vector3 pointInCylinder = StartPoint + Direction * cylinderOffset;
-            float distanceToSurface = Mathf.Max(Vector3.Distance(pointInCylinder, pointInLine) - Radius);
-            if (distanceToSurface < Radius)
+            Vector3 pointInCylinder = start + direction * cylinderOffset;
+            float distanceToSurface = Mathf.Max(Vector3.Distance(pointInCylinder, pointInLine) - radius);
+            if (distanceToSurface < radius)
             {
-                float adjustedDistance = Mathf.Sqrt(Radius * Radius - distanceToSurface * distanceToSurface);
+                float adjustedDistance = Mathf.Sqrt(radius * radius - distanceToSurface * distanceToSurface);
                 pointInLine -= targetRay.direction * adjustedDistance;
             }
-            Vector3 surfacePoint = NearestPointInSurface(pointInLine);
+            Vector3 surfacePoint = NearestPointInSurface(pointInLine, relativeTo);
             Pose desiredPose = new Pose(surfacePoint, recordedPose.rotation);
-            bestPose = MinimalTranslationPoseAtSurface(desiredPose, recordedPose);
+            bestPose = MinimalTranslationPoseAtSurface(desiredPose, relativeTo);
 
             return true;
         }
 
-        protected Pose MinimalRotationPoseAtSurface(in Pose userPose, in Pose referencePose)
+        protected Pose MinimalRotationPoseAtSurface(in Pose userPose, Transform relativeTo)
         {
+            Pose referencePose = GetReferencePose(relativeTo);
+            Vector3 direction = GetDirection(relativeTo);
+            Quaternion rotation = GetRotation(relativeTo);
+            float radius = GetRadius(relativeTo);
             Vector3 desiredPos = userPose.position;
             Quaternion desiredRot = userPose.rotation;
             Quaternion baseRot = referencePose.rotation;
             Quaternion rotDif = (desiredRot) * Quaternion.Inverse(baseRot);
-            Vector3 desiredDirection = (rotDif * Rotation) * Vector3.forward;
-            Vector3 projectedDirection = Vector3.ProjectOnPlane(desiredDirection, Direction).normalized;
-            Vector3 altitudePoint = PointAltitude(desiredPos);
-            Vector3 surfacePoint = NearestPointInSurface(altitudePoint + projectedDirection * Radius);
-            Quaternion surfaceRotation = CalculateRotationOffset(surfacePoint) * baseRot;
+            Vector3 desiredDirection = (rotDif * rotation) * Vector3.forward;
+            Vector3 projectedDirection = Vector3.ProjectOnPlane(desiredDirection, direction).normalized;
+            Vector3 altitudePoint = PointAltitude(desiredPos, relativeTo);
+            Vector3 surfacePoint = NearestPointInSurface(altitudePoint + projectedDirection * radius, relativeTo);
+            Quaternion surfaceRotation = CalculateRotationOffset(surfacePoint, relativeTo) * baseRot;
             return new Pose(surfacePoint, surfaceRotation);
         }
 
-        protected Pose MinimalTranslationPoseAtSurface(in Pose userPose, in Pose referencePose)
+        protected Pose MinimalTranslationPoseAtSurface(in Pose userPose, Transform relativeTo)
         {
+            Pose referencePose = GetReferencePose(relativeTo);
             Vector3 desiredPos = userPose.position;
             Quaternion baseRot = referencePose.rotation;
-
-            Vector3 surfacePoint = NearestPointInSurface(desiredPos);
-            Quaternion surfaceRotation = CalculateRotationOffset(surfacePoint) * baseRot;
+            Vector3 surfacePoint = NearestPointInSurface(desiredPos, relativeTo);
+            Quaternion surfaceRotation = CalculateRotationOffset(surfacePoint, relativeTo) * baseRot;
 
             return new Pose(surfacePoint, surfaceRotation);
         }
 
-        protected Quaternion CalculateRotationOffset(Vector3 surfacePoint)
+        protected Quaternion CalculateRotationOffset(Vector3 surfacePoint, Transform relativeTo)
         {
-            Vector3 recordedDirection = Vector3.ProjectOnPlane(_referencePoint.position - StartPoint, Direction);
-            Vector3 desiredDirection = Vector3.ProjectOnPlane(surfacePoint - StartPoint, Direction);
+            Vector3 start = GetStartPoint(relativeTo);
+            Vector3 direction = GetDirection(relativeTo);
+            Vector3 referenceDir = GetPerpendicularDir(relativeTo);
+            Vector3 recordedDirection = Vector3.ProjectOnPlane(referenceDir, direction);
+            Vector3 desiredDirection = Vector3.ProjectOnPlane(surfacePoint - start, direction);
             return Quaternion.FromToRotation(recordedDirection, desiredDirection);
         }
 
         #region Inject
 
         public void InjectAllCylinderSurface(CylinderSurfaceData data,
-            Transform relativeTo, Transform gripPoint)
+            Transform relativeTo)
         {
             InjectData(data);
             InjectRelativeTo(relativeTo);
-            InjectReferencePoint(gripPoint);
         }
 
         public void InjectData(CylinderSurfaceData data)
@@ -444,12 +445,6 @@ namespace Oculus.Interaction.Grab.GrabSurfaces
         {
             _relativeTo = relativeTo;
         }
-
-        public void InjectReferencePoint(Transform referencePoint)
-        {
-            _referencePoint = referencePoint;
-        }
-
         #endregion
     }
 }

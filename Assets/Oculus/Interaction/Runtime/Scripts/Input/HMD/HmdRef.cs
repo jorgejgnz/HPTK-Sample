@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
  *
@@ -30,7 +30,7 @@ namespace Oculus.Interaction.Input
     public class HmdRef : MonoBehaviour, IHmd
     {
         [SerializeField, Interface(typeof(IHmd))]
-        private MonoBehaviour _hmd;
+        private UnityEngine.Object _hmd;
         private IHmd Hmd;
 
         public event Action WhenUpdated
@@ -62,7 +62,7 @@ namespace Oculus.Interaction.Input
 
         public void InjectHmd(IHmd hmd)
         {
-            _hmd = hmd as MonoBehaviour;
+            _hmd = hmd as UnityEngine.Object;
             Hmd = hmd;
         }
         #endregion

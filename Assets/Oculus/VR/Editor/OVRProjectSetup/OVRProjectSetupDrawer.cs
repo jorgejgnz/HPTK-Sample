@@ -44,7 +44,6 @@ internal class OVRProjectSetupDrawer
 
         internal readonly GUIStyle IssuesBackground = new GUIStyle("ScrollViewAlt")
         {
-
         };
 
         internal readonly GUIStyle ListLabel = new GUIStyle("TV Selection")
@@ -61,6 +60,12 @@ internal class OVRProjectSetupDrawer
             stretchWidth = false,
             fontStyle = FontStyle.Bold,
             padding = new RectOffset(10, 10, 0, 0)
+        };
+
+        internal readonly GUIStyle GenerateReportButton = new GUIStyle(EditorStyles.miniButton)
+        {
+            margin = new RectOffset(0, 10, 2, 2),
+            stretchWidth = false,
         };
 
         internal readonly GUIStyle FixButton = new GUIStyle(EditorStyles.miniButton)
@@ -88,25 +93,25 @@ internal class OVRProjectSetupDrawer
         internal readonly GUIStyle IconStyle = new GUIStyle(EditorStyles.label)
         {
             margin = new RectOffset(5, 5, 4, 5),
-            padding = new RectOffset(0,0,0,0),
+            padding = new RectOffset(0, 0, 0, 0),
             fixedWidth = SmallIconSize,
             fixedHeight = SmallIconSize
         };
 
         internal readonly GUIStyle SubtitleHelpText = new GUIStyle(EditorStyles.miniLabel)
         {
-            margin = new RectOffset(10,0,0,0),
+            margin = new RectOffset(10, 0, 0, 0),
             wordWrap = true
         };
 
         internal readonly GUIStyle InternalHelpBox = new GUIStyle(EditorStyles.helpBox)
         {
-            margin = new RectOffset(5,5,5,5)
+            margin = new RectOffset(5, 5, 5, 5)
         };
 
         internal readonly GUIStyle InternalHelpText = new GUIStyle(EditorStyles.miniLabel)
         {
-            margin = new RectOffset(10,0,0,0),
+            margin = new RectOffset(10, 0, 0, 0),
             wordWrap = true,
             fontStyle = FontStyle.Italic,
             normal =
@@ -135,8 +140,8 @@ internal class OVRProjectSetupDrawer
             clipping = TextClipping.Overflow,
             fixedHeight = 18.0f,
             fixedWidth = 18.0f,
-            margin = new RectOffset(2,2,2,2),
-            padding = new RectOffset(1,1,1,1)
+            margin = new RectOffset(2, 2, 2, 2),
+            padding = new RectOffset(1, 1, 1, 1)
         };
 
         internal readonly GUIStyle Foldout = new GUIStyle(EditorStyles.foldoutHeader)
@@ -153,8 +158,8 @@ internal class OVRProjectSetupDrawer
 
         internal readonly GUIStyle List = new GUIStyle(EditorStyles.helpBox)
         {
-            margin = new RectOffset(3,3,3,3),
-            padding = new RectOffset(3,3,3,3)
+            margin = new RectOffset(3, 3, 3, 3),
+            padding = new RectOffset(3, 3, 3, 3)
         };
     }
 
@@ -163,33 +168,73 @@ internal class OVRProjectSetupDrawer
 
     private readonly OVRProjectSetupSettingBool _showOutstandingItems =
         new OVRProjectSetupUserSettingBool("ShowOutstandingItems", true);
+
     private readonly OVRProjectSetupSettingBool _showRecommendedItems =
         new OVRProjectSetupUserSettingBool("ShowRecommendedItems", true);
+
     private readonly OVRProjectSetupSettingBool _showVerifiedItems =
         new OVRProjectSetupUserSettingBool("ShowVerifiedItems", false);
+
     private readonly OVRProjectSetupSettingBool _showIgnoredItems =
         new OVRProjectSetupUserSettingBool("ShowIgnoredItems", false);
 
     private static readonly GUIContent Title = new GUIContent("Project Setup Tool");
-    private static readonly GUIContent Description = new GUIContent("This tool maintains a checklist of required setup tasks as well as best practices to ensure your project is ready to go. Follow our suggestions and fixes to quickly setup your project.");
+
+    private static readonly GUIContent Description =
+        new GUIContent("This tool maintains a checklist of required setup tasks as well as best practices to " +
+                       "ensure your project is ready to go. Follow our suggestions and fixes to quickly setup your project.");
+
     private static readonly GUIContent SummaryLabel = new GUIContent("Current project status: ");
     private static readonly GUIContent ListTitle = new GUIContent("Checklist");
     private static readonly GUIContent UnsupportedTitle = new GUIContent("Unsupported Platform");
-    private static readonly GUIContent Filter = new GUIContent("Filter by Group :", "Filters the task to the selected group.");
+
+    private static readonly GUIContent Filter =
+        new GUIContent("Filter by Group :", "Filters the task to the selected group.");
+
     private static readonly GUIContent FixButtonContent = new GUIContent("Fix", "Fix with recommended settings");
-    private static readonly GUIContent FixAllButtonContent = new GUIContent("Fix All", "Fix all the issues from this category");
+
+    private static readonly GUIContent FixAllButtonContent =
+        new GUIContent("Fix All", "Fix all the issues from this category");
+
     private static readonly GUIContent ApplyButtonContent = new GUIContent("Apply", "Apply the recommended settings");
-    private static readonly GUIContent ApplyAllButtonContent = new GUIContent("Apply All", "Apply the recommended settings for all the items in this category");
-    private static readonly GUIContent WarningIcon = OVRProjectSetupUtils.CreateIcon("ovr_icon_category_warning.png");
-    private static readonly GUIContent ErrorIcon = OVRProjectSetupUtils.CreateIcon("ovr_icon_category_error.png");
-    private static readonly GUIContent InfoIcon = OVRProjectSetupUtils.CreateIcon("ovr_icon_category_neutral.png");
-    private static readonly GUIContent TestPassedIcon = OVRProjectSetupUtils.CreateIcon("ovr_icon_category_success.png");
-    private static readonly GUIContent ConfigIcon = OVRProjectSetupUtils.CreateIcon("_Popup", "Additional options", builtIn:true);
+
+    private static readonly GUIContent ApplyAllButtonContent =
+        new GUIContent("Apply All", "Apply the recommended settings for all the items in this category");
+
+    private static readonly GUIContent RefreshTasksButtonContent =
+        new GUIContent("Refresh", "Refresh the items in the list");
+
+    private static readonly GUIContent GenerateReportButtonContent =
+        new GUIContent("Generate report", "Generate a report of all the issues");
+
+    private static readonly OVRGUIContent WarningIcon = OVREditorUtils.CreateContent("ovr_icon_category_warning.png", OVRGUIContent.Source.ProjectSetupToolIcons);
+    private static readonly OVRGUIContent ErrorIcon = OVREditorUtils.CreateContent("ovr_icon_category_error.png", OVRGUIContent.Source.ProjectSetupToolIcons);
+
+    private static readonly OVRGUIContent InfoIcon = OVREditorUtils.CreateContent("ovr_icon_category_neutral.png", OVRGUIContent.Source.ProjectSetupToolIcons);
+    private static readonly OVRGUIContent TestPassedIcon =
+        OVREditorUtils.CreateContent("ovr_icon_category_success.png", OVRGUIContent.Source.ProjectSetupToolIcons);
+
+    private static readonly OVRGUIContent ConfigIcon =
+        OVREditorUtils.CreateContent("_Popup", OVRGUIContent.Source.BuiltIn, "Additional options");
+
+
+    private static readonly OVRGUIContent DocumentationIcon =
+        OVREditorUtils.CreateContent("ovr_icon_documentation.png",  OVRGUIContent.Source.GenericIcons, "Go to Documentation");
 
     private const string OutstandingItems = "Outstanding Issues";
     private const string RecommendedItems = "Recommended Items";
     private const string VerifiedItems = "Verified Items";
     private const string IgnoredItems = "Ignored Items";
+    private const string OutFolderTitle = "Select output folder";
+    private const string ErrorTitle = "Error";
+    private const string SuccessTitle = "Success";
+    private const string ReportGenerationErrorMessage = "Could not generate the project setup report.";
+    private const string ReportGenerationSuccessMessage = "Project setup report generated successfully at:";
+    private const string TasksRefreshErrorMessage = "Could not refresh the checklist.";
+    private const string TasksRefreshSuccessMessage = "Tasks refreshed successfully.";
+    private const string OkButton = "ok";
+    private const string DocumentationUrl =
+        "https://developer.oculus.com/documentation/unity/unity-upst-overview";
 
 
     // Internals
@@ -215,6 +260,7 @@ internal class OVRProjectSetupDrawer
                 BuildTargetGroup = BuildPipeline.GetBuildTargetGroup(EditorUserBuildSettings.activeBuildTarget);
             }
         }
+
         protected override void CloseScope() => EditorGUILayout.EndVertical();
     }
 
@@ -223,10 +269,11 @@ internal class OVRProjectSetupDrawer
     {
         var previousLabelWidth = EditorGUIUtility.labelWidth;
         EditorGUIUtility.labelWidth = Styles.LabelWidth;
-        TEnumType newValue = (TEnumType)EditorGUILayout.EnumPopup(content, currentValue, GUILayout.Width(Styles.GroupSelectionWidth));
+        TEnumType newValue =
+            (TEnumType)EditorGUILayout.EnumPopup(content, currentValue, GUILayout.Width(Styles.GroupSelectionWidth));
         EditorGUIUtility.labelWidth = previousLabelWidth;
 
-        if(!newValue.Equals(currentValue))
+        if (!newValue.Equals(currentValue))
         {
             onChanged(newValue);
         }
@@ -234,7 +281,8 @@ internal class OVRProjectSetupDrawer
         return newValue;
     }
 
-    private bool FoldoutWithAdditionalAction(OVRProjectSetupSettingBool key, string label, Rect rect, Action inlineAdditionalAction)
+    private bool FoldoutWithAdditionalAction(OVRProjectSetupSettingBool key, string label, Rect rect,
+        Action inlineAdditionalAction)
     {
         var previousLabelWidth = EditorGUIUtility.labelWidth;
         EditorGUIUtility.labelWidth = rect.width - 8;
@@ -262,7 +310,7 @@ internal class OVRProjectSetupDrawer
         return newValue;
     }
 
-    private GUIContent GetTaskIcon(OVRConfigurationTask task, BuildTargetGroup buildTargetGroup)
+    private OVRGUIContent GetTaskIcon(OVRConfigurationTask task, BuildTargetGroup buildTargetGroup)
     {
         if (task.IsDone(buildTargetGroup))
         {
@@ -278,24 +326,43 @@ internal class OVRProjectSetupDrawer
         };
     }
 
+    private string GenerateReport(BuildTargetGroup buildTargetGroup, string outputPath)
+    {
+        if (_lastSummary == null)
+        {
+            OVRProjectSetup.UpdateTasks(buildTargetGroup, logMessages: OVRProjectSetup.LogMessages.Disabled,
+                blocking: true, onCompleted: processor =>
+                {
+                    var updater = processor as OVRConfigurationTaskUpdater;
+                    _lastSummary = updater?.Summary;
+                });
+            return _lastSummary?.GenerateReport(outputPath);
+        }
+
+        return _lastSummary.GenerateReport(outputPath);
+    }
+
     private void UpdateTasks(BuildTargetGroup buildTargetGroup)
     {
-        OVRProjectSetup.UpdateTasks(buildTargetGroup, logMessages:OVRProjectSetup.LogMessages.Disabled, blocking:false, onCompleted:OnUpdated);
+        OVRProjectSetup.UpdateTasks(buildTargetGroup, logMessages: OVRProjectSetup.LogMessages.Disabled,
+            blocking: false, onCompleted: OnUpdated);
     }
 
     private void OnUpdated(OVRConfigurationTaskProcessor processor)
     {
-	    var updater = processor as OVRConfigurationTaskUpdater;
-	    _lastSummary = updater?.Summary;
+        var updater = processor as OVRConfigurationTaskUpdater;
+        _lastSummary = updater?.Summary;
     }
 
     private void ShowSettingsMenu()
     {
         var menu = new GenericMenu();
         OVRProjectSetup.Enabled.AppendToMenu(menu);
+        OVRProjectSetupUpdater.Enabled.AppendToMenu(menu);
         OVRProjectSetup.RequiredThrowErrors.AppendToMenu(menu);
         OVRProjectSetup.AllowLogs.AppendToMenu(menu);
         OVRProjectSetup.ShowStatusIcon.AppendToMenu(menu);
+        OVRProjectSetup.ProduceReportOnBuild.AppendToMenu(menu);
         menu.ShowAsContext();
     }
 
@@ -305,24 +372,32 @@ internal class OVRProjectSetupDrawer
         var hasDocumentation = !string.IsNullOrEmpty(task.URL.GetValue(buildTargetGroup));
         if (hasDocumentation)
         {
-            menu.AddItem(new GUIContent("Documentation"), false, OnDocumentation, new object[]{buildTargetGroup, task});
+            menu.AddItem(new GUIContent("Documentation"), false, OnDocumentation,
+                new object[] { buildTargetGroup, task });
         }
 
         var hasSourceCode = task.SourceCode.Valid;
         if (hasSourceCode)
         {
-            menu.AddItem(new GUIContent("Go to Source Code"), false, OnGoToSourceCode, new object[]{buildTargetGroup, task});
+            menu.AddItem(new GUIContent("Go to Source Code"), false, OnGoToSourceCode,
+                new object[] { buildTargetGroup, task });
         }
 
-        menu.AddItem(new GUIContent("Ignore"), task.IsIgnored(buildTargetGroup), OnIgnore, new object[]{buildTargetGroup, task});
+        menu.AddItem(new GUIContent("Ignore"), task.IsIgnored(buildTargetGroup), OnIgnore,
+            new object[] { buildTargetGroup, task });
         menu.ShowAsContext();
     }
 
     internal void OnTitleBarGUI()
     {
-        if(GUILayout.Button(ConfigIcon, styles.MiniButton))
+        if (GUILayout.Button(ConfigIcon, styles.MiniButton))
         {
             ShowSettingsMenu();
+        }
+
+        if (GUILayout.Button(DocumentationIcon, styles.MiniButton))
+        {
+            Application.OpenURL(DocumentationUrl);
         }
 
     }
@@ -341,59 +416,62 @@ internal class OVRProjectSetupDrawer
         var enabled = OVRProjectSetup.Enabled.Value;
         using (new EditorGUI.DisabledScope(!enabled))
         {
-	        // Summary
-	        using (new EditorGUILayout.HorizontalScope())
-	        {
-		        GUILayout.Label(SummaryLabel, styles.NormalStyle);
-		        if (enabled)
-		        {
-			        GUILayout.Label(OVRProjectSetupStatusIcon.ComputeIcon(_lastSummary), styles.InlinedIconStyle);
-			        GUILayout.Label(_lastSummary?.ComputeNoticeMessage() ?? "", styles.BoldStyle);
-		        }
-		        else
-		        {
-			        GUILayout.Label("Setup Tool is disabled", styles.BoldStyle);
-		        }
-	        }
+            // Summary
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                GUILayout.Label(SummaryLabel, styles.NormalStyle);
+                if (enabled)
+                {
+                    GUILayout.Label(OVRProjectSetupStatusIcon.ComputeIcon(_lastSummary), styles.InlinedIconStyle);
+                    GUILayout.Label(_lastSummary?.ComputeNoticeMessage() ?? "", styles.BoldStyle);
+                }
+                else
+                {
+                    GUILayout.Label("Setup Tool is disabled", styles.BoldStyle);
+                }
+            }
 
-	        // Checklist
-	        using (var buildTargetSelection = new BuildTargetSelectionScope())
-	        {
-		        var buildTargetGroup = buildTargetSelection.BuildTargetGroup;
-		        if (_selectedBuildTargetGroup != buildTargetGroup)
-		        {
-			        _selectedBuildTargetGroup = buildTargetGroup;
-			        UpdateTasks(buildTargetGroup);
-		        }
+            // Checklist
+            using (var buildTargetSelection = new BuildTargetSelectionScope())
+            {
+                var buildTargetGroup = buildTargetSelection.BuildTargetGroup;
+                if (_selectedBuildTargetGroup != buildTargetGroup)
+                {
+                    _selectedBuildTargetGroup = buildTargetGroup;
+                    UpdateTasks(buildTargetGroup);
+                }
 
-		        using (new EditorGUILayout.VerticalScope())
-		        {
-			        EditorGUILayout.Space();
-			        DrawTasksList(_selectedBuildTargetGroup);
-		        }
-	        }
+                using (new EditorGUILayout.VerticalScope())
+                {
+                    EditorGUILayout.Space();
+                    DrawTasksList(_selectedBuildTargetGroup);
+                }
+            }
         }
     }
 
     private void DrawTasksList(BuildTargetGroup buildTargetGroup)
     {
-	    var disableTasksList = EditorApplication.isPlaying;
+        var disableTasksList = EditorApplication.isPlaying;
 
-	    using (new EditorGUI.DisabledGroupScope(disableTasksList))
-	    {
-		    // Header
-		    using (new EditorGUILayout.HorizontalScope())
-		    {
-			    // Title
-			    GUILayout.Label(ListTitle,
-				    styles.IssuesTitleLabel, GUILayout.Width(Styles.TitleLabelWidth));
+        using (new EditorGUI.DisabledGroupScope(disableTasksList))
+        {
+            // Header
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                // Title
+                GUILayout.Label(ListTitle,
+                    styles.IssuesTitleLabel, GUILayout.Width(Styles.TitleLabelWidth));
 
-			    GUILayout.FlexibleSpace();
+                GUILayout.FlexibleSpace();
 
-			    // Filter
-			    EnumPopup<OVRProjectSetup.TaskGroup>(Filter, _selectedTaskGroup,
-				    group => _selectedTaskGroup = group);
-		    }
+                // Filter
+                EnumPopup<OVRProjectSetup.TaskGroup>(Filter, _selectedTaskGroup,
+                    group => _selectedTaskGroup = group);
+
+                // More Actions Menu Button
+                DrawMoreActionsMenuList(buildTargetGroup);
+            }
 
             // Scroll View
             _scrollViewPos = EditorGUILayout.BeginScrollView(_scrollViewPos, styles.IssuesBackground,
@@ -443,7 +521,8 @@ internal class OVRProjectSetupDrawer
         }
     }
 
-    private void DrawCategory(OVRProjectSetupSettingBool key, Func<IEnumerable<OVRConfigurationTask>, List<OVRConfigurationTask>> filter, BuildTargetGroup buildTargetGroup, string title, bool fixAllButton)
+    private void DrawCategory(OVRProjectSetupSettingBool key, Func<IEnumerable<OVRConfigurationTask>,
+        List<OVRConfigurationTask>> filter, BuildTargetGroup buildTargetGroup, string title, bool fixAllButton)
     {
         var tasks = filter(OVRProjectSetup.GetTasks(buildTargetGroup, false));
 
@@ -463,18 +542,24 @@ internal class OVRProjectSetupDrawer
             {
                 if (fixAllButton)
                 {
-	                if (tasks.Any(task => task.FixAction != null))
-	                {
-		                var content = tasks[0].Level.GetValue(buildTargetGroup) == OVRProjectSetup.TaskLevel.Required
-			                ? FixAllButtonContent
-			                : ApplyAllButtonContent;
-		                EditorGUI.BeginDisabledGroup(OVRProjectSetup.ProcessorQueue.BusyWith(OVRConfigurationTaskProcessor.ProcessorType.Fixer));
-		                if (GUILayout.Button(content, styles.FixAllButton))
-		                {
-			                OVRProjectSetup.FixTasks(buildTargetGroup, filter, blocking:false, onCompleted:AfterFixApply);
-		                }
-		                EditorGUI.EndDisabledGroup();
-	                }
+                    if (tasks.Any(task => task.FixAction != null))
+                    {
+                        var content = tasks[0].Level.GetValue(buildTargetGroup) == OVRProjectSetup.TaskLevel.Required
+                            ? FixAllButtonContent
+                            : ApplyAllButtonContent;
+                        EditorGUI.BeginDisabledGroup(
+                            OVRProjectSetup.ProcessorQueue.BusyWith(OVRConfigurationTaskProcessor.ProcessorType.Fixer));
+                        if (GUILayout.Button(content, styles.FixAllButton))
+                        {
+                            OVRProjectSetupSettingsProvider.SetNewInteraction(OVRProjectSetupSettingsProvider
+                                .Interaction.Fixed);
+
+                            OVRProjectSetup.FixTasks(buildTargetGroup, filter, blocking: false,
+                                onCompleted: AfterFixApply);
+                        }
+
+                        EditorGUI.EndDisabledGroup();
+                    }
                 }
             });
 
@@ -502,7 +587,8 @@ internal class OVRProjectSetupDrawer
     private void DrawIssue(OVRConfigurationTask task, BuildTargetGroup buildTargetGroup)
     {
         var ignored = task.IsIgnored(buildTargetGroup);
-        var cannotBeFixed = task.IsDone(buildTargetGroup) || OVRProjectSetup.ProcessorQueue.BusyWith(OVRConfigurationTaskProcessor.ProcessorType.Fixer);
+        var cannotBeFixed = task.IsDone(buildTargetGroup) ||
+                            OVRProjectSetup.ProcessorQueue.BusyWith(OVRConfigurationTaskProcessor.ProcessorType.Fixer);
         var disabled = cannotBeFixed || ignored;
 
         // Note : We're not using scopes, because in this very case, we've got a cross of scopes
@@ -519,25 +605,27 @@ internal class OVRProjectSetupDrawer
 
         if (task.FixAction != null)
         {
-	        EditorGUI.BeginDisabledGroup(cannotBeFixed);
-	        var content = task.Level.GetValue(buildTargetGroup) == OVRProjectSetup.TaskLevel.Required
-		        ? FixButtonContent
-		        : ApplyButtonContent;
+            EditorGUI.BeginDisabledGroup(cannotBeFixed);
+            var content = task.Level.GetValue(buildTargetGroup) == OVRProjectSetup.TaskLevel.Required
+                ? FixButtonContent
+                : ApplyButtonContent;
 
             var fixMessage = task.FixMessage.GetValue(buildTargetGroup);
             var tooltip = fixMessage != null ? $"{content.tooltip} :\n{fixMessage}" : content.tooltip;
             content = new GUIContent(content.text, tooltip);
-	        if (GUILayout.Button(content, styles.FixButton))
-	        {
-		        OVRProjectSetup.FixTask(buildTargetGroup, task, blocking: false, onCompleted: AfterFixApply);
-	        }
+            if (GUILayout.Button(content, styles.FixButton))
+            {
+                OVRProjectSetupSettingsProvider.SetNewInteraction(OVRProjectSetupSettingsProvider.Interaction.Fixed);
 
-	        EditorGUI.EndDisabledGroup();
+                OVRProjectSetup.FixTask(buildTargetGroup, task, blocking: false, onCompleted: AfterFixApply);
+            }
+
+            EditorGUI.EndDisabledGroup();
         }
 
         var current = Event.current;
-        if(GUILayout.Button("", EditorStyles.foldoutHeaderIcon, GUILayout.Width(16.0f))
-           || (clickArea.Contains(current.mousePosition) && current.type == EventType.ContextClick))
+        if (GUILayout.Button("", EditorStyles.foldoutHeaderIcon, GUILayout.Width(16.0f))
+            || (clickArea.Contains(current.mousePosition) && current.type == EventType.ContextClick))
         {
             ShowItemMenu(buildTargetGroup, task);
             if (current.type == EventType.ContextClick)
@@ -547,6 +635,22 @@ internal class OVRProjectSetupDrawer
         }
 
         EditorGUILayout.EndHorizontal();
+    }
+
+    private void DrawMoreActionsMenuList(BuildTargetGroup buildTargetGroup)
+    {
+        var current = Event.current;
+        if (GUILayout.Button("", EditorStyles.foldoutHeaderIcon, GUILayout.Width(16.0f)))
+        {
+            var menu = new GenericMenu();
+            menu.AddItem(RefreshTasksButtonContent, false, OnRefresh, new object[] { buildTargetGroup });
+            menu.AddItem(GenerateReportButtonContent, false, OnGenerateReport, new object[] { buildTargetGroup });
+            menu.ShowAsContext();
+            if (current.type == EventType.ContextClick)
+            {
+                current.Use();
+            }
+        }
     }
 
     private void ReadContextMenuArguments(
@@ -562,11 +666,21 @@ internal class OVRProjectSetupDrawer
     private void OnIgnore(object args)
     {
         ReadContextMenuArguments(args, out var buildTargetGroup, out var task);
-        task?.SetIgnored(buildTargetGroup, !task.IsIgnored(buildTargetGroup));
+
+        var ignore = !task.IsIgnored(buildTargetGroup);
+        if (ignore)
+        {
+            OVRProjectSetupSettingsProvider.SetNewInteraction(OVRProjectSetupSettingsProvider.Interaction.Ignored);
+        }
+
+        task?.SetIgnored(buildTargetGroup, ignore);
     }
 
     private void OnDocumentation(object args)
     {
+        OVRProjectSetupSettingsProvider.SetNewInteraction(OVRProjectSetupSettingsProvider.Interaction
+            .WentToDocumentation);
+
         ReadContextMenuArguments(args, out var buildTargetGroup, out var task);
         var url = task?.URL.GetValue(buildTargetGroup);
 
@@ -575,7 +689,40 @@ internal class OVRProjectSetupDrawer
 
     private void OnGoToSourceCode(object args)
     {
+        OVRProjectSetupSettingsProvider.SetNewInteraction(OVRProjectSetupSettingsProvider.Interaction.WentToSource);
+
         ReadContextMenuArguments(args, out var buildTargetGroup, out var task);
         task?.SourceCode.Open();
+    }
+
+    private void OnGenerateReport(object arg)
+    {
+        var buildTargetGroup = arg is object[] args ? (BuildTargetGroup)args[0] : BuildTargetGroup.Unknown;
+        var path = EditorUtility.OpenFolderPanel(OutFolderTitle, "", "");
+        if (string.IsNullOrEmpty(path)) return;
+        try
+        {
+            var reportFileName = GenerateReport(buildTargetGroup, path);
+            EditorUtility.DisplayDialog(SuccessTitle, $"{ReportGenerationSuccessMessage}\n{reportFileName}", OkButton);
+        }
+        catch (Exception e)
+        {
+            EditorUtility.DisplayDialog(ErrorTitle, $"{ReportGenerationErrorMessage}\n{e.Message}", OkButton);
+        }
+    }
+
+    private void OnRefresh(object arg)
+    {
+        var buildTargetGroup = arg is object[] args ? (BuildTargetGroup)args[0] : BuildTargetGroup.Unknown;
+        try
+        {
+            OVRProjectSetup.UpdateTasks(buildTargetGroup, logMessages: OVRProjectSetup.LogMessages.Disabled,
+                blocking: true);
+            EditorUtility.DisplayDialog(SuccessTitle, TasksRefreshSuccessMessage, OkButton);
+        }
+        catch (Exception e)
+        {
+            EditorUtility.DisplayDialog(ErrorTitle, $"{TasksRefreshErrorMessage}\n{e.Message}", OkButton);
+        }
     }
 }

@@ -20,5 +20,5 @@
 
 public class OVRDirectComposition
 {
-	// deprecated since SDK 1.49
+    // deprecated since SDK 1.49
 }

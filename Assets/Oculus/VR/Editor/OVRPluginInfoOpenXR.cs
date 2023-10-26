@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
  *
@@ -20,7 +20,6 @@
 
 
 #if OVR_UNITY_PACKAGE_MANAGER
-
 using System;
 using System.IO;
 using System.Linq;
@@ -33,8 +32,7 @@ namespace Oculus.VR.Editor
     [InitializeOnLoad]
     public class OVRPluginInfoOpenXR : IOVRPluginInfoSupplier
     {
-        private const string PackageName =
-            "com.meta.xr.sdk.utilities";
+        private const string PackageName = "com.meta.xr.sdk.utilities";
 
         private static readonly string PluginsRelPath =
             Path.Combine("Packages", PackageName, "Plugins");

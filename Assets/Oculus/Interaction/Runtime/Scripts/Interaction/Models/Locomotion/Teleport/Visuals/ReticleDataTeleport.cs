@@ -28,7 +28,7 @@ namespace Oculus.Interaction.DistanceReticles
         private Transform _snapPoint;
 
         [SerializeField, Optional]
-        private Renderer _renderer;
+        private MaterialPropertyBlockEditor _materialBlock;
 
         private static readonly int _highlightShaderID = Shader.PropertyToID("_Highlight");
 
@@ -64,9 +64,10 @@ namespace Oculus.Interaction.DistanceReticles
 
         public void Highlight(bool highlight)
         {
-            if (_renderer != null)
+            if(_materialBlock != null)
             {
-                _renderer.material.SetFloat(_highlightShaderID, highlight ? 1f : 0f);
+                _materialBlock.MaterialPropertyBlock.SetFloat(_highlightShaderID, highlight ? 1f : 0f);
+                _materialBlock.UpdateMaterialPropertyBlock();
             }
         }
 

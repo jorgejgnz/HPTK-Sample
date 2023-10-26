@@ -39,7 +39,7 @@ namespace Oculus.Interaction.Input
 
         [Header("OVR Data Source")]
         [SerializeField, Interface(typeof(IOVRCameraRigRef))]
-        private MonoBehaviour _cameraRigRef;
+        private UnityEngine.Object _cameraRigRef;
         private IOVRCameraRigRef CameraRigRef;
 
         [SerializeField]
@@ -50,7 +50,7 @@ namespace Oculus.Interaction.Input
         private Handedness _handedness;
 
         [SerializeField, Interface(typeof(ITrackingToWorldTransformer))]
-        private MonoBehaviour _trackingToWorldTransformer;
+        private UnityEngine.Object _trackingToWorldTransformer;
         private ITrackingToWorldTransformer TrackingToWorldTransformer;
 
         public bool ProcessLateUpdates
@@ -213,8 +213,7 @@ namespace Oculus.Interaction.Input
                 || (OVRInput.GetDominantHand() == OVRInput.Handedness.RightHanded
                     && _handedness == Handedness.Right);
 
-            float pinchAmount = OVRControllerUtility.GetPinchAmount(_ovrController);
-            float pinchStrength = _pinchCurve.Evaluate(pinchAmount);
+            float pinchStrength = _pinchCurve.Evaluate(OVRInput.Get(OVRInput.Axis1D.PrimaryIndexTrigger, _ovrController));
             float gripStrength = _pinchCurve.Evaluate(OVRInput.Get(OVRInput.Axis1D.PrimaryHandTrigger, _ovrController));
 
             _handDataAsset.IsFingerHighConfidence[(int)HandFinger.Thumb] = true;
@@ -227,15 +226,15 @@ namespace Oculus.Interaction.Input
 
             _handDataAsset.IsFingerHighConfidence[(int)HandFinger.Middle] = true;
             _handDataAsset.IsFingerPinching[(int)HandFinger.Middle] = gripStrength >= 1f;
-            _handDataAsset.FingerPinchStrength[(int)HandFinger.Middle] = pinchStrength;
+            _handDataAsset.FingerPinchStrength[(int)HandFinger.Middle] = gripStrength;
 
             _handDataAsset.IsFingerHighConfidence[(int)HandFinger.Ring] = true;
             _handDataAsset.IsFingerPinching[(int)HandFinger.Ring] = gripStrength >= 1f;
-            _handDataAsset.FingerPinchStrength[(int)HandFinger.Ring] = pinchStrength;
+            _handDataAsset.FingerPinchStrength[(int)HandFinger.Ring] = gripStrength;
 
             _handDataAsset.IsFingerHighConfidence[(int)HandFinger.Pinky] = true;
             _handDataAsset.IsFingerPinching[(int)HandFinger.Pinky] = gripStrength >= 1f;
-            _handDataAsset.FingerPinchStrength[(int)HandFinger.Pinky] = pinchStrength;
+            _handDataAsset.FingerPinchStrength[(int)HandFinger.Pinky] = gripStrength;
 
             _handDataAsset.PointerPoseOrigin = PoseOrigin.RawTrackedPose;
             _handDataAsset.PointerPose = new Pose(
@@ -283,7 +282,7 @@ namespace Oculus.Interaction.Input
 
         public void InjectTrackingToWorldTransformer(ITrackingToWorldTransformer trackingToWorldTransformer)
         {
-            _trackingToWorldTransformer = trackingToWorldTransformer as MonoBehaviour;
+            _trackingToWorldTransformer = trackingToWorldTransformer as UnityEngine.Object;
             TrackingToWorldTransformer = trackingToWorldTransformer;
         }
 

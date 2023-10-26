@@ -9,6 +9,7 @@
 using System;
 using Meta.WitAi.Data;
 using Meta.WitAi.Json;
+using Meta.WitAi.Requests;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Serialization;
@@ -44,7 +45,7 @@ namespace Meta.WitAi.CallbackHandlers
             }
             else
             {
-                Voice.VoiceEvents.OnRequestCreated.AddListener(OnRequestCreated);
+                Voice.VoiceEvents.OnSend.AddListener(OnRequestSend);
                 Voice.VoiceEvents.OnValidatePartialResponse.AddListener(HandleValidateEarlyResponse);
                 Voice.VoiceEvents.OnResponse.AddListener(HandleFinalResponse);
             }
@@ -54,13 +55,13 @@ namespace Meta.WitAi.CallbackHandlers
         {
             if (Voice)
             {
-                Voice.VoiceEvents.OnRequestCreated.RemoveListener(OnRequestCreated);
+                Voice.VoiceEvents.OnSend.RemoveListener(OnRequestSend);
                 Voice.VoiceEvents.OnValidatePartialResponse.RemoveListener(HandleValidateEarlyResponse);
                 Voice.VoiceEvents.OnResponse.RemoveListener(HandleFinalResponse);
             }
         }
 
-        protected virtual void OnRequestCreated(WitRequest request)
+        protected virtual void OnRequestSend(VoiceServiceRequest request)
         {
             _validated = false;
         }

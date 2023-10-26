@@ -31,13 +31,14 @@ namespace Oculus.Interaction.HandGrab.Editor
     public class HandGrabPoseEditor : UnityEditor.Editor
     {
         private HandGrabPose _handGrabPose;
-
         private HandGhostProvider _ghostVisualsProvider;
         private HandGhost _handGhost;
         private Handedness _lastHandedness;
+        private Transform _relativeTo;
 
         private int _editMode = 0;
         private SerializedProperty _handPoseProperty;
+        private SerializedProperty _relativeToProperty;
 
         private const float GIZMO_SCALE = 0.005f;
         private static readonly string[] EDIT_MODES = new string[] { "Edit fingers", "Follow Surface" };
@@ -45,7 +46,12 @@ namespace Oculus.Interaction.HandGrab.Editor
         private void Awake()
         {
             _handGrabPose = target as HandGrabPose;
+        }
+
+        private void OnEnable()
+        {
             _handPoseProperty = serializedObject.FindProperty("_handPose");
+            _relativeToProperty = serializedObject.FindProperty("_relativeTo");
             AssignMissingGhostProvider();
         }
 
@@ -58,33 +64,36 @@ namespace Oculus.Interaction.HandGrab.Editor
         {
             base.OnInspectorGUI();
 
-            if (_handGrabPose.HandPose != null
-                && _handPoseProperty != null)
+            _relativeTo = _relativeToProperty.objectReferenceValue as Transform;
+
+            if (_handGrabPose.UsesHandPose())
             {
                 EditorGUILayout.PropertyField(_handPoseProperty);
-                EditorGUILayout.Space();
-                DrawGhostMenu(_handGrabPose.HandPose, false);
             }
-            else if (_handGhost != null)
+
+            GUIStyle boldStyle = new GUIStyle(GUI.skin.label) { fontStyle = FontStyle.Bold };
+            EditorGUILayout.LabelField("Interactive Edition (Editor only)", boldStyle);
+            if (_handGrabPose.UsesHandPose())
+            {
+                DrawGhostMenu(_handGrabPose.HandPose);
+            }
+            else
             {
                 DestroyGhost();
             }
             serializedObject.ApplyModifiedProperties();
         }
 
-        private void DrawGhostMenu(HandPose handPose, bool forceCreate)
+        private void DrawGhostMenu(HandPose handPose)
         {
-            GUIStyle boldStyle = new GUIStyle(GUI.skin.label) { fontStyle = FontStyle.Bold };
-            EditorGUILayout.LabelField("Interactive Edition", boldStyle);
-
             HandGhostProvider provider = EditorGUILayout.ObjectField("Ghost Provider", _ghostVisualsProvider, typeof(HandGhostProvider), false) as HandGhostProvider;
-            if (forceCreate
-                || provider != _ghostVisualsProvider
-                || _handGhost == null
+            if (_handGhost == null
+                || _ghostVisualsProvider != provider
                 || _lastHandedness != handPose.Handedness)
             {
                 RegenerateGhost(provider);
             }
+            _ghostVisualsProvider = provider;
             _lastHandedness = handPose.Handedness;
 
             if (_handGrabPose.SnapSurface == null)
@@ -99,8 +108,12 @@ namespace Oculus.Interaction.HandGrab.Editor
 
         public void OnSceneGUI()
         {
-            if (SceneView.currentDrawingSceneView == null
-                || _handGhost == null)
+            if (SceneView.currentDrawingSceneView == null)
+            {
+                return;
+            }
+
+            if (_handGhost == null)
             {
                 return;
             }
@@ -114,6 +127,7 @@ namespace Oculus.Interaction.HandGrab.Editor
                 GhostFollowSurface();
             }
         }
+
 
         #region ghost
 
@@ -129,7 +143,6 @@ namespace Oculus.Interaction.HandGrab.Editor
 
         private void RegenerateGhost(HandGhostProvider provider)
         {
-            _ghostVisualsProvider = provider;
             DestroyGhost();
             CreateGhost();
         }
@@ -140,11 +153,14 @@ namespace Oculus.Interaction.HandGrab.Editor
             {
                 return;
             }
-
+            Transform relativeTo = _handGrabPose.RelativeTo;
             HandGhost ghostPrototype = _ghostVisualsProvider.GetHand(_handGrabPose.HandPose.Handedness);
             _handGhost = GameObject.Instantiate(ghostPrototype, _handGrabPose.transform);
             _handGhost.gameObject.hideFlags = HideFlags.HideAndDontSave;
-            _handGhost.SetPose(_handGrabPose);
+
+            Pose relativePose = _handGrabPose.RelativePose;
+            Pose pose = PoseUtils.GlobalPoseScaled(relativeTo, relativePose);
+            _handGhost.SetPose(_handGrabPose.HandPose, pose);
         }
 
         private void DestroyGhost()
@@ -153,8 +169,8 @@ namespace Oculus.Interaction.HandGrab.Editor
             {
                 return;
             }
+
             GameObject.DestroyImmediate(_handGhost.gameObject);
-            _handGhost = null;
         }
 
         private void GhostFollowSurface()
@@ -164,20 +180,21 @@ namespace Oculus.Interaction.HandGrab.Editor
                 return;
             }
 
-            Pose ghostTargetPose = _handGrabPose.RelativeGrip;
+            Pose ghostTargetPose = _handGrabPose.RelativePose;
 
             if (_handGrabPose.SnapSurface != null)
             {
                 Vector3 mousePosition = Event.current.mousePosition;
                 Ray ray = HandleUtility.GUIPointToWorldRay(mousePosition);
-                Pose recorderPose = _handGrabPose.transform.GetPose();
-                if (_handGrabPose.SnapSurface.CalculateBestPoseAtSurface(ray, recorderPose, out Pose target))
+                if (_handGrabPose.SnapSurface.CalculateBestPoseAtSurface(ray, out Pose poseInSurface, _relativeTo))
                 {
-                    _handGrabPose.RelativeTo.Delta(target, ref ghostTargetPose);
+                    ghostTargetPose = PoseUtils.DeltaScaled(_relativeTo, poseInSurface);
                 }
             }
 
-            _handGhost.SetRootPose(ghostTargetPose, _handGrabPose.RelativeTo);
+            _handGhost.SetRootPose(ghostTargetPose, _relativeTo);
+            Handles.color = EditorConstants.PRIMARY_COLOR_DISABLED;
+            Handles.DrawSolidDisc(_handGhost.transform.position, _handGhost.transform.right, 0.01f);
         }
 
         private void GhostEditFingers()
@@ -191,9 +208,10 @@ namespace Oculus.Interaction.HandGrab.Editor
 
         private void DrawBonesRotator(List<HandJointMap> bones)
         {
-            bool changed = false;
+            bool anyChanged = false;
             for (int i = 0; i < FingersMetadata.HAND_JOINT_IDS.Length; i++)
             {
+                bool changed = false;
                 HandJointId joint = FingersMetadata.HAND_JOINT_IDS[i];
                 HandFinger finger = FingersMetadata.JOINT_TO_FINGER[(int)joint];
 
@@ -211,28 +229,40 @@ namespace Oculus.Interaction.HandGrab.Editor
                 Transform transform = jointMap.transform;
                 transform.localRotation = jointMap.RotationOffset * _handGrabPose.HandPose.JointRotations[i];
 
+                float scale = GIZMO_SCALE * _handGrabPose.transform.lossyScale.x;
                 Handles.color = EditorConstants.PRIMARY_COLOR;
-                Quaternion rotation = Handles.Disc(transform.rotation, transform.position,
-                   transform.forward, GIZMO_SCALE, false, 0);
+                Quaternion entryRotation = transform.rotation;
+                Quaternion rotation = Handles.Disc(entryRotation, transform.position,
+                   transform.forward, scale, false, 0);
+                if (rotation != entryRotation)
+                {
+                    changed = true;
+                }
 
                 if (FingersMetadata.HAND_JOINT_CAN_SPREAD[i])
                 {
                     Handles.color = EditorConstants.SECONDARY_COLOR;
-                    rotation = Handles.Disc(rotation, transform.position,
-                        transform.up, GIZMO_SCALE, false, 0);
+                    Quaternion curlRotation = rotation;
+                    rotation = Handles.Disc(curlRotation, transform.position,
+                        transform.up, scale, false, 0);
+                    if (rotation != curlRotation)
+                    {
+                        changed = true;
+                    }
+                }
+
+                if (!changed)
+                {
+                    continue;
                 }
 
                 transform.rotation = rotation;
-                Quaternion finalRot = jointMap.TrackedRotation;
-                if (_handGrabPose.HandPose.JointRotations[i] != finalRot)
-                {
-                    Undo.RecordObject(_handGrabPose, "Bone Rotation");
-                    _handGrabPose.HandPose.JointRotations[i] = finalRot;
-                    changed = true;
-                }
+                Undo.RecordObject(_handGrabPose, "Bone Rotation");
+                _handGrabPose.HandPose.JointRotations[i] = jointMap.TrackedRotation;
+                anyChanged = true;
             }
 
-            if (changed)
+            if (anyChanged)
             {
                 EditorUtility.SetDirty(_handGrabPose);
             }

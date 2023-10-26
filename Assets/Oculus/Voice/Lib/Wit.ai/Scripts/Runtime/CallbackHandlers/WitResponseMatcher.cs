@@ -9,8 +9,10 @@
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using Meta.WitAi.Attributes;
 using Meta.WitAi.Data;
 using Meta.WitAi.Json;
+using Meta.WitAi.Utilities;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Serialization;
@@ -34,6 +36,12 @@ namespace Meta.WitAi.CallbackHandlers
         [SerializeField] private FormattedValueEvents[] formattedValueEvents;
         [SerializeField] private MultiValueEvent onMultiValueEvent = new MultiValueEvent();
 
+        [TooltipBox("Triggered if the matching conditions did not match. The parameter will be the transcription that was received. This will only trigger if there were values for intents or entities, but those values didn't match this matcher.")]
+        [SerializeField] private StringEvent onDidNotMatch = new StringEvent();
+
+        [TooltipBox("Triggered if a request was checked and no intents were found. This will still trigger if entities match and only applies to intents. The parameter will be the transcription.")]
+        [SerializeField] private StringEvent onOutOfDomain = new StringEvent();
+
         private static Regex valueRegex = new Regex(Regex.Escape("{value}"), RegexOptions.Compiled);
 
         // Handle validation
@@ -54,7 +62,18 @@ namespace Meta.WitAi.CallbackHandlers
             return string.Empty;
         }
         // Ignore for mismatched intent
-        protected override void OnResponseInvalid(WitResponseNode response, string error) {}
+        protected override void OnResponseInvalid(WitResponseNode response, string error)
+        {
+            if (response.GetIntents().Length > 0 || response.EntityCount() > 0)
+            {
+                onDidNotMatch?.Invoke(response.GetTranscription());
+            }
+
+            if (response.GetIntents().Length == 0)
+            {
+                onOutOfDomain?.Invoke(response.GetTranscription());
+            }
+        }
         // Handle valid callback
         protected override void OnResponseSuccess(WitResponseNode response)
         {
@@ -89,6 +108,10 @@ namespace Meta.WitAi.CallbackHandlers
                         formatEvent.onFormattedValueEvent?.Invoke(result);
                     }
                 }
+            }
+            else
+            {
+                onDidNotMatch?.Invoke(response.GetTranscription());
             }
 
             // Get all values & perform multi value event

@@ -29,7 +29,7 @@ namespace Oculus.Interaction
     public class HandVisual : MonoBehaviour, IHandVisual
     {
         [SerializeField, Interface(typeof(IHand))]
-        private MonoBehaviour _hand;
+        private UnityEngine.Object _hand;
         public IHand Hand { get; private set; }
 
         [SerializeField]
@@ -180,7 +180,7 @@ namespace Oculus.Interaction
 
         public void InjectHand(IHand hand)
         {
-            _hand = hand as MonoBehaviour;
+            _hand = hand as UnityEngine.Object;
             Hand = hand;
         }
 

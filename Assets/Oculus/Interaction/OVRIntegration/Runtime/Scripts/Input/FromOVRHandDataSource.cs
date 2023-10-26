@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
  *
@@ -28,7 +28,7 @@ namespace Oculus.Interaction.Input
     {
         [Header("OVR Data Source")]
         [SerializeField, Interface(typeof(IOVRCameraRigRef))]
-        private MonoBehaviour _cameraRigRef;
+        private UnityEngine.Object _cameraRigRef;
 
         [SerializeField]
         private bool _processLateUpdates = false;
@@ -38,11 +38,11 @@ namespace Oculus.Interaction.Input
         private Handedness _handedness;
 
         [SerializeField, Interface(typeof(ITrackingToWorldTransformer))]
-        private MonoBehaviour _trackingToWorldTransformer;
+        private UnityEngine.Object _trackingToWorldTransformer;
         private ITrackingToWorldTransformer TrackingToWorldTransformer;
 
         [SerializeField, Interface(typeof(IHandSkeletonProvider))]
-        private MonoBehaviour _handSkeletonProvider;
+        private UnityEngine.Object _handSkeletonProvider;
         private IHandSkeletonProvider HandSkeletonProvider;
 
         public bool ProcessLateUpdates
@@ -279,13 +279,13 @@ namespace Oculus.Interaction.Input
 
         public void InjectTrackingToWorldTransformer(ITrackingToWorldTransformer trackingToWorldTransformer)
         {
-            _trackingToWorldTransformer = trackingToWorldTransformer as MonoBehaviour;
+            _trackingToWorldTransformer = trackingToWorldTransformer as UnityEngine.Object;
             TrackingToWorldTransformer = trackingToWorldTransformer;
         }
 
         public void InjectHandSkeletonProvider(IHandSkeletonProvider handSkeletonProvider)
         {
-            _handSkeletonProvider = handSkeletonProvider as MonoBehaviour;
+            _handSkeletonProvider = handSkeletonProvider as UnityEngine.Object;
             HandSkeletonProvider = handSkeletonProvider;
         }
 

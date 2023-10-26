@@ -15,7 +15,7 @@ namespace Meta.Conduit
     /// <summary>
     /// An action entry in the manifest.
     /// </summary>
-    internal class ManifestAction
+    internal class ManifestAction: IManifestMethod
     {
         /// <summary>
         /// Called via JSON reflection, need preserver or it will be stripped on compile
@@ -37,7 +37,7 @@ namespace Meta.Conduit
         /// The name of the action as exposed to the backend.
         /// </summary>
         public string Name { get; set; }
-
+        
         /// <summary>
         /// The parameters used by the action.
         /// </summary>

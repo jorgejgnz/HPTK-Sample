@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
  *
@@ -27,6 +27,7 @@ using UnityEngine;
 /// <remarks>
 /// See <see cref="OVRPlugin.EyeGazeState"/> structure for list of eye state parameters.
 /// </remarks>
+[HelpURL("https://developer.oculus.com/reference/unity/latest/class_o_v_r_eye_gaze")]
 public class OVREyeGaze : MonoBehaviour
 {
     /// <summary>
@@ -62,28 +63,33 @@ public class OVREyeGaze : MonoBehaviour
 
     private OVRPlugin.EyeGazesState _currentEyeGazesState;
 
-	/// <summary>
-	/// Reference frame for eye. If it's null, then world reference frame will be used.
-	/// </summary>
-	[Tooltip("Reference frame for eye. " +
-	         "Reference frame should be set in the forward direction of the eye. It is there to calculate the initial offset of the eye GameObject. " +
-			 "If it's null, then world reference frame will be used.")]
-	public Transform ReferenceFrame;
+    /// <summary>
+    /// Reference frame for eye. If it's null, then world reference frame will be used.
+    /// </summary>
+    [Tooltip("Reference frame for eye. " +
+             "Reference frame should be set in the forward direction of the eye. It is there to calculate the initial offset of the eye GameObject. " +
+             "If it's null, then world reference frame will be used.")]
+    public Transform ReferenceFrame;
 
-	/// <summary>
-	/// HeadSpace: Track eye relative to head space.
-	/// WorldSpace: Track eye in world space.
-	/// TrackingSpace: Track eye relative to OVRCameraRig.
-	/// </summary>
-	[Tooltip("HeadSpace: Tracking mode will convert the eye pose from tracking space to local space which is relative to the VR camera rig. " +
-	         "For example, we can use this setting to correctly show the eye movement of a character which is facing in another direction than the source.\n" +
-			 "WorldSpace: Tracking mode will convert the eye pose from tracking space to world space.\n" +
-			 "TrackingSpace: Track eye is relative to OVRCameraRig. This is raw pose information from VR tracking space.")]
-	public EyeTrackingMode TrackingMode;
+    /// <summary>
+    /// HeadSpace: Track eye relative to head space.
+    /// WorldSpace: Track eye in world space.
+    /// TrackingSpace: Track eye relative to OVRCameraRig.
+    /// </summary>
+    [Tooltip(
+        "HeadSpace: Tracking mode will convert the eye pose from tracking space to local space " +
+        "which is relative to the VR camera rig. For example, we can use this setting to correctly " +
+        "show the eye movement of a character which is facing in another direction than the source.\n" +
+        "WorldSpace: Tracking mode will convert the eye pose from tracking space to world space.\n" +
+        "TrackingSpace: Track eye is relative to OVRCameraRig. This is raw pose information from VR tracking space.")]
+    public EyeTrackingMode TrackingMode;
 
     private Quaternion _initialRotationOffset;
     private Transform _viewTransform;
-    private const OVRPermissionsRequester.Permission EyeTrackingPermission = OVRPermissionsRequester.Permission.EyeTracking;
+
+    private const OVRPermissionsRequester.Permission EyeTrackingPermission =
+        OVRPermissionsRequester.Permission.EyeTracking;
+
     private Action<string> _onPermissionGranted;
     private static int _trackingInstanceCount;
 

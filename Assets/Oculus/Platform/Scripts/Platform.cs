@@ -194,257 +194,6 @@ namespace Oculus.Platform
     }
   }
 
-  public static partial class Rooms
-  {
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    public static Request<Models.Room> UpdateDataStore(UInt64 roomID, Dictionary<string, string> data)
-    {
-      if (Core.IsInitialized())
-      {
-        CAPI.ovrKeyValuePair[] kvps = new CAPI.ovrKeyValuePair[data.Count];
-        int i=0;
-        foreach(var item in data)
-        {
-          kvps[i++] = new CAPI.ovrKeyValuePair(item.Key, item.Value);
-        }
-
-        return new Request<Models.Room>(CAPI.ovr_Room_UpdateDataStore(roomID, kvps));
-      }
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    [Obsolete("Deprecated in favor of SetRoomInviteAcceptedNotificationCallback")]
-    public static void SetRoomInviteNotificationCallback(Message<string>.Callback callback)
-    {
-      SetRoomInviteAcceptedNotificationCallback(callback);
-    }
-
-  }
-
-  /// DEPRECATED. Will be removed from headers at version v51.
-  public static partial class Matchmaking
-  {
-    /// DEPRECATED. Will be removed from headers at version v51.
-    public class CustomQuery
-    {
-      public Dictionary<string, object> data;
-      public Criterion[] criteria;
-
-      /// DEPRECATED. Will be removed from headers at version v51.
-      public struct Criterion
-      {
-        public Criterion(string key_, MatchmakingCriterionImportance importance_)
-        {
-          key = key_;
-          importance = importance_;
-
-          parameters = null;
-        }
-
-        public string key;
-        public MatchmakingCriterionImportance importance;
-        public Dictionary<string, object> parameters;
-      }
-
-      /// DEPRECATED. Will be removed from headers at version v51.
-      public IntPtr ToUnmanaged()
-      {
-        var customQueryUnmanaged = new CAPI.ovrMatchmakingCustomQueryData();
-
-        if(criteria != null && criteria.Length > 0)
-        {
-          customQueryUnmanaged.criterionArrayCount = (uint)criteria.Length;
-          var temp = new CAPI.ovrMatchmakingCriterion[criteria.Length];
-
-          for(int i=0; i<criteria.Length; i++)
-          {
-            temp[i].importance_ = criteria[i].importance;
-            temp[i].key_ = criteria[i].key;
-
-            if(criteria[i].parameters != null && criteria[i].parameters.Count > 0)
-            {
-              temp[i].parameterArrayCount = (uint)criteria[i].parameters.Count;
-              temp[i].parameterArray = CAPI.ArrayOfStructsToIntPtr(CAPI.DictionaryToOVRKeyValuePairs(criteria[i].parameters));
-            }
-            else
-            {
-              temp[i].parameterArrayCount = 0;
-              temp[i].parameterArray = IntPtr.Zero;
-            }
-          }
-
-          customQueryUnmanaged.criterionArray = CAPI.ArrayOfStructsToIntPtr(temp);
-        }
-        else
-        {
-          customQueryUnmanaged.criterionArrayCount = 0;
-          customQueryUnmanaged.criterionArray = IntPtr.Zero;
-        }
-
-
-        if(data != null && data.Count > 0)
-        {
-          customQueryUnmanaged.dataArrayCount = (uint)data.Count;
-          customQueryUnmanaged.dataArray = CAPI.ArrayOfStructsToIntPtr(CAPI.DictionaryToOVRKeyValuePairs(data));
-        }
-        else
-        {
-          customQueryUnmanaged.dataArrayCount = 0;
-          customQueryUnmanaged.dataArray = IntPtr.Zero;
-        }
-
-        IntPtr res = Marshal.AllocHGlobal(Marshal.SizeOf(customQueryUnmanaged));
-        Marshal.StructureToPtr(customQueryUnmanaged, res, true);
-        return res;
-      }
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    public static Request ReportResultsInsecure(UInt64 roomID, Dictionary<string, int> data)
-    {
-      if(Core.IsInitialized())
-      {
-        CAPI.ovrKeyValuePair[] kvps = new CAPI.ovrKeyValuePair[data.Count];
-        int i=0;
-        foreach(var item in data)
-        {
-          kvps[i++] = new CAPI.ovrKeyValuePair(item.Key, item.Value);
-        }
-
-        return new Request(CAPI.ovr_Matchmaking_ReportResultInsecure(roomID, kvps));
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    public static Request<Models.MatchmakingStats> GetStats(string pool, uint maxLevel, MatchmakingStatApproach approach = MatchmakingStatApproach.Trailing)
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request<Models.MatchmakingStats>(CAPI.ovr_Matchmaking_GetStats(pool, maxLevel, approach));
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-  }
-
-
-  /// DEPRECATED. Will be removed from headers at version v51.
-  public static partial class Net
-  {
-    /// DEPRECATED. Will be removed from headers at version v51.
-    public static Packet ReadPacket()
-    {
-      if (!Core.IsInitialized())
-      {
-        Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-        return null;
-      }
-
-      var packetHandle = CAPI.ovr_Net_ReadPacket();
-
-      if(packetHandle == IntPtr.Zero)
-      {
-        return null;
-      }
-
-      return new Packet(packetHandle);
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    public static bool SendPacket(UInt64 userID, byte[] bytes, SendPolicy policy)
-    {
-      if(Core.IsInitialized())
-      {
-        return CAPI.ovr_Net_SendPacket(userID, (UIntPtr)bytes.Length, bytes, policy);
-      }
-
-      return false;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    public static void Connect(UInt64 userID)
-    {
-      if (Core.IsInitialized())
-      {
-        CAPI.ovr_Net_Connect(userID);
-      }
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    public static void Accept(UInt64 userID)
-    {
-      if(Core.IsInitialized())
-      {
-        CAPI.ovr_Net_Accept(userID);
-      }
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    public static void Close(UInt64 userID)
-    {
-      if(Core.IsInitialized())
-      {
-        CAPI.ovr_Net_Close(userID);
-      }
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    public static bool IsConnected(UInt64 userID)
-    {
-      return Core.IsInitialized() && CAPI.ovr_Net_IsConnected(userID);
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    public static bool SendPacketToCurrentRoom(byte[] bytes, SendPolicy policy)
-    {
-      if (Core.IsInitialized())
-      {
-        return CAPI.ovr_Net_SendPacketToCurrentRoom((UIntPtr)bytes.Length, bytes, policy);
-      }
-
-      return false;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    public static bool AcceptForCurrentRoom()
-    {
-      if (Core.IsInitialized())
-      {
-        return CAPI.ovr_Net_AcceptForCurrentRoom();
-      }
-
-      return false;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    public static void CloseForCurrentRoom()
-    {
-      if (Core.IsInitialized())
-      {
-        CAPI.ovr_Net_CloseForCurrentRoom();
-      }
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    public static Request<Models.PingResult> Ping(UInt64 userID)
-    {
-      if(Core.IsInitialized())
-      {
-        return new Request<Models.PingResult>(CAPI.ovr_Net_Ping(userID));
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-  }
-
   public static partial class Leaderboards
   {
     public static Request<Models.LeaderboardEntryList> GetNextEntries(Models.LeaderboardEntryList list)
@@ -757,14 +506,59 @@ namespace Oculus.Platform
 
   public static partial class Application
   {
-    /// Requests version information, including the currently installed and latest
-    /// available version name and version code.
+    /// Cancel an app download that is in progress. It will return a result when
+    /// the download is cancelled.
+    ///
+    public static Request<Models.AppDownloadResult> CancelAppDownload()
+    {
+      if (Core.IsInitialized())
+      {
+        return new Request<Models.AppDownloadResult>(CAPI.ovr_Application_CancelAppDownload());
+      }
+
+      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
+      return null;
+    }
+
+    /// Track download progress for an app
+    ///
+    public static Request<Models.AppDownloadProgressResult> CheckAppDownloadProgress()
+    {
+      if (Core.IsInitialized())
+      {
+        return new Request<Models.AppDownloadProgressResult>(CAPI.ovr_Application_CheckAppDownloadProgress());
+      }
+
+      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
+      return null;
+    }
+
+    /// Requests version information, including the version code and version name
+    /// of the currently installed app and version code, version name, size and
+    /// release date of the latest app update
     ///
     public static Request<Models.ApplicationVersion> GetVersion()
     {
       if (Core.IsInitialized())
       {
         return new Request<Models.ApplicationVersion>(CAPI.ovr_Application_GetVersion());
+      }
+
+      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
+      return null;
+    }
+
+    /// Installs the app update that was previously downloaded. Once the install
+    /// begins the application will exit automatically. After the installation
+    /// process is complete, the app will be relaunched based on the options
+    /// passed.
+    /// \param deeplink_options Additional configuration for this relaunch. Optional.
+    ///
+    public static Request<Models.AppDownloadResult> InstallAppUpdateAndRelaunch(ApplicationOptions deeplink_options = null)
+    {
+      if (Core.IsInitialized())
+      {
+        return new Request<Models.AppDownloadResult>(CAPI.ovr_Application_InstallAppUpdateAndRelaunch((IntPtr)deeplink_options));
       }
 
       Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
@@ -782,6 +576,21 @@ namespace Oculus.Platform
       if (Core.IsInitialized())
       {
         return new Request<string>(CAPI.ovr_Application_LaunchOtherApp(appID, (IntPtr)deeplink_options));
+      }
+
+      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
+      return null;
+    }
+
+    /// Starts an app download. It will return a result when the download is
+    /// finished. Download progress can be monitored using the
+    /// check_app_download_progress API.
+    ///
+    public static Request<Models.AppDownloadResult> StartAppDownload()
+    {
+      if (Core.IsInitialized())
+      {
+        return new Request<Models.AppDownloadResult>(CAPI.ovr_Application_StartAppDownload());
       }
 
       Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
@@ -1189,191 +998,17 @@ namespace Oculus.Platform
 
   }
 
-  public static partial class CloudStorage
+  public static partial class DeviceApplicationIntegrity
   {
-    /// DEPRECATED. Will be removed from headers at version v51.
+    /// Returns Device and Application Integrity Attestation JSON Web Token. The
+    /// token has format of header.claims.signature encoded in base64. Header
+    /// contains algorithm type (PS256) and token type (JWT).
     ///
-    /// Deletes the specified save data buffer. Conflicts are handled just like
-    /// Saves.
-    /// \param bucket The name of the storage bucket.
-    /// \param key The name for this saved data.
-    ///
-    public static Request<Models.CloudStorageUpdateResponse> Delete(string bucket, string key)
+    public static Request<string> GetIntegrityToken(string challenge_nonce)
     {
       if (Core.IsInitialized())
       {
-        return new Request<Models.CloudStorageUpdateResponse>(CAPI.ovr_CloudStorage_Delete(bucket, key));
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    ///
-    /// Loads the saved entry for the specified bucket and key. If a conflict
-    /// exists with the key then an error message is returned.
-    /// \param bucket The name of the storage bucket.
-    /// \param key The name for this saved data.
-    ///
-    public static Request<Models.CloudStorageData> Load(string bucket, string key)
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request<Models.CloudStorageData>(CAPI.ovr_CloudStorage_Load(bucket, key));
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    ///
-    /// Loads all the metadata for the saves in the specified bucket, including
-    /// conflicts.
-    /// \param bucket The name of the storage bucket.
-    ///
-    public static Request<Models.CloudStorageMetadataList> LoadBucketMetadata(string bucket)
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request<Models.CloudStorageMetadataList>(CAPI.ovr_CloudStorage_LoadBucketMetadata(bucket));
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    ///
-    /// Loads the metadata for this bucket-key combination that need to be manually
-    /// resolved.
-    /// \param bucket The name of the storage bucket
-    /// \param key The key for this saved data.
-    ///
-    public static Request<Models.CloudStorageConflictMetadata> LoadConflictMetadata(string bucket, string key)
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request<Models.CloudStorageConflictMetadata>(CAPI.ovr_CloudStorage_LoadConflictMetadata(bucket, key));
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    ///
-    /// Loads the data specified by the storage handle.
-    ///
-    public static Request<Models.CloudStorageData> LoadHandle(string handle)
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request<Models.CloudStorageData>(CAPI.ovr_CloudStorage_LoadHandle(handle));
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    ///
-    /// load the metadata for the specified key
-    /// \param bucket The name of the storage bucket.
-    /// \param key The name for this saved data.
-    ///
-    public static Request<Models.CloudStorageMetadata> LoadMetadata(string bucket, string key)
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request<Models.CloudStorageMetadata>(CAPI.ovr_CloudStorage_LoadMetadata(bucket, key));
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    ///
-    /// Selects the local save for manual conflict resolution.
-    /// \param bucket The name of the storage bucket.
-    /// \param key The name for this saved data.
-    /// \param remoteHandle The handle of the remote that the local file was resolved against.
-    ///
-    public static Request<Models.CloudStorageUpdateResponse> ResolveKeepLocal(string bucket, string key, string remoteHandle)
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request<Models.CloudStorageUpdateResponse>(CAPI.ovr_CloudStorage_ResolveKeepLocal(bucket, key, remoteHandle));
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    ///
-    /// Selects the remote save for manual conflict resolution.
-    /// \param bucket The name of the storage bucket.
-    /// \param key The name for this saved data.
-    /// \param remoteHandle The handle of the remote.
-    ///
-    public static Request<Models.CloudStorageUpdateResponse> ResolveKeepRemote(string bucket, string key, string remoteHandle)
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request<Models.CloudStorageUpdateResponse>(CAPI.ovr_CloudStorage_ResolveKeepRemote(bucket, key, remoteHandle));
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    ///
-    /// Note: Cloud Storage is only available for Rift apps.
-    ///
-    /// Send a save data buffer to the platform. CloudStorage.Save() passes a
-    /// pointer to your data in an async call. You need to maintain the save data
-    /// until you receive the message indicating that the save was successful.
-    ///
-    /// If the data is destroyed or modified prior to receiving that message the
-    /// data will not be saved.
-    /// \param bucket The name of the storage bucket.
-    /// \param key The name for this saved data.
-    /// \param data Start of the data block.
-    /// \param counter Optional. Counter used for user data or auto-deconfliction.
-    /// \param extraData Optional. String data that isn't used by the platform.
-    ///
-    /// <b>Error codes</b>
-    /// - \b 100: The stored version has a later timestamp than the data provided. This cloud storage bucket's conflict resolution policy is configured to use the latest timestamp, which is configurable in the developer dashboard.
-    ///
-    public static Request<Models.CloudStorageUpdateResponse> Save(string bucket, string key, byte[] data, long counter, string extraData)
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request<Models.CloudStorageUpdateResponse>(CAPI.ovr_CloudStorage_Save(bucket, key, data, (uint)(data != null ? data.Length : 0), counter, extraData));
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-  }
-
-  public static partial class CloudStorage2
-  {
-    /// DEPRECATED. Will be removed from headers at version v51.
-    ///
-    /// Get the directory path for the current user/app pair that will be used
-    /// during cloud storage synchronization
-    ///
-    public static Request<string> GetUserDirectoryPath()
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request<string>(CAPI.ovr_CloudStorage2_GetUserDirectoryPath());
+        return new Request<string>(CAPI.ovr_DeviceApplicationIntegrity_GetIntegrityToken(challenge_nonce));
       }
 
       Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
@@ -1896,387 +1531,6 @@ namespace Oculus.Platform
 
   }
 
-  public static partial class Matchmaking
-  {
-    /// DEPRECATED. Will be removed from headers at version v51.
-    /// \param pool A BROWSE type matchmaking pool.
-    /// \param customQueryData Optional. Custom query data.
-    ///
-    /// <b>Error codes</b>
-    /// - \b 100: Pool {pool_key} does not contain custom data key {key}. You can configure matchmaking custom data at https://dashboard.oculus.com/application/&lt;app_id&gt;/matchmaking
-    /// - \b 12072: Unknown pool: {pool_key}. You can configure matchmaking pools at https://dashboard.oculus.com/application/&lt;app_id&gt;/matchmaking
-    ///
-    public static Request<Models.MatchmakingBrowseResult> Browse(string pool, CustomQuery customQueryData = null)
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request<Models.MatchmakingBrowseResult>(CAPI.ovr_Matchmaking_Browse(pool, customQueryData != null ? customQueryData.ToUnmanaged() : IntPtr.Zero));
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    ///
-    /// Modes: BROWSE
-    ///
-    /// See overview documentation above.
-    ///
-    /// Return a list of matchmaking rooms in the current pool filtered by skill
-    /// and ping (if enabled). This also enqueues the user in the matchmaking
-    /// queue. When the user has made a selection, call Rooms.Join2() on one of the
-    /// rooms that was returned. If the user stops browsing, call
-    /// Matchmaking.Cancel().
-    ///
-    /// In addition to the list of rooms, enqueue results are also returned. Call
-    /// MatchmakingBrowseResult.GetEnqueueResult() to obtain them. See
-    /// OVR_MatchmakingEnqueueResult.h for details.
-    /// \param pool A BROWSE type matchmaking pool.
-    /// \param matchmakingOptions Additional matchmaking configuration for this request. Optional.
-    ///
-    /// <b>Error codes</b>
-    /// - \b 100: Pool {pool_key} does not contain custom data key {key}. You can configure matchmaking custom data at https://dashboard.oculus.com/application/&lt;app_id&gt;/matchmaking
-    /// - \b 12072: Unknown pool: {pool_key}. You can configure matchmaking pools at https://dashboard.oculus.com/application/&lt;app_id&gt;/matchmaking
-    ///
-    public static Request<Models.MatchmakingBrowseResult> Browse2(string pool, MatchmakingOptions matchmakingOptions = null)
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request<Models.MatchmakingBrowseResult>(CAPI.ovr_Matchmaking_Browse2(pool, (IntPtr)matchmakingOptions));
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    /// \param pool The pool in question.
-    /// \param requestHash Used to find your entry in a queue.
-    ///
-    /// <b>Error codes</b>
-    /// - \b 10: Room {room_id}: The user does not have permission to {cannot_action} because the user is currently in another room (perhaps on another device), and thus is no longer in this room. Users can only be in one room at a time. If they are active on two different devices at once, there will be undefined behavior.
-    /// - \b 10: Room {room_id}: The user does not have permission to {cannot_action} because the user is not in the room (or any room). Perhaps they already left, or they stopped heartbeating. If this is a test environment, make sure you are not using the deprecated initialization methods ovr_PlatformInitializeStandaloneAccessToken (C++)/StandalonePlatform.Initialize(accessToken) (C#).
-    /// - \b 10: Room {room_id}: The user does not have permission to {cannot_action} because the user is not the owner of the room.
-    /// - \b 100: Invalid room_id: {room_id}. Either the ID is not a valid room or the user does not have permission to see or act on the room.
-    ///
-    public static Request Cancel(string pool, string requestHash)
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request(CAPI.ovr_Matchmaking_Cancel(pool, requestHash));
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    ///
-    /// Modes: QUICKMATCH, BROWSE
-    ///
-    /// Makes a best effort to cancel a previous Enqueue request before a match
-    /// occurs. Typically triggered when a user gives up waiting. For BROWSE mode,
-    /// call this when a user gives up looking through the room list or when the
-    /// host of a room wants to stop receiving new users. If you don't cancel but
-    /// the user goes offline, the user/room will be timed out of the queue within
-    /// 30 seconds.
-    ///
-    /// <b>Error codes</b>
-    /// - \b 10: Room {room_id}: The user does not have permission to {cannot_action} because the user is currently in another room (perhaps on another device), and thus is no longer in this room. Users can only be in one room at a time. If they are active on two different devices at once, there will be undefined behavior.
-    /// - \b 10: Room {room_id}: The user does not have permission to {cannot_action} because the user is not in the room (or any room). Perhaps they already left, or they stopped heartbeating. If this is a test environment, make sure you are not using the deprecated initialization methods ovr_PlatformInitializeStandaloneAccessToken (C++)/StandalonePlatform.Initialize(accessToken) (C#).
-    /// - \b 10: Room {room_id}: The user does not have permission to {cannot_action} because the user is not the owner of the room.
-    /// - \b 100: Invalid room_id: {room_id}. Either the ID is not a valid room or the user does not have permission to see or act on the room.
-    ///
-    public static Request Cancel()
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request(CAPI.ovr_Matchmaking_Cancel2());
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    /// \param pool The matchmaking pool to use, which is defined for the app.
-    /// \param maxUsers Overrides the Max Users value, which is configured in pool settings of the Developer Dashboard.
-    /// \param subscribeToUpdates If true, sends a message with type MessageType.Notification_Room_RoomUpdate when the room data changes, such as when users join or leave.
-    /// \param customQueryData Optional.  See "Custom criteria" section above.
-    ///
-    /// <b>Error codes</b>
-    /// - \b 100: Pool {pool_key} does not contain custom data key {key}. You can configure matchmaking custom data at https://dashboard.oculus.com/application/&lt;app_id&gt;/matchmaking
-    /// - \b 12051: Pool '{pool_key}' is configured for Quickmatch mode. In Quickmatch mode, rooms are created on users' behalf when a match is found. Specify Advanced Quickmatch or Browse mode to use this feature.
-    /// - \b 12072: Unknown pool: {pool_key}. You can configure matchmaking pools at https://dashboard.oculus.com/application/&lt;app_id&gt;/matchmaking
-    /// - \b 12089: You have asked to enqueue {num_users} users together, but this must be less than the maximum number of users in a room, {max_users}.
-    ///
-    public static Request<Models.MatchmakingEnqueueResultAndRoom> CreateAndEnqueueRoom(string pool, uint maxUsers, bool subscribeToUpdates = false, CustomQuery customQueryData = null)
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request<Models.MatchmakingEnqueueResultAndRoom>(CAPI.ovr_Matchmaking_CreateAndEnqueueRoom(pool, maxUsers, subscribeToUpdates, customQueryData != null ? customQueryData.ToUnmanaged() : IntPtr.Zero));
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    ///
-    /// Modes: BROWSE, QUICKMATCH (Advanced; Can Users Create Rooms = true)
-    ///
-    /// See overview documentation above.
-    ///
-    /// Create a matchmaking room, join it, and enqueue it. This is the preferred
-    /// method. But, if you do not wish to automatically enqueue the room, you can
-    /// call CreateRoom2 instead.
-    ///
-    /// Visit https://dashboard.oculus.com/application/[YOUR_APP_ID]/matchmaking to
-    /// set up pools and queries
-    /// \param pool The matchmaking pool to use, which is defined for the app.
-    /// \param matchmakingOptions Additional matchmaking configuration for this request. Optional.
-    ///
-    /// <b>Error codes</b>
-    /// - \b 100: Pool {pool_key} does not contain custom data key {key}. You can configure matchmaking custom data at https://dashboard.oculus.com/application/&lt;app_id&gt;/matchmaking
-    /// - \b 12051: Pool '{pool_key}' is configured for Quickmatch mode. In Quickmatch mode, rooms are created on users' behalf when a match is found. Specify Advanced Quickmatch or Browse mode to use this feature.
-    /// - \b 12072: Unknown pool: {pool_key}. You can configure matchmaking pools at https://dashboard.oculus.com/application/&lt;app_id&gt;/matchmaking
-    /// - \b 12089: You have asked to enqueue {num_users} users together, but this must be less than the maximum number of users in a room, {max_users}.
-    ///
-    public static Request<Models.MatchmakingEnqueueResultAndRoom> CreateAndEnqueueRoom2(string pool, MatchmakingOptions matchmakingOptions = null)
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request<Models.MatchmakingEnqueueResultAndRoom>(CAPI.ovr_Matchmaking_CreateAndEnqueueRoom2(pool, (IntPtr)matchmakingOptions));
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    /// \param pool The matchmaking pool to use, which is defined for the app.
-    /// \param maxUsers Overrides the Max Users value, which is configured in pool settings of the Developer Dashboard.
-    /// \param subscribeToUpdates If true, sends a message with type MessageType.Notification_Room_RoomUpdate when room data changes, such as when users join or leave.
-    ///
-    public static Request<Models.Room> CreateRoom(string pool, uint maxUsers, bool subscribeToUpdates = false)
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request<Models.Room>(CAPI.ovr_Matchmaking_CreateRoom(pool, maxUsers, subscribeToUpdates));
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    ///
-    /// Create a matchmaking room and join it, but do not enqueue the room. After
-    /// creation, you can call EnqueueRoom2. However, Oculus recommends using
-    /// CreateAndEnqueueRoom2 instead.
-    ///
-    /// Modes: BROWSE, QUICKMATCH (Advanced; Can Users Create Rooms = true)
-    ///
-    /// Create a matchmaking room and join it, but do not enqueue the room. After
-    /// creation, you can call EnqueueRoom. Consider using CreateAndEnqueueRoom
-    /// instead.
-    ///
-    /// Visit https://dashboard.oculus.com/application/[YOUR_APP_ID]/matchmaking to
-    /// set up pools and queries
-    /// \param pool The matchmaking pool to use, which is defined for the app.
-    /// \param matchmakingOptions Additional matchmaking configuration for this request. Optional.
-    ///
-    public static Request<Models.Room> CreateRoom2(string pool, MatchmakingOptions matchmakingOptions = null)
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request<Models.Room>(CAPI.ovr_Matchmaking_CreateRoom2(pool, (IntPtr)matchmakingOptions));
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    /// \param pool The pool to enqueue in.
-    /// \param customQueryData Optional.  See "Custom criteria" section above.
-    ///
-    /// <b>Error codes</b>
-    /// - \b 100: Pool {pool_key} does not contain custom data key {key}. You can configure matchmaking custom data at https://dashboard.oculus.com/application/&lt;app_id&gt;/matchmaking
-    /// - \b 12072: Unknown pool: {pool_key}. You can configure matchmaking pools at https://dashboard.oculus.com/application/&lt;app_id&gt;/matchmaking
-    ///
-    public static Request<Models.MatchmakingEnqueueResult> Enqueue(string pool, CustomQuery customQueryData = null)
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request<Models.MatchmakingEnqueueResult>(CAPI.ovr_Matchmaking_Enqueue(pool, customQueryData != null ? customQueryData.ToUnmanaged() : IntPtr.Zero));
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    ///
-    /// Modes: QUICKMATCH
-    ///
-    /// See overview documentation above.
-    ///
-    /// Enqueue yourself to await an available matchmaking room. The platform
-    /// returns a MessageType.Notification_Matchmaking_MatchFound message when a
-    /// match is found. Call Rooms.Join2() on the returned room. The response
-    /// contains useful information to display to the user to set expectations for
-    /// how long it will take to get a match.
-    ///
-    /// If the user stops waiting, call Matchmaking.Cancel().
-    /// \param pool The pool to enqueue in.
-    /// \param matchmakingOptions Additional matchmaking configuration for this request. Optional.
-    ///
-    /// <b>Error codes</b>
-    /// - \b 100: Pool {pool_key} does not contain custom data key {key}. You can configure matchmaking custom data at https://dashboard.oculus.com/application/&lt;app_id&gt;/matchmaking
-    /// - \b 12072: Unknown pool: {pool_key}. You can configure matchmaking pools at https://dashboard.oculus.com/application/&lt;app_id&gt;/matchmaking
-    ///
-    public static Request<Models.MatchmakingEnqueueResult> Enqueue2(string pool, MatchmakingOptions matchmakingOptions = null)
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request<Models.MatchmakingEnqueueResult>(CAPI.ovr_Matchmaking_Enqueue2(pool, (IntPtr)matchmakingOptions));
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    /// \param roomID Returned either from MessageType.Notification_Matchmaking_MatchFound or from Matchmaking.CreateRoom().
-    /// \param customQueryData Optional.  See the "Custom criteria" section above.
-    ///
-    /// <b>Error codes</b>
-    /// - \b 10: Room {room_id}: The user does not have permission to {cannot_action} because the user is currently in another room (perhaps on another device), and thus is no longer in this room. Users can only be in one room at a time. If they are active on two different devices at once, there will be undefined behavior.
-    /// - \b 10: Room {room_id}: The user does not have permission to {cannot_action} because the user is not in the room (or any room). Perhaps they already left, or they stopped heartbeating. If this is a test environment, make sure you are not using the deprecated initialization methods ovr_PlatformInitializeStandaloneAccessToken (C++)/StandalonePlatform.Initialize(accessToken) (C#).
-    /// - \b 10: Room {room_id}: The user does not have permission to {cannot_action} because the user is not the owner of the room.
-    /// - \b 100: Invalid room_id: {room_id}. Either the ID is not a valid room or the user does not have permission to see or act on the room.
-    /// - \b 12051: Pool '{pool_key}' is configured for Quickmatch mode. In Quickmatch mode, rooms are created on users' behalf when a match is found. Specify Advanced Quickmatch or Browse mode to use this feature.
-    ///
-    public static Request<Models.MatchmakingEnqueueResult> EnqueueRoom(UInt64 roomID, CustomQuery customQueryData = null)
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request<Models.MatchmakingEnqueueResult>(CAPI.ovr_Matchmaking_EnqueueRoom(roomID, customQueryData != null ? customQueryData.ToUnmanaged() : IntPtr.Zero));
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    ///
-    /// Modes: BROWSE (for Rooms only), ROOM
-    ///
-    /// See the overview documentation above. Enqueue yourself to await an
-    /// available matchmaking room. MessageType.Notification_Matchmaking_MatchFound
-    /// gets enqueued when a match is found.
-    ///
-    /// The response contains useful information to display to the user to set
-    /// expectations for how long it will take to get a match.
-    ///
-    /// If the user stops waiting, call Matchmaking.Cancel().
-    /// \param roomID Returned either from MessageType.Notification_Matchmaking_MatchFound or from Matchmaking.CreateRoom().
-    /// \param matchmakingOptions Additional matchmaking configuration for this request. Optional.
-    ///
-    /// <b>Error codes</b>
-    /// - \b 10: Room {room_id}: The user does not have permission to {cannot_action} because the user is currently in another room (perhaps on another device), and thus is no longer in this room. Users can only be in one room at a time. If they are active on two different devices at once, there will be undefined behavior.
-    /// - \b 10: Room {room_id}: The user does not have permission to {cannot_action} because the user is not in the room (or any room). Perhaps they already left, or they stopped heartbeating. If this is a test environment, make sure you are not using the deprecated initialization methods ovr_PlatformInitializeStandaloneAccessToken (C++)/StandalonePlatform.Initialize(accessToken) (C#).
-    /// - \b 10: Room {room_id}: The user does not have permission to {cannot_action} because the user is not the owner of the room.
-    /// - \b 100: Invalid room_id: {room_id}. Either the ID is not a valid room or the user does not have permission to see or act on the room.
-    /// - \b 12051: Pool '{pool_key}' is configured for Quickmatch mode. In Quickmatch mode, rooms are created on users' behalf when a match is found. Specify Advanced Quickmatch or Browse mode to use this feature.
-    ///
-    public static Request<Models.MatchmakingEnqueueResult> EnqueueRoom2(UInt64 roomID, MatchmakingOptions matchmakingOptions = null)
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request<Models.MatchmakingEnqueueResult>(CAPI.ovr_Matchmaking_EnqueueRoom2(roomID, (IntPtr)matchmakingOptions));
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    ///
-    /// Modes: QUICKMATCH, BROWSE
-    ///
-    /// Used to debug the state of the current matchmaking pool queue. This is not
-    /// intended to be used in production.
-    ///
-    public static Request<Models.MatchmakingAdminSnapshot> GetAdminSnapshot()
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request<Models.MatchmakingAdminSnapshot>(CAPI.ovr_Matchmaking_GetAdminSnapshot());
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    /// \param roomID ID of a room previously returned from MessageType.Notification_Matchmaking_MatchFound or Matchmaking.Browse().
-    /// \param subscribeToUpdates If true, sends a message with type MessageType.Notification_Room_RoomUpdate when room data changes, such as when users join or leave.
-    ///
-    public static Request<Models.Room> JoinRoom(UInt64 roomID, bool subscribeToUpdates = false)
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request<Models.Room>(CAPI.ovr_Matchmaking_JoinRoom(roomID, subscribeToUpdates));
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    ///
-    /// Modes: QUICKMATCH, BROWSE (+ Skill Pool)
-    ///
-    /// For pools with skill-based matching. See overview documentation above.
-    ///
-    /// Call after calling Rooms.Join2() when the players are present to begin a
-    /// rated match for which you plan to report the results (using
-    /// Matchmaking.ReportResultInsecure()).
-    ///
-    /// <b>Error codes</b>
-    /// - \b 100: There is no active match associated with the room {room_id}.
-    /// - \b 100: You can only start matches, report matches, and track skill ratings in matchmaking rooms. {room_id} is a room, but it is not a matchmaking room.
-    ///
-    public static Request StartMatch(UInt64 roomID)
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request(CAPI.ovr_Matchmaking_StartMatch(roomID));
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    ///
-    /// Indicates that a match has been found, for example after calling
-    /// Matchmaking.Enqueue(). Use Message.GetRoom() to extract the matchmaking
-    /// room.
-    ///
-    public static void SetMatchFoundNotificationCallback(Message<Models.Room>.Callback callback)
-    {
-      Callback.SetNotificationCallback(
-        Message.MessageType.Notification_Matchmaking_MatchFound,
-        callback
-      );
-    }
-
-  }
-
   public static partial class Media
   {
     /// Launch the Share to Facebook modal via a deeplink to Home on Gear VR,
@@ -2328,70 +1582,8 @@ namespace Oculus.Platform
 
   }
 
-  public static partial class Net
-  {
-    /// DEPRECATED. Will be removed from headers at version v51.
-    ///
-    /// Indicates that a connection has been established or there's been an error.
-    /// Use NetworkingPeer.GetState() to get the result; as above,
-    /// NetworkingPeer.GetID() returns the ID of the peer this message is for.
-    ///
-    public static void SetConnectionStateChangedCallback(Message<Models.NetworkingPeer>.Callback callback)
-    {
-      Callback.SetNotificationCallback(
-        Message.MessageType.Notification_Networking_ConnectionStateChange,
-        callback
-      );
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    ///
-    /// Indicates that another user is attempting to establish a P2P connection
-    /// with us. Use NetworkingPeer.GetID() to extract the ID of the peer.
-    ///
-    public static void SetPeerConnectRequestCallback(Message<Models.NetworkingPeer>.Callback callback)
-    {
-      Callback.SetNotificationCallback(
-        Message.MessageType.Notification_Networking_PeerConnectRequest,
-        callback
-      );
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    ///
-    /// Generated in response to Net.Ping(). Either contains ping time in
-    /// microseconds or indicates that there was a timeout.
-    ///
-    public static void SetPingResultNotificationCallback(Message<Models.PingResult>.Callback callback)
-    {
-      Callback.SetNotificationCallback(
-        Message.MessageType.Notification_Networking_PingResult,
-        callback
-      );
-    }
-
-  }
-
   public static partial class Notifications
   {
-    /// DEPRECATED. Will be removed from headers at version v51.
-    ///
-    /// Retrieve a list of all pending room invites for your application (for
-    /// example, notifications that may have been sent before the user launched
-    /// your game). You can also get push notifications with
-    /// MessageType.Notification_Room_InviteReceived.
-    ///
-    public static Request<Models.RoomInviteNotificationList> GetRoomInviteNotifications()
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request<Models.RoomInviteNotificationList>(CAPI.ovr_Notification_GetRoomInvites());
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
     /// Mark a notification as read. This causes it to disappear from the Universal
     /// Menu, the Oculus App, Oculus Home, and in-app retrieval.
     ///
@@ -2478,457 +1670,6 @@ namespace Oculus.Platform
 
   }
 
-  public static partial class Rooms
-  {
-    /// DEPRECATED. Will be removed from headers at version v51.
-    /// \param joinPolicy Specifies who can join the room without an invite.
-    /// \param maxUsers The maximum number of users allowed in the room, including the creator.
-    /// \param subscribeToUpdates If true, sends a message with type MessageType.Notification_Room_RoomUpdate when room data changes, such as when users join or leave.
-    ///
-    /// <b>Error codes</b>
-    /// - \b 100: Something went wrong.
-    /// - \b 12037: Rooms cannot allow more than {limit} users to join. Please set the max users to a lower amount.
-    ///
-    public static Request<Models.Room> CreateAndJoinPrivate(RoomJoinPolicy joinPolicy, uint maxUsers, bool subscribeToUpdates = false)
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request<Models.Room>(CAPI.ovr_Room_CreateAndJoinPrivate(joinPolicy, maxUsers, subscribeToUpdates));
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    ///
-    /// Creates a new private (client controlled) room and adds the caller to it.
-    /// This type of room is good for matches where the user wants to play with
-    /// friends, as they're primarially discoverable by examining which rooms your
-    /// bidirectional followers are in.
-    /// \param joinPolicy Specifies who can join the room without an invite.
-    /// \param maxUsers The maximum number of users allowed in the room, including the creator.
-    /// \param roomOptions Additional room configuration for this request. Optional.
-    ///
-    /// <b>Error codes</b>
-    /// - \b 100: Something went wrong.
-    /// - \b 12037: Rooms cannot allow more than {limit} users to join. Please set the max users to a lower amount.
-    ///
-    public static Request<Models.Room> CreateAndJoinPrivate2(RoomJoinPolicy joinPolicy, uint maxUsers, RoomOptions roomOptions)
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request<Models.Room>(CAPI.ovr_Room_CreateAndJoinPrivate2(joinPolicy, maxUsers, (IntPtr)roomOptions));
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    ///
-    /// Allows arbitrary rooms for the application to be loaded.
-    /// \param roomID The room to load.
-    ///
-    public static Request<Models.Room> Get(UInt64 roomID)
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request<Models.Room>(CAPI.ovr_Room_Get(roomID));
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    ///
-    /// Easy loading of the room you're currently in. If you don't want live
-    /// updates on your current room (by using subscribeToUpdates), you can use
-    /// this to refresh the data.
-    ///
-    public static Request<Models.Room> GetCurrent()
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request<Models.Room>(CAPI.ovr_Room_GetCurrent());
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    ///
-    /// Allows the current room for a given user to be loaded. Remember that the
-    /// user's privacy settings may not allow their room to be loaded. Because of
-    /// this, it's often possible to load the users in a room, but not to take
-    /// those users and load their room.
-    /// \param userID ID of the user for which to load the room.
-    ///
-    public static Request<Models.Room> GetCurrentForUser(UInt64 userID)
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request<Models.Room>(CAPI.ovr_Room_GetCurrentForUser(userID));
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    ///
-    public static Request<Models.UserList> GetInvitableUsers()
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request<Models.UserList>(CAPI.ovr_Room_GetInvitableUsers());
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    ///
-    /// Loads a list of users you can invite to a room. These are pulled from your
-    /// bidirectional followers list and recently met lists and filtered for
-    /// relevance and interest. If the room cannot be joined, this list will be
-    /// empty. By default, the invitable users returned will be for the user's
-    /// current room.
-    ///
-    /// If your application grouping was created after September 9 2017, recently
-    /// met users will be included by default. If your application grouping was
-    /// created before then, you can go to edit the setting in the "Rooms and
-    /// Matchmaking" section of Platform Services at dashboard.oculus.com
-    ///
-    /// Customization can be done via RoomOptions. Create this object with
-    /// RoomOptions(). The params that could be used are:
-    ///
-    /// 1. RoomOptions.SetRoomId()- will return the invitable users for this room
-    /// (instead of the current room).
-    ///
-    /// 2. RoomOptions.SetOrdering() - returns the list of users in the provided
-    /// ordering (see UserOrdering enum).
-    ///
-    /// 3. RoomOptions.SetRecentlyMetTimeWindow() - how long long ago should we
-    /// include users you've recently met in the results?
-    ///
-    /// 4. RoomOptions.SetMaxUserResults() - we will limit the number of results
-    /// returned. By default, the number is unlimited, but the server may choose to
-    /// limit results for performance reasons.
-    ///
-    /// 5. RoomOptions.SetExcludeRecentlyMet() - Don't include users recently in
-    /// rooms with this user in the result. Also, see the above comment.
-    ///
-    /// Example custom C++ usage:
-    ///
-    ///   auto roomOptions = ovr_RoomOptions_Create();
-    ///   ovr_RoomOptions_SetOrdering(roomOptions, ovrUserOrdering_PresenceAlphabetical);
-    ///   ovr_RoomOptions_SetRoomId(roomOptions, roomID);
-    ///   ovr_Room_GetInvitableUsers2(roomOptions);
-    ///   ovr_RoomOptions_Destroy(roomOptions);
-    /// \param roomOptions Additional configuration for this request. Optional.
-    ///
-    public static Request<Models.UserList> GetInvitableUsers2(RoomOptions roomOptions = null)
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request<Models.UserList>(CAPI.ovr_Room_GetInvitableUsers2((IntPtr)roomOptions));
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    ///
-    /// Fetches the list of moderated rooms created for the application.
-    ///
-    public static Request<Models.RoomList> GetModeratedRooms()
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request<Models.RoomList>(CAPI.ovr_Room_GetModeratedRooms());
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    ///
-    /// Invites a user to the specified room. They will receive a notification via
-    /// MessageType.Notification_Room_InviteReceived if they are in your game,
-    /// and/or they can poll for room invites using
-    /// Notifications.GetRoomInviteNotifications().
-    /// \param roomID The ID of your current room.
-    /// \param inviteToken A user's invite token, returned by Rooms.GetInvitableUsers().
-    ///
-    /// <b>Error codes</b>
-    /// - \b 100: The invite token has expired, the user will need to be reinvited to the room.
-    /// - \b 100: The target user cannot join you in your current experience
-    /// - \b 100: You cannot send an invite to a room you are not in
-    ///
-    public static Request<Models.Room> InviteUser(UInt64 roomID, string inviteToken)
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request<Models.Room>(CAPI.ovr_Room_InviteUser(roomID, inviteToken));
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    ///
-    /// Joins the target room (leaving the one you're currently in).
-    /// \param roomID The room to join.
-    /// \param subscribeToUpdates If true, sends a message with type MessageType.Notification_Room_RoomUpdate when room data changes, such as when users join or leave.
-    ///
-    /// <b>Error codes</b>
-    /// - \b 10: The room you're attempting to join is currently locked. Please try again later.
-    /// - \b 10: You don't have permission to enter this room. You may need to be invited first.
-    /// - \b 100: Invalid room_id: {room_id}. Either the ID is not a valid room or the user does not have permission to see or act on the room.
-    /// - \b 100: The room you're attempting to join is full. Please try again later.
-    /// - \b 100: This game isn't available. If it already started or was canceled, you can host a new game at any point.
-    ///
-    public static Request<Models.Room> Join(UInt64 roomID, bool subscribeToUpdates = false)
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request<Models.Room>(CAPI.ovr_Room_Join(roomID, subscribeToUpdates));
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    ///
-    /// Joins the target room (leaving the one you're currently in).
-    /// \param roomID The room to join.
-    /// \param roomOptions Additional room configuration for this request. Optional.
-    ///
-    /// <b>Error codes</b>
-    /// - \b 10: The room you're attempting to join is currently locked. Please try again later.
-    /// - \b 10: You don't have permission to enter this room. You may need to be invited first.
-    /// - \b 100: Invalid room_id: {room_id}. Either the ID is not a valid room or the user does not have permission to see or act on the room.
-    /// - \b 100: The room you're attempting to join is full. Please try again later.
-    /// - \b 100: This game isn't available. If it already started or was canceled, you can host a new game at any point.
-    ///
-    public static Request<Models.Room> Join2(UInt64 roomID, RoomOptions roomOptions)
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request<Models.Room>(CAPI.ovr_Room_Join2(roomID, (IntPtr)roomOptions));
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    ///
-    /// Allows the room owner to kick a user out of the current room.
-    /// \param roomID The room that you currently own (check Room.GetOwner()).
-    /// \param userID The user to be kicked (cannot be yourself).
-    /// \param kickDurationSeconds Length of the ban, in seconds.
-    ///
-    /// <b>Error codes</b>
-    /// - \b 10: Room {room_id}: The user does not have permission to {cannot_action} because the user is not in the room (or any room). Perhaps they already left, or they stopped heartbeating. If this is a test environment, make sure you are not using the deprecated initialization methods ovr_PlatformInitializeStandaloneAccessToken (C++)/StandalonePlatform.Initialize(accessToken) (C#).
-    /// - \b 10: Room {room_id}: The user does not have permission to {cannot_action} because the user is not the owner of the room.
-    /// - \b 100: You cannot remove yourself from room {room_id}
-    ///
-    public static Request<Models.Room> KickUser(UInt64 roomID, UInt64 userID, int kickDurationSeconds)
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request<Models.Room>(CAPI.ovr_Room_KickUser(roomID, userID, kickDurationSeconds));
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    ///
-    /// Launch the invitable user flow to invite to the logged in user's current
-    /// room. This is intended to be a nice shortcut for developers not wanting to
-    /// build out their own Invite UI although it has the same rules as if you
-    /// build it yourself.
-    ///
-    public static Request LaunchInvitableUserFlow(UInt64 roomID)
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request(CAPI.ovr_Room_LaunchInvitableUserFlow(roomID));
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    ///
-    /// Removes you from your current room. Returns the solo room you are now in if
-    /// it succeeds
-    /// \param roomID The room you're currently in.
-    ///
-    /// <b>Error codes</b>
-    /// - \b 100: Something went wrong.
-    ///
-    public static Request<Models.Room> Leave(UInt64 roomID)
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request<Models.Room>(CAPI.ovr_Room_Leave(roomID));
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    ///
-    /// Allows the room owner to set the description of their room.
-    /// \param roomID The room that you currently own (check Room.GetOwner()).
-    /// \param description The new name of the room.
-    ///
-    /// <b>Error codes</b>
-    /// - \b 10: Room {room_id}: The user does not have permission to {cannot_action} because the user is currently in another room (perhaps on another device), and thus is no longer in this room. Users can only be in one room at a time. If they are active on two different devices at once, there will be undefined behavior.
-    /// - \b 10: Room {room_id}: The user does not have permission to {cannot_action} because the user is not in the room (or any room). Perhaps they already left, or they stopped heartbeating. If this is a test environment, make sure you are not using the deprecated initialization methods ovr_PlatformInitializeStandaloneAccessToken (C++)/StandalonePlatform.Initialize(accessToken) (C#).
-    /// - \b 10: Room {room_id}: The user does not have permission to {cannot_action} because the user is not the owner of the room.
-    ///
-    public static Request<Models.Room> SetDescription(UInt64 roomID, string description)
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request<Models.Room>(CAPI.ovr_Room_SetDescription(roomID, description));
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    ///
-    /// Disallow new members from being able to join the room. This will prevent
-    /// joins from Rooms.Join(), invites, 'Join From Home', etc. Users that are in
-    /// the room at the time of lockdown WILL be able to rejoin.
-    /// \param roomID The room whose membership you want to lock or unlock.
-    /// \param membershipLockStatus The new LockStatus for the room
-    ///
-    /// <b>Error codes</b>
-    /// - \b 10: Room {room_id}: The user does not have permission to {cannot_action} because the user is currently in another room (perhaps on another device), and thus is no longer in this room. Users can only be in one room at a time. If they are active on two different devices at once, there will be undefined behavior.
-    /// - \b 10: Room {room_id}: The user does not have permission to {cannot_action} because the user is not in the room (or any room). Perhaps they already left, or they stopped heartbeating. If this is a test environment, make sure you are not using the deprecated initialization methods ovr_PlatformInitializeStandaloneAccessToken (C++)/StandalonePlatform.Initialize(accessToken) (C#).
-    /// - \b 10: Room {room_id}: The user does not have permission to {cannot_action} because the user is not the owner of the room.
-    /// - \b 100: Invalid room_id: {room_id}. Either the ID is not a valid room or the user does not have permission to see or act on the room.
-    ///
-    public static Request<Models.Room> UpdateMembershipLockStatus(UInt64 roomID, RoomMembershipLockStatus membershipLockStatus)
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request<Models.Room>(CAPI.ovr_Room_UpdateMembershipLockStatus(roomID, membershipLockStatus));
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    ///
-    /// Allows the room owner to transfer ownership to someone else.
-    /// \param roomID The room that the user owns (check Room.GetOwner()).
-    /// \param userID The new user to make an owner; the user must be in the room.
-    ///
-    /// <b>Error codes</b>
-    /// - \b 10: Room {room_id}: The user does not have permission to {cannot_action} because the user is currently in another room (perhaps on another device), and thus is no longer in this room. Users can only be in one room at a time. If they are active on two different devices at once, there will be undefined behavior.
-    /// - \b 10: Room {room_id}: The user does not have permission to {cannot_action} because the user is not in the room (or any room). Perhaps they already left, or they stopped heartbeating. If this is a test environment, make sure you are not using the deprecated initialization methods ovr_PlatformInitializeStandaloneAccessToken (C++)/StandalonePlatform.Initialize(accessToken) (C#).
-    /// - \b 10: Room {room_id}: The user does not have permission to {cannot_action} because the user is not the owner of the room.
-    /// - \b 100: Parameter {parameter}: invalid user id: {user_id}
-    ///
-    public static Request UpdateOwner(UInt64 roomID, UInt64 userID)
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request(CAPI.ovr_Room_UpdateOwner(roomID, userID));
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    ///
-    /// Sets the join policy of the user's private room.
-    /// \param roomID The room ID that the user owns (check Room.GetOwner()).
-    /// \param newJoinPolicy The new join policy for the room.
-    ///
-    /// <b>Error codes</b>
-    /// - \b 10: Room {room_id}: The user does not have permission to {cannot_action} because the user is currently in another room (perhaps on another device), and thus is no longer in this room. Users can only be in one room at a time. If they are active on two different devices at once, there will be undefined behavior.
-    /// - \b 10: Room {room_id}: The user does not have permission to {cannot_action} because the user is not in the room (or any room). Perhaps they already left, or they stopped heartbeating. If this is a test environment, make sure you are not using the deprecated initialization methods ovr_PlatformInitializeStandaloneAccessToken (C++)/StandalonePlatform.Initialize(accessToken) (C#).
-    ///
-    public static Request<Models.Room> UpdatePrivateRoomJoinPolicy(UInt64 roomID, RoomJoinPolicy newJoinPolicy)
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request<Models.Room>(CAPI.ovr_Room_UpdatePrivateRoomJoinPolicy(roomID, newJoinPolicy));
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    ///
-    /// Indicates that the user has accepted an invitation, for example in Oculus
-    /// Home. Use Message.GetString() to extract the ID of the room that the user
-    /// has been inivted to as a string. Then call ovrID_FromString() to parse it
-    /// into an ovrID.
-    ///
-    /// Note that you must call Rooms.Join() if you want to actually join the room.
-    ///
-    public static void SetRoomInviteAcceptedNotificationCallback(Message<string>.Callback callback)
-    {
-      Callback.SetNotificationCallback(
-        Message.MessageType.Notification_Room_InviteAccepted,
-        callback
-      );
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    ///
-    /// Handle this to notify the user when they've received an invitation to join
-    /// a room in your game. You can use this in lieu of, or in addition to,
-    /// polling for room invitations via
-    /// Notifications.GetRoomInviteNotifications().
-    ///
-    public static void SetRoomInviteReceivedNotificationCallback(Message<Models.RoomInviteNotification>.Callback callback)
-    {
-      Callback.SetNotificationCallback(
-        Message.MessageType.Notification_Room_InviteReceived,
-        callback
-      );
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    ///
-    /// Indicates that the current room has been updated. Use Message.GetRoom() to
-    /// extract the updated room.
-    ///
-    public static void SetUpdateNotificationCallback(Message<Models.Room>.Callback callback)
-    {
-      Callback.SetNotificationCallback(
-        Message.MessageType.Notification_Room_RoomUpdate,
-        callback
-      );
-    }
-
-  }
-
   public static partial class Users
   {
     /// Retrieve the user with the given ID. This might fail if the ID is invalid
@@ -3004,53 +1745,6 @@ namespace Oculus.Platform
       if (Core.IsInitialized())
       {
         return new Request<Models.UserList>(CAPI.ovr_User_GetLoggedInUserFriends());
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    /// DEPRECATED. Use Users.GetLoggedInUserFriends() instead Will be removed from
-    /// headers at version v51.
-    ///
-    /// Retrieve a list of the logged in user's bidirectional followers and any
-    /// rooms they might be in.
-    ///
-    public static Request<Models.UserAndRoomList> GetLoggedInUserFriendsAndRooms()
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request<Models.UserAndRoomList>(CAPI.ovr_User_GetLoggedInUserFriendsAndRooms());
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    /// DEPRECATED. Will be removed from headers at version v51.
-    ///
-    /// Returns a list of users that the logged in user was in a room with
-    /// recently, sorted by relevance, along with any rooms they might be in. All
-    /// you need to do to use this method is to use our Rooms API, and we will
-    /// track the number of times users are together, their most recent encounter,
-    /// and the amount of time they spend together.
-    ///
-    /// Customization can be done via UserOptions. Create this object with
-    /// UserOptions(). The params that could be used are:
-    ///
-    /// 1. UserOptions.SetTimeWindow() - how recently should the users have played?
-    /// The default is TimeWindow.ThirtyDays.
-    ///
-    /// 2. UserOptions.SetMaxUsers() - we will limit the number of results
-    /// returned. By default, the number is unlimited, but the server may choose to
-    /// limit results for performance reasons.
-    /// \param userOptions Additional configuration for this request. Optional.
-    ///
-    public static Request<Models.UserAndRoomList> GetLoggedInUserRecentlyMetUsersAndRooms(UserOptions userOptions = null)
-    {
-      if (Core.IsInitialized())
-      {
-        return new Request<Models.UserAndRoomList>(CAPI.ovr_User_GetLoggedInUserRecentlyMetUsersAndRooms((IntPtr)userOptions));
       }
 
       Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
@@ -3143,6 +1837,36 @@ namespace Oculus.Platform
       if (Core.IsInitialized())
       {
         return new Request<Models.LaunchUnblockFlowResult>(CAPI.ovr_User_LaunchUnblockFlow(userID));
+      }
+
+      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
+      return null;
+    }
+
+  }
+
+  public static partial class UserAgeCategory
+  {
+    /// Retrieve the user age category for the current user.
+    ///
+    public static Request<Models.UserAccountAgeCategory> Get()
+    {
+      if (Core.IsInitialized())
+      {
+        return new Request<Models.UserAccountAgeCategory>(CAPI.ovr_UserAgeCategory_Get());
+      }
+
+      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
+      return null;
+    }
+
+    /// Report the current user's age category to Meta.
+    ///
+    public static Request Report(AppAgeCategory age_category)
+    {
+      if (Core.IsInitialized())
+      {
+        return new Request(CAPI.ovr_UserAgeCategory_Report(age_category));
       }
 
       Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
@@ -3308,18 +2032,6 @@ namespace Oculus.Platform
       return null;
     }
 
-    /// Sent when another user is attempting to establish a VoIP connection. Use
-    /// Message.GetNetworkingPeer() to extract information about the user, and
-    /// Voip.Accept() to accept the connection.
-    ///
-    public static void SetVoipConnectRequestCallback(Message<Models.NetworkingPeer>.Callback callback)
-    {
-      Callback.SetNotificationCallback(
-        Message.MessageType.Notification_Voip_ConnectRequest,
-        callback
-      );
-    }
-
     /// Indicates that the current microphone availability state has been updated.
     /// Use Voip.GetMicrophoneAvailability() to extract the microphone availability
     /// state.
@@ -3328,18 +2040,6 @@ namespace Oculus.Platform
     {
       Callback.SetNotificationCallback(
         Message.MessageType.Notification_Voip_MicrophoneAvailabilityStateUpdate,
-        callback
-      );
-    }
-
-    /// Sent to indicate that the state of the VoIP connection changed. Use
-    /// Message.GetNetworkingPeer() and NetworkingPeer.GetState() to extract the
-    /// current state.
-    ///
-    public static void SetVoipStateChangeCallback(Message<Models.NetworkingPeer>.Callback callback)
-    {
-      Callback.SetNotificationCallback(
-        Message.MessageType.Notification_Voip_StateChange,
         callback
       );
     }
@@ -3422,30 +2122,6 @@ namespace Oculus.Platform
           CAPI.ovr_HTTP_GetWithMessageType(
             list.NextUrl,
             (int)Message.MessageType.Achievements_GetNextAchievementProgressArrayPage
-          )
-        );
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-  }
-
-  public static partial class CloudStorage {
-    public static Request<Models.CloudStorageMetadataList> GetNextCloudStorageMetadataListPage(Models.CloudStorageMetadataList list) {
-      if (!list.HasNextPage)
-      {
-        Debug.LogWarning("Oculus.Platform.GetNextCloudStorageMetadataListPage: List has no next page");
-        return null;
-      }
-
-      if (Core.IsInitialized())
-      {
-        return new Request<Models.CloudStorageMetadataList>(
-          CAPI.ovr_HTTP_GetWithMessageType(
-            list.NextUrl,
-            (int)Message.MessageType.CloudStorage_GetNextCloudStorageMetadataArrayPage
           )
         );
       }
@@ -3550,27 +2226,6 @@ namespace Oculus.Platform
   }
 
   public static partial class Notifications {
-    public static Request<Models.RoomInviteNotificationList> GetNextRoomInviteNotificationListPage(Models.RoomInviteNotificationList list) {
-      if (!list.HasNextPage)
-      {
-        Debug.LogWarning("Oculus.Platform.GetNextRoomInviteNotificationListPage: List has no next page");
-        return null;
-      }
-
-      if (Core.IsInitialized())
-      {
-        return new Request<Models.RoomInviteNotificationList>(
-          CAPI.ovr_HTTP_GetWithMessageType(
-            list.NextUrl,
-            (int)Message.MessageType.Notification_GetNextRoomInviteNotificationArrayPage
-          )
-        );
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
   }
 
   public static partial class RichPresence {
@@ -3597,30 +2252,6 @@ namespace Oculus.Platform
 
   }
 
-  public static partial class Rooms {
-    public static Request<Models.RoomList> GetNextRoomListPage(Models.RoomList list) {
-      if (!list.HasNextPage)
-      {
-        Debug.LogWarning("Oculus.Platform.GetNextRoomListPage: List has no next page");
-        return null;
-      }
-
-      if (Core.IsInitialized())
-      {
-        return new Request<Models.RoomList>(
-          CAPI.ovr_HTTP_GetWithMessageType(
-            list.NextUrl,
-            (int)Message.MessageType.Room_GetNextRoomArrayPage
-          )
-        );
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-  }
-
   public static partial class Users {
     public static Request<Models.BlockedUserList> GetNextBlockedUserListPage(Models.BlockedUserList list) {
       if (!list.HasNextPage)
@@ -3635,27 +2266,6 @@ namespace Oculus.Platform
           CAPI.ovr_HTTP_GetWithMessageType(
             list.NextUrl,
             (int)Message.MessageType.User_GetNextBlockedUserArrayPage
-          )
-        );
-      }
-
-      Debug.LogError(Oculus.Platform.Core.PlatformUninitializedError);
-      return null;
-    }
-
-    public static Request<Models.UserAndRoomList> GetNextUserAndRoomListPage(Models.UserAndRoomList list) {
-      if (!list.HasNextPage)
-      {
-        Debug.LogWarning("Oculus.Platform.GetNextUserAndRoomListPage: List has no next page");
-        return null;
-      }
-
-      if (Core.IsInitialized())
-      {
-        return new Request<Models.UserAndRoomList>(
-          CAPI.ovr_HTTP_GetWithMessageType(
-            list.NextUrl,
-            (int)Message.MessageType.User_GetNextUserAndRoomArrayPage
           )
         );
       }

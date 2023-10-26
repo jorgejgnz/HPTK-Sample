@@ -31,6 +31,12 @@ namespace Meta.WitAi.TTS.Events
         [Tooltip("Called when a audio clip is ready for playback")]
         public TTSClipEvent OnStreamReady = new TTSClipEvent();
 
+        [Tooltip("Called if/when an audio clip is adjusted")]
+        public TTSClipEvent OnStreamClipUpdate = new TTSClipEvent();
+
+        [Tooltip("Called when a audio clip is completely loaded")]
+        public TTSClipEvent OnStreamComplete = new TTSClipEvent();
+
         [Tooltip("Called when a audio clip stream has been cancelled")]
         public TTSClipEvent OnStreamCancel = new TTSClipEvent();
 

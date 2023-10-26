@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
  *
@@ -25,15 +25,22 @@ using System;
 [System.Serializable]
 public class OVRProjectSetupSettings : ScriptableObject
 {
-	[Serializable]
-	public class BoolProperties : SerializableDictionary<string, bool> {}
+    [Serializable]
+    public class BoolProperties : SerializableDictionary<string, bool>
+    {
+    }
 
-	private const string AssetName = "OculusProjectSetupSettings.asset";
+    private const string AssetName = "OculusProjectSetupSettings.asset";
 
     [SerializeField] private BoolProperties boolProperties = new BoolProperties();
 
     private static OVRProjectSetupSettings _config = null;
     private static string _configPath = null;
+
+    public bool HasBool(string key)
+    {
+        return boolProperties.ContainsKey(key);
+    }
 
     public bool GetProjectSetupBool(string key, bool defaultValue)
     {
@@ -48,49 +55,51 @@ public class OVRProjectSetupSettings : ScriptableObject
 
     public void SetProjectSetupBool(string key, bool value)
     {
-	    boolProperties[key] = value;
+        boolProperties[key] = value;
         EditorUtility.SetDirty(this);
     }
 
     public void RemoveProjectSetupBool(string key)
     {
-	    boolProperties.Remove(key);
+        boolProperties.Remove(key);
         EditorUtility.SetDirty(this);
     }
 
     private static string GetOculusProjectConfigAssetPath(bool refresh = false)
     {
-	    if (_configPath != null && !refresh)
-	    {
-		    return _configPath;
-	    }
+        if (_configPath != null && !refresh)
+        {
+            return _configPath;
+        }
 
-	    // Using the same Path logic as OVRProjectConfig
-	    _configPath = OVRProjectConfig.ComputeOculusProjectAssetPath(AssetName);
+        // Using the same Path logic as OVRProjectConfig
+        _configPath = OVRProjectConfig.ComputeOculusProjectAssetPath(AssetName);
         return _configPath;
     }
 
     public static OVRProjectSetupSettings GetProjectConfig(bool refresh = false, bool create = true)
     {
-	    if (_config != null && !refresh)
-	    {
-		    return _config;
-	    }
+        if (_config != null && !refresh)
+        {
+            return _config;
+        }
 
-        var oculusProjectConfigAssetPath = GetOculusProjectConfigAssetPath(refresh:false);
+        var oculusProjectConfigAssetPath = GetOculusProjectConfigAssetPath(refresh: false);
         try
         {
-	        _config = AssetDatabase.LoadAssetAtPath(oculusProjectConfigAssetPath, typeof(OVRProjectSetupSettings)) as OVRProjectSetupSettings;
+            _config = AssetDatabase.LoadAssetAtPath(oculusProjectConfigAssetPath,
+                typeof(OVRProjectSetupSettings)) as OVRProjectSetupSettings;
         }
         catch (System.Exception e)
         {
-            Debug.LogWarningFormat("Unable to load ProjectSetupConfig from {0}, error {1}", oculusProjectConfigAssetPath, e.Message);
+            Debug.LogWarningFormat("Unable to load ProjectSetupConfig from {0}, error {1}",
+                oculusProjectConfigAssetPath, e.Message);
         }
 
         if (_config == null && create && !BuildPipeline.isBuildingPlayer)
         {
-	        Debug.LogFormat("Creating ProjectSetupConfig at path {0}", oculusProjectConfigAssetPath);
-	        _config = ScriptableObject.CreateInstance<OVRProjectSetupSettings>();
+            Debug.LogFormat("Creating ProjectSetupConfig at path {0}", oculusProjectConfigAssetPath);
+            _config = ScriptableObject.CreateInstance<OVRProjectSetupSettings>();
             AssetDatabase.CreateAsset(_config, oculusProjectConfigAssetPath);
         }
 

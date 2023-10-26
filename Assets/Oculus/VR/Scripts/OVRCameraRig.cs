@@ -33,56 +33,105 @@ using Node = UnityEngine.XR.XRNode;
 /// A head-tracked stereoscopic virtual reality camera rig.
 /// </summary>
 [ExecuteInEditMode]
+[HelpURL("https://developer.oculus.com/reference/unity/latest/class_o_v_r_camera_rig")]
 public class OVRCameraRig : MonoBehaviour
 {
     /// <summary>
     /// The left eye camera.
     /// </summary>
-    public Camera leftEyeCamera { get { return (usePerEyeCameras) ? _leftEyeCamera : _centerEyeCamera; } }
+    public Camera leftEyeCamera
+    {
+        get { return (usePerEyeCameras) ? _leftEyeCamera : _centerEyeCamera; }
+    }
+
     /// <summary>
     /// The right eye camera.
     /// </summary>
-    public Camera rightEyeCamera { get { return (usePerEyeCameras) ? _rightEyeCamera : _centerEyeCamera; } }
+    public Camera rightEyeCamera
+    {
+        get { return (usePerEyeCameras) ? _rightEyeCamera : _centerEyeCamera; }
+    }
+
     /// <summary>
     /// Provides a root transform for all anchors in tracking space.
     /// </summary>
     public Transform trackingSpace { get; private set; }
+
     /// <summary>
     /// Always coincides with the pose of the left eye.
     /// </summary>
     public Transform leftEyeAnchor { get; private set; }
+
     /// <summary>
     /// Always coincides with average of the left and right eye poses.
     /// </summary>
     public Transform centerEyeAnchor { get; private set; }
+
     /// <summary>
     /// Always coincides with the pose of the right eye.
     /// </summary>
     public Transform rightEyeAnchor { get; private set; }
+
     /// <summary>
-    /// Always coincides with the pose of the left hand.
+    /// Always coincides with the pose of the left active input device.
     /// </summary>
     public Transform leftHandAnchor { get; private set; }
+
     /// <summary>
-    /// Always coincides with the pose of the right hand.
+    /// Always coincides with the pose of the right active input device.
     /// </summary>
     public Transform rightHandAnchor { get; private set; }
+
+    /// <summary>
+    /// Coincides with the pose of the left input device if it is detached.
+    /// </summary>
+    public Transform leftHandAnchorDetached { get; private set; }
+
+    /// <summary>
+    /// Coincides with the pose of the left input device if it is detached.
+    /// </summary>
+    public Transform rightHandAnchorDetached { get; private set; }
+
+    /// <summary>
+    /// Coincides with the pose of the left controller when it is in a hand
+    /// </summary>
+    public Transform leftControllerInHandAnchor { get; private set; }
+
+    /// <summary>
+    /// Coincides with the pose of the left hand when it is on a controller
+    /// </summary>
+    public Transform leftHandOnControllerAnchor { get; private set; }
+
+    /// <summary>
+    /// Coincides with the pose of the right controller when it is in a hand
+    /// </summary>
+    public Transform rightControllerInHandAnchor { get; private set; }
+
+    /// <summary>
+    /// Coincides with the pose of the right hand when it is on a controller
+    /// </summary>
+    public Transform rightHandOnControllerAnchor { get; private set; }
+
     /// <summary>
     /// Anchors controller pose to fix offset issues for the left hand.
     /// </summary>
     public Transform leftControllerAnchor { get; private set; }
+
     /// <summary>
     /// Anchors controller pose to fix offset issues for the right hand.
     /// </summary>
     public Transform rightControllerAnchor { get; private set; }
+
     /// <summary>
     /// Always coincides with the pose of the sensor.
     /// </summary>
     public Transform trackerAnchor { get; private set; }
+
     /// <summary>
     /// Occurs when the eye pose anchors have been set.
     /// </summary>
     public event System.Action<OVRCameraRig> UpdatedAnchors;
+
     /// <summary>
     /// Occurs when the <see cref="trackingSpace"/>'s transform changes.
     /// </summary>
@@ -91,16 +140,19 @@ public class OVRCameraRig : MonoBehaviour
     /// <see cref="trackingSpace"/> property.
     /// </remarks>
     public event Action<Transform> TrackingSpaceChanged;
+
     /// <summary>
     /// If true, separate cameras will be used for the left and right eyes.
     /// </summary>
     public bool usePerEyeCameras = false;
+
     /// <summary>
     /// If true, all tracked anchors are updated in FixedUpdate instead of Update to favor physics fidelity.
     /// \note: This will cause visible judder unless you tick exactly once per frame using a custom physics
     /// update, because you'll be sampling the position at different times into each frame.
     /// </summary>
     public bool useFixedUpdateForTracking = false;
+
     /// <summary>
     /// If true, the cameras on the eyeAnchors will be disabled.
     /// \note: The main camera of the game will be used to provide VR rendering. And the tracking space anchors will still be updated to provide reference poses.
@@ -118,13 +170,20 @@ public class OVRCameraRig : MonoBehaviour
     protected readonly string rightHandAnchorName = "RightHandAnchor";
     protected readonly string leftControllerAnchorName = "LeftControllerAnchor";
     protected readonly string rightControllerAnchorName = "RightControllerAnchor";
+    protected readonly string leftHandAnchorDetachedName = "LeftHandAnchorDetached";
+    protected readonly string rightHandAnchorDetachedName = "RightHandAnchorDetached";
+    protected readonly string leftControllerInHandAnchorName = "LeftControllerInHandAnchor";
+    protected readonly string leftHandOnControllerAnchorName = "LeftHandOnControllerAnchor";
+    protected readonly string rightControllerInHandAnchorName = "RightControllerInHandAnchor";
+    protected readonly string rightHandOnControllerAnchorName = "RightHandOnControllerAnchor";
     protected Camera _centerEyeCamera;
     protected Camera _leftEyeCamera;
     protected Camera _rightEyeCamera;
 
     private Matrix4x4 _previousTrackingSpaceTransform;
 
-#region Unity Messages
+    #region Unity Messages
+
     protected virtual void Awake()
     {
         _skipUpdate = true;
@@ -159,7 +218,8 @@ public class OVRCameraRig : MonoBehaviour
     {
         Application.onBeforeRender -= OnBeforeRenderCallback;
     }
-#endregion
+
+    #endregion
 
     protected virtual void UpdateAnchors(bool updateEyeAnchors, bool updateHandAnchors)
     {
@@ -187,7 +247,9 @@ public class OVRCameraRig : MonoBehaviour
 
         trackerAnchor.localRotation = tracker.orientation;
 
-        Quaternion emulatedRotation = Quaternion.Euler(-OVRManager.instance.headPoseRelativeOffsetRotation.x, -OVRManager.instance.headPoseRelativeOffsetRotation.y, OVRManager.instance.headPoseRelativeOffsetRotation.z);
+        Quaternion emulatedRotation = Quaternion.Euler(-OVRManager.instance.headPoseRelativeOffsetRotation.x,
+            -OVRManager.instance.headPoseRelativeOffsetRotation.y,
+            OVRManager.instance.headPoseRelativeOffsetRotation.z);
 
         //Note: in the below code, when using UnityEngine's API, we only update anchor transforms if we have a new, fresh value this frame.
         //If we don't, it could mean that tracking is lost, etc. so the pose should not change in the virtual world.
@@ -200,9 +262,12 @@ public class OVRCameraRig : MonoBehaviour
                 Vector3 centerEyePosition = Vector3.zero;
                 Quaternion centerEyeRotation = Quaternion.identity;
 
-                if (OVRNodeStateProperties.GetNodeStatePropertyVector3(Node.CenterEye, NodeStatePropertyType.Position, OVRPlugin.Node.EyeCenter, OVRPlugin.Step.Render, out centerEyePosition))
+                if (OVRNodeStateProperties.GetNodeStatePropertyVector3(Node.CenterEye, NodeStatePropertyType.Position,
+                        OVRPlugin.Node.EyeCenter, OVRPlugin.Step.Render, out centerEyePosition))
                     centerEyeAnchor.localPosition = centerEyePosition;
-                if (OVRNodeStateProperties.GetNodeStatePropertyQuaternion(Node.CenterEye, NodeStatePropertyType.Orientation, OVRPlugin.Node.EyeCenter, OVRPlugin.Step.Render, out centerEyeRotation))
+                if (OVRNodeStateProperties.GetNodeStatePropertyQuaternion(Node.CenterEye,
+                        NodeStatePropertyType.Orientation, OVRPlugin.Node.EyeCenter, OVRPlugin.Step.Render,
+                        out centerEyeRotation))
                     centerEyeAnchor.localRotation = centerEyeRotation;
             }
             else
@@ -225,13 +290,19 @@ public class OVRCameraRig : MonoBehaviour
                 Quaternion leftEyeRotation = Quaternion.identity;
                 Quaternion rightEyeRotation = Quaternion.identity;
 
-                if (OVRNodeStateProperties.GetNodeStatePropertyVector3(Node.LeftEye, NodeStatePropertyType.Position, OVRPlugin.Node.EyeLeft, OVRPlugin.Step.Render, out leftEyePosition))
+                if (OVRNodeStateProperties.GetNodeStatePropertyVector3(Node.LeftEye, NodeStatePropertyType.Position,
+                        OVRPlugin.Node.EyeLeft, OVRPlugin.Step.Render, out leftEyePosition))
                     leftEyeAnchor.localPosition = leftEyePosition;
-                if (OVRNodeStateProperties.GetNodeStatePropertyVector3(Node.RightEye, NodeStatePropertyType.Position, OVRPlugin.Node.EyeRight, OVRPlugin.Step.Render, out rightEyePosition))
+                if (OVRNodeStateProperties.GetNodeStatePropertyVector3(Node.RightEye, NodeStatePropertyType.Position,
+                        OVRPlugin.Node.EyeRight, OVRPlugin.Step.Render, out rightEyePosition))
                     rightEyeAnchor.localPosition = rightEyePosition;
-                if (OVRNodeStateProperties.GetNodeStatePropertyQuaternion(Node.LeftEye, NodeStatePropertyType.Orientation, OVRPlugin.Node.EyeLeft, OVRPlugin.Step.Render, out leftEyeRotation))
+                if (OVRNodeStateProperties.GetNodeStatePropertyQuaternion(Node.LeftEye,
+                        NodeStatePropertyType.Orientation, OVRPlugin.Node.EyeLeft, OVRPlugin.Step.Render,
+                        out leftEyeRotation))
                     leftEyeAnchor.localRotation = leftEyeRotation;
-                if (OVRNodeStateProperties.GetNodeStatePropertyQuaternion(Node.RightEye, NodeStatePropertyType.Orientation, OVRPlugin.Node.EyeRight, OVRPlugin.Step.Render, out rightEyeRotation))
+                if (OVRNodeStateProperties.GetNodeStatePropertyQuaternion(Node.RightEye,
+                        NodeStatePropertyType.Orientation, OVRPlugin.Node.EyeRight, OVRPlugin.Step.Render,
+                        out rightEyeRotation))
                     rightEyeAnchor.localRotation = rightEyeRotation;
             }
         }
@@ -246,22 +317,120 @@ public class OVRCameraRig : MonoBehaviour
                 Quaternion leftQuat = Quaternion.identity;
                 Quaternion rightQuat = Quaternion.identity;
 
-                if (OVRNodeStateProperties.GetNodeStatePropertyVector3(Node.LeftHand, NodeStatePropertyType.Position, OVRPlugin.Node.HandLeft, OVRPlugin.Step.Render, out leftPos))
+                if (OVRNodeStateProperties.GetNodeStatePropertyVector3(Node.LeftHand, NodeStatePropertyType.Position,
+                        OVRPlugin.Node.HandLeft, OVRPlugin.Step.Render, out leftPos))
                     leftHandAnchor.localPosition = leftPos;
-                if (OVRNodeStateProperties.GetNodeStatePropertyVector3(Node.RightHand, NodeStatePropertyType.Position, OVRPlugin.Node.HandRight, OVRPlugin.Step.Render, out rightPos))
+                if (OVRNodeStateProperties.GetNodeStatePropertyVector3(Node.RightHand, NodeStatePropertyType.Position,
+                        OVRPlugin.Node.HandRight, OVRPlugin.Step.Render, out rightPos))
                     rightHandAnchor.localPosition = rightPos;
-                if (OVRNodeStateProperties.GetNodeStatePropertyQuaternion(Node.LeftHand, NodeStatePropertyType.Orientation, OVRPlugin.Node.HandLeft, OVRPlugin.Step.Render, out leftQuat))
+                if (OVRNodeStateProperties.GetNodeStatePropertyQuaternion(Node.LeftHand,
+                        NodeStatePropertyType.Orientation, OVRPlugin.Node.HandLeft, OVRPlugin.Step.Render,
+                        out leftQuat))
                     leftHandAnchor.localRotation = leftQuat;
-                if (OVRNodeStateProperties.GetNodeStatePropertyQuaternion(Node.RightHand, NodeStatePropertyType.Orientation, OVRPlugin.Node.HandRight, OVRPlugin.Step.Render, out rightQuat))
+                if (OVRNodeStateProperties.GetNodeStatePropertyQuaternion(Node.RightHand,
+                        NodeStatePropertyType.Orientation, OVRPlugin.Node.HandRight, OVRPlugin.Step.Render,
+                        out rightQuat))
                     rightHandAnchor.localRotation = rightQuat;
-
             }
             else
             {
-                leftHandAnchor.localPosition = OVRInput.GetLocalControllerPosition(OVRInput.Controller.LTouch);
-                rightHandAnchor.localPosition = OVRInput.GetLocalControllerPosition(OVRInput.Controller.RTouch);
-                leftHandAnchor.localRotation = OVRInput.GetLocalControllerRotation(OVRInput.Controller.LTouch);
-                rightHandAnchor.localRotation = OVRInput.GetLocalControllerRotation(OVRInput.Controller.RTouch);
+                OVRInput.Controller leftActiveController =
+                    OVRInput.GetActiveControllerForHand(OVRInput.Handedness.LeftHanded);
+                OVRInput.Controller rightActiveController =
+                    OVRInput.GetActiveControllerForHand(OVRInput.Handedness.RightHanded);
+
+                // it's possible for niether hands or controllers to be active, in that case
+                // manually calculate which one we care about giving hands priority.
+                if (leftActiveController == OVRInput.Controller.None)
+                {
+                    if (OVRInput.GetControllerPositionValid(OVRInput.Controller.LHand))
+                    {
+                        leftActiveController = OVRInput.Controller.LHand;
+                    }
+                    else if (OVRInput.GetControllerPositionValid(OVRInput.Controller.LTouch))
+                    {
+                        leftActiveController = OVRInput.Controller.LTouch;
+                    }
+                }
+                if (rightActiveController == OVRInput.Controller.None)
+                {
+                    if (OVRInput.GetControllerPositionValid(OVRInput.Controller.RHand))
+                    {
+                        rightActiveController = OVRInput.Controller.RHand;
+                    }
+                    else if (OVRInput.GetControllerPositionValid(OVRInput.Controller.RTouch))
+                    {
+                        rightActiveController = OVRInput.Controller.RTouch;
+                    }
+                }
+
+                leftHandAnchor.localPosition = OVRInput.GetLocalControllerPosition(leftActiveController);
+                rightHandAnchor.localPosition = OVRInput.GetLocalControllerPosition(rightActiveController);
+                leftHandAnchor.localRotation = OVRInput.GetLocalControllerRotation(leftActiveController);
+                rightHandAnchor.localRotation = OVRInput.GetLocalControllerRotation(rightActiveController);
+
+                // left
+                OVRInput.ControllerInHandState controllerInHandState =
+                    OVRInput.GetControllerIsInHandState(OVRInput.Hand.HandLeft);
+                if (controllerInHandState == OVRInput.ControllerInHandState.ControllerNotInHand)
+                {
+                    leftHandAnchorDetached.localPosition =
+                        OVRInput.GetLocalControllerPosition(OVRInput.Controller.LTouch);
+                    leftHandAnchorDetached.localRotation =
+                        OVRInput.GetLocalControllerRotation(OVRInput.Controller.LTouch);
+                    leftHandOnControllerAnchor.localPosition = Vector3.zero;
+                    leftHandOnControllerAnchor.localRotation = Quaternion.identity;
+                }
+                else if (controllerInHandState == OVRInput.ControllerInHandState.ControllerInHand)
+                {
+                    Vector3 leftRelativeHandPosition =
+                        trackingSpace.TransformPoint(OVRInput.GetLocalControllerPosition(OVRInput.Controller.LHand));
+                    leftHandOnControllerAnchor.localPosition =
+                        leftHandAnchor.InverseTransformPoint(leftRelativeHandPosition);
+                    leftHandOnControllerAnchor.localRotation = Quaternion.Inverse(leftHandAnchor.localRotation) *
+                                                               OVRInput.GetLocalControllerRotation(OVRInput.Controller
+                                                                   .LHand);
+                    leftHandAnchorDetached.localPosition = Vector3.zero;
+                    leftHandAnchorDetached.localRotation = Quaternion.identity;
+                }
+                else
+                {
+                    leftHandAnchorDetached.localPosition = Vector3.zero;
+                    leftHandAnchorDetached.localRotation = Quaternion.identity;
+                    leftHandOnControllerAnchor.localPosition = Vector3.zero;
+                    leftHandOnControllerAnchor.localRotation = Quaternion.identity;
+                }
+
+                // right
+                controllerInHandState = OVRInput.GetControllerIsInHandState(OVRInput.Hand.HandRight);
+                if (controllerInHandState == OVRInput.ControllerInHandState.ControllerNotInHand)
+                {
+                    rightHandAnchorDetached.localPosition =
+                        OVRInput.GetLocalControllerPosition(OVRInput.Controller.RTouch);
+                    rightHandAnchorDetached.localRotation =
+                        OVRInput.GetLocalControllerRotation(OVRInput.Controller.RTouch);
+                    rightHandOnControllerAnchor.localPosition = Vector3.zero;
+                    rightHandOnControllerAnchor.localRotation = Quaternion.identity;
+                }
+                else if (controllerInHandState == OVRInput.ControllerInHandState.ControllerInHand)
+                {
+                    Vector3 rightRelativeHandPosition =
+                        trackingSpace.TransformPoint(OVRInput.GetLocalControllerPosition(OVRInput.Controller.RHand));
+                    rightHandOnControllerAnchor.localPosition =
+                        rightHandAnchor.InverseTransformPoint(rightRelativeHandPosition);
+                    rightHandOnControllerAnchor.localRotation = Quaternion.Inverse(rightHandAnchor.localRotation) *
+                                                                OVRInput.GetLocalControllerRotation(OVRInput.Controller
+                                                                    .RHand);
+                    rightHandAnchorDetached.localPosition = Vector3.zero;
+                    rightHandAnchorDetached.localRotation = Quaternion.identity;
+                }
+                else
+                {
+                    rightHandAnchorDetached.localPosition = Vector3.zero;
+                    rightHandAnchorDetached.localRotation = Quaternion.identity;
+                    rightHandOnControllerAnchor.localPosition = Vector3.zero;
+                    rightHandOnControllerAnchor.localRotation = Quaternion.identity;
+                }
             }
 
             trackerAnchor.localPosition = tracker.position;
@@ -279,6 +448,7 @@ public class OVRCameraRig : MonoBehaviour
                     Quaternion.Inverse(trackingSpace.rotation) * leftControllerAnchor.rotation,
                     Quaternion.Inverse(trackingSpace.rotation) * rightControllerAnchor.rotation);
             }
+
             rightControllerAnchor.localPosition = rightOffsetPose.position;
             rightControllerAnchor.localRotation = rightOffsetPose.orientation;
             leftControllerAnchor.localPosition = leftOffsetPose.position;
@@ -292,7 +462,8 @@ public class OVRCameraRig : MonoBehaviour
             XRDisplaySubsystem displaySubsystem = OVRManager.GetCurrentDisplaySubsystem();
             if (displaySubsystem != null)
             {
-                displaySubsystem.MarkTransformLateLatched(centerEyeAnchor.transform, XRDisplaySubsystem.LateLatchNode.Head);
+                displaySubsystem.MarkTransformLateLatched(centerEyeAnchor.transform,
+                    XRDisplaySubsystem.LateLatchNode.Head);
                 displaySubsystem.MarkTransformLateLatched(leftHandAnchor, XRDisplaySubsystem.LateLatchNode.LeftHand);
                 displaySubsystem.MarkTransformLateLatched(rightHandAnchor, XRDisplaySubsystem.LateLatchNode.RightHand);
             }
@@ -305,7 +476,7 @@ public class OVRCameraRig : MonoBehaviour
 
     protected virtual void OnBeforeRenderCallback()
     {
-        if (OVRManager.loadedXRDevice == OVRManager.XRDevice.Oculus)			//Restrict late-update to only Oculus devices
+        if (OVRManager.loadedXRDevice == OVRManager.XRDevice.Oculus) //Restrict late-update to only Oculus devices
         {
             bool controllersNeedUpdate = OVRManager.instance.LateControllerUpdate;
 #if USING_XR_SDK
@@ -336,7 +507,7 @@ public class OVRCameraRig : MonoBehaviour
 
         var currentLocalToWorld = trackingSpace.localToWorldMatrix;
         var shouldRaiseEvent = TrackingSpaceChanged != null &&
-                                   !_previousTrackingSpaceTransform.Equals(currentLocalToWorld);
+                               !_previousTrackingSpaceTransform.Equals(currentLocalToWorld);
         _previousTrackingSpaceTransform = currentLocalToWorld;
 
         if (shouldRaiseEvent)
@@ -377,6 +548,24 @@ public class OVRCameraRig : MonoBehaviour
 
         if (rightHandAnchor == null)
             rightHandAnchor = ConfigureAnchor(trackingSpace, rightHandAnchorName);
+
+        if (leftHandAnchorDetached == null)
+            leftHandAnchorDetached = ConfigureAnchor(trackingSpace, leftHandAnchorDetachedName);
+
+        if (rightHandAnchorDetached == null)
+            rightHandAnchorDetached = ConfigureAnchor(trackingSpace, rightHandAnchorDetachedName);
+
+        if (leftControllerInHandAnchor == null)
+            leftControllerInHandAnchor = ConfigureAnchor(leftHandAnchor, leftControllerInHandAnchorName);
+
+        if (leftHandOnControllerAnchor == null)
+            leftHandOnControllerAnchor = ConfigureAnchor(leftControllerInHandAnchor, leftHandOnControllerAnchorName);
+
+        if (rightControllerInHandAnchor == null)
+            rightControllerInHandAnchor = ConfigureAnchor(rightHandAnchor, rightControllerInHandAnchorName);
+
+        if (rightHandOnControllerAnchor == null)
+            rightHandOnControllerAnchor = ConfigureAnchor(rightControllerInHandAnchor, rightHandOnControllerAnchorName);
 
         if (trackerAnchor == null)
             trackerAnchor = ConfigureAnchor(trackingSpace, trackerAnchorName);
@@ -442,8 +631,8 @@ public class OVRCameraRig : MonoBehaviour
         {
             // disable the right eye camera when in monoscopic mode
             if (_centerEyeCamera.enabled == usePerEyeCameras ||
-                    _leftEyeCamera.enabled == !usePerEyeCameras ||
-                    _rightEyeCamera.enabled == !(usePerEyeCameras && (!monoscopic || OVRPlugin.EyeTextureArrayEnabled)))
+                _leftEyeCamera.enabled == !usePerEyeCameras ||
+                _rightEyeCamera.enabled == !(usePerEyeCameras && (!monoscopic || OVRPlugin.EyeTextureArrayEnabled)))
             {
                 _skipUpdate = true;
             }
@@ -451,7 +640,6 @@ public class OVRCameraRig : MonoBehaviour
             _centerEyeCamera.enabled = !usePerEyeCameras;
             _leftEyeCamera.enabled = usePerEyeCameras;
             _rightEyeCamera.enabled = (usePerEyeCameras && (!monoscopic || OVRPlugin.EyeTextureArrayEnabled));
-
         }
     }
 
@@ -492,9 +680,11 @@ public class OVRCameraRig : MonoBehaviour
 
         Vector3 pos;
         Quaternion rot;
-        if (OVRNodeStateProperties.GetNodeStatePropertyVector3(Node.Head, NodeStatePropertyType.Position, OVRPlugin.Node.Head, OVRPlugin.Step.Render, out pos))
+        if (OVRNodeStateProperties.GetNodeStatePropertyVector3(Node.Head, NodeStatePropertyType.Position,
+                OVRPlugin.Node.Head, OVRPlugin.Step.Render, out pos))
             headPose.position = pos;
-        if (OVRNodeStateProperties.GetNodeStatePropertyQuaternion(Node.Head, NodeStatePropertyType.Orientation, OVRPlugin.Node.Head, OVRPlugin.Step.Render, out rot))
+        if (OVRNodeStateProperties.GetNodeStatePropertyQuaternion(Node.Head, NodeStatePropertyType.Orientation,
+                OVRPlugin.Node.Head, OVRPlugin.Step.Render, out rot))
             headPose.orientation = rot;
 
         OVRPose invHeadPose = headPose.Inverse();

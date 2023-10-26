@@ -84,7 +84,7 @@ namespace Meta.WitAi.Data.Entities
         {
             int index = entities.FindIndex(e => e.entity == dynamicEntity.entity);
             if(index < 0) entities.Add(dynamicEntity);
-            else Debug.LogWarning($"Cannot add entity, registry already has an entry for {dynamicEntity.entity}");
+            else VLog.W($"Cannot add entity, registry already has an entry for {dynamicEntity.entity}");
         }
 
         public void Remove(WitDynamicEntity dynamicEntity)

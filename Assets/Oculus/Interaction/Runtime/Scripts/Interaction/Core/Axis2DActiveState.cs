@@ -40,7 +40,7 @@ namespace Oculus.Interaction
         }
 
         [SerializeField, Interface(typeof(IAxis2D))]
-        private MonoBehaviour _inputAxis;
+        private UnityEngine.Object _inputAxis;
         private IAxis2D InputAxis { get; set; }
 
         [SerializeField]

@@ -9,10 +9,11 @@
 using UnityEditor;
 using System.Reflection;
 using Meta.WitAi.Data.Configuration;
-using UnityEngine;
+using Meta.WitAi.Data.Info;
 
 namespace Meta.WitAi.Windows
 {
+    [CustomPropertyDrawer(typeof(WitEntityInfo))]
     public class WitEntityPropertyDrawer : WitPropertyDrawer
     {
         // Use name value for title if possible
@@ -59,8 +60,8 @@ namespace Meta.WitAi.Windows
             {
                 return;
             }
-            
-            var assemblyWalker = WitConfigurationEditor.AssemblyWalker;
+
+            var assemblyWalker = ConduitManifestGenerationManager.GetInstance(configuration).AssemblyWalker;
             if (assemblyWalker == null)
             {
                 return;
@@ -78,7 +79,7 @@ namespace Meta.WitAi.Windows
                     VLog.W($"Failed to local source code for {entityName}");
                     return;
                 }
-                
+
                 UnityEditorInternal.InternalEditorUtility.OpenFileAtLineExternal(sourceCodeFile, 1);
             }
         }

@@ -14,13 +14,15 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading;
+using Meta.Voice;
 using Meta.WitAi.Configuration;
 using Meta.WitAi.Data;
 using Meta.WitAi.Data.Configuration;
 using Meta.WitAi.Json;
 using Meta.WitAi.Requests;
+using Meta.WitAi.Utilities;
 using UnityEngine;
-using UnityEngine.Networking;
+
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -33,87 +35,120 @@ namespace Meta.WitAi
     /// Note: This is not intended to be instantiated directly. Requests should be created with the
     /// WitRequestFactory
     /// </summary>
-    public class WitRequest
+    public class WitRequest : VoiceServiceRequest
     {
+        #region PARAMETERS
         /// <summary>
-        /// Error code thrown when an exception is caught during processing or
-        /// some other general error happens that is not an error from the server
+        /// The wit Configuration to be used with this request
         /// </summary>
-        public const int ERROR_CODE_GENERAL = -1;
-
+        public WitConfiguration Configuration { get; private set; }
         /// <summary>
-        /// Error code returned when no configuration is defined
+        /// The request timeout in ms
         /// </summary>
-        public const int ERROR_CODE_NO_CONFIGURATION = -2;
-
+        public int TimeoutMs { get; private set; } = 1000;
         /// <summary>
-        /// Error code returned when the client token has not been set in the
-        /// Wit configuration.
+        /// Encoding settings for audio based requests
         /// </summary>
-        public const int ERROR_CODE_NO_CLIENT_TOKEN = -3;
-
-        /// <summary>
-        /// No data was returned from the server.
-        /// </summary>
-        public const int ERROR_CODE_NO_DATA_FROM_SERVER = -4;
+        public AudioEncoding AudioEncoding { get; set; }
+        [Obsolete("Deprecated for AudioEncoding")]
+        public AudioEncoding audioEncoding
+        {
+            get => AudioEncoding;
+            set => AudioEncoding = value;
+        }
 
         /// <summary>
-        /// Invalid data was returned from the server.
+        /// Endpoint to be used for this request
         /// </summary>
-        public const int ERROR_CODE_INVALID_DATA_FROM_SERVER = -5;
-
+        public string Path { get; private set; }
         /// <summary>
-        /// Request was aborted
+        /// Final portion of the endpoint Path
         /// </summary>
-        public const int ERROR_CODE_ABORTED = -6;
-
+        public string Command { get; private set; }
         /// <summary>
-        /// Request to the server timeed out
+        /// Whether a post command should be called
         /// </summary>
-        public const int ERROR_CODE_TIMEOUT = -7;
-
-        private IWitRequestConfiguration configuration;
-        public bool shouldPost;
-
-        private string command;
-        private string path;
-
-        public QueryParam[] queryParams;
-
-        private HttpWebRequest _request;
-        private Stream _writeStream;
-
-        private WitResponseNode responseData;
-
-        private bool isActive;
-        private bool responseStarted;
+        public bool IsPost { get; private set; }
+        /// <summary>
+        /// Key value pair that is sent as a query param in the Wit.ai uri
+        /// </summary>
+        [Obsolete("Deprecated for Options.QueryParams")]
+        public VoiceServiceRequestOptions.QueryParam[] queryParams
+        {
+            get
+            {
+                List<VoiceServiceRequestOptions.QueryParam> results = new List<VoiceServiceRequestOptions.QueryParam>();
+                foreach (var key in Options?.QueryParams?.Keys)
+                {
+                    VoiceServiceRequestOptions.QueryParam p = new VoiceServiceRequestOptions.QueryParam()
+                    {
+                        key = key,
+                        value = Options?.QueryParams[key]
+                    };
+                    results.Add(p);
+                }
+                return results.ToArray();
+            }
+        }
 
         public byte[] postData;
         public string postContentType;
-        public string requestIdOverride;
         public string forcedHttpMethodType = null;
+        #endregion PARAMETERS
 
-        private object streamLock = new object();
+        #region REQUEST
+        /// <summary>
+        /// Returns true if the request is being performed
+        /// </summary>
+        public bool IsRequestStreamActive => IsActive || IsInputStreamReady;
+        /// <summary>
+        /// Returns true if the response had begun
+        /// </summary>
+        public bool HasResponseStarted { get; private set; }
+        /// <summary>
+        /// Returns true if the response had begun
+        /// </summary>
+        public bool IsInputStreamReady { get; private set; }
 
-        private int bytesWritten;
-        private bool requestRequiresBody;
+        public AudioDurationTracker audioDurationTracker;
+        private HttpWebRequest _request;
+        private Stream _writeStream;
+        private object _streamLock = new object();
+        private int _bytesWritten;
+        private string _stackTrace;
+        private DateTime _requestStartTime;
+        private ConcurrentQueue<byte[]> _writeBuffer = new ConcurrentQueue<byte[]>();
+        #endregion REQUEST
+
+        #region RESULTS
+        /// <summary>
+        /// The current status of the request
+        /// </summary>
+        public string StatusDescription { get; private set; }
 
         /// <summary>
-        /// Callback called when a response is received from the server off a partial transcription
+        /// Simply return the Path to be called
         /// </summary>
-        public event Action<WitRequest> onPartialResponse;
+        public override string ToString() => Path;
 
         /// <summary>
-        /// Callback called when a response is received from the server
+        /// Last response data parsed
         /// </summary>
-        public event Action<WitRequest> onResponse;
+        private WitResponseNode _lastResponseData;
+        #endregion RESULTS
 
+        #region EVENTS
+        /// <summary>
+        /// Provides an opportunity to provide custom headers for the request just before it is
+        /// executed.
+        /// </summary>
+        public event OnProvideCustomHeadersEvent onProvideCustomHeaders;
+        public delegate Dictionary<string, string> OnProvideCustomHeadersEvent();
         /// <summary>
         /// Callback called when the server is ready to receive data from the WitRequest's input
         /// stream. See WitRequest.Write()
         /// </summary>
-        public Action<WitRequest> onInputStreamReady;
-
+        public event Action<WitRequest> onInputStreamReady;
         /// <summary>
         /// Returns the raw string response that was received before converting it to a JSON object.
         ///
@@ -124,21 +159,11 @@ namespace Meta.WitAi
         public Action<string> onRawResponse;
 
         /// <summary>
-        /// Returns a partial utterance from an in process request
-        ///
-        /// NOTE: This response comes back on a different thread.
+        /// Provides an opportunity to customize the url just before a request executed
         /// </summary>
-        public Action<string> onPartialTranscription;
-
-        /// <summary>
-        /// Returns a full utterance from a completed request
-        ///
-        /// NOTE: This response comes back on a different thread.
-        /// </summary>
-        public Action<string> onFullTranscription;
-
-        public delegate void PreSendRequestDelegate(ref Uri src_uri, out Dictionary<string,string> headers);
-
+        [Obsolete("Deprecated for WitVRequest.OnProvideCustomUri")]
+        public OnCustomizeUriEvent onCustomizeUri;
+        public delegate Uri OnCustomizeUriEvent(UriBuilder uriBuilder);
         /// <summary>
         /// Allows customization of the request before it is sent out.
         ///
@@ -147,198 +172,221 @@ namespace Meta.WitAi
         /// headers, url modifications, or customization of the request.
         /// </summary>
         public static PreSendRequestDelegate onPreSendRequest;
-
-        public delegate Uri OnCustomizeUriEvent(UriBuilder uriBuilder);
+        public delegate void PreSendRequestDelegate(ref Uri src_uri, out Dictionary<string,string> headers);
         /// <summary>
-        /// Provides an opportunity to customize the url just before a request executed
+        /// Returns a partial utterance from an in process request
+        ///
+        /// NOTE: This response comes back on a different thread.
         /// </summary>
-        public OnCustomizeUriEvent onCustomizeUri;
-
-        public delegate Dictionary<string, string> OnProvideCustomHeadersEvent();
+        [Obsolete("Deprecated for Events.OnPartialTranscription")]
+        public event Action<string> onPartialTranscription;
         /// <summary>
-        /// Provides an opportunity to provide custom headers for the request just before it is
-        /// executed.
+        /// Returns a full utterance from a completed request
+        ///
+        /// NOTE: This response comes back on a different thread.
         /// </summary>
-        public OnProvideCustomHeadersEvent onProvideCustomHeaders;
-
-        /// <summary>
-        /// Returns true if a request is pending. Will return false after data has been populated
-        /// from the response.
-        /// </summary>
-        public bool IsActive => isActive;
+        [Obsolete("Deprecated for Events.OnFullTranscription")]
+        public event Action<string> onFullTranscription;
 
         /// <summary>
-        /// JSON data that was received as a response from the server after onResponse has been
-        /// called
+        /// Callback called when a response is received from the server off a partial transcription
         /// </summary>
-        public WitResponseNode ResponseData => responseData;
-
+        [Obsolete("Deprecated for Events.OnPartialResponse")]
+        public event Action<WitRequest> onPartialResponse;
         /// <summary>
-        /// Encoding settings for audio based requests
+        /// Callback called when a response is received from the server
         /// </summary>
-        public AudioEncoding audioEncoding = new AudioEncoding();
+        [Obsolete("Deprecated for Events.OnComplete")]
+        public event Action<WitRequest> onResponse;
+        #endregion EVENTS
 
-        private int statusCode;
-        public int StatusCode => statusCode;
-
-        private string statusDescription;
-        private bool isRequestStreamActive;
-        public bool IsRequestStreamActive => IsActive && isRequestStreamActive;
-
-        public bool HasResponseStarted => responseStarted;
-
-        private bool isServerAuthRequired;
-        public string StatusDescription => statusDescription;
-
-        private int _timeoutMs;
-        public int Timeout => _timeoutMs;
-
-        private bool configurationRequired;
-        private string callingStackTrace;
-        private DateTime requestStartTime;
-        private ConcurrentQueue<byte[]> writeBuffer = new ConcurrentQueue<byte[]>();
-
-        public override string ToString()
+        #region INITIALIZATION
+        /// <summary>
+        /// Initialize wit request with configuration & path to endpoint
+        /// </summary>
+        /// <param name="newConfiguration"></param>
+        /// <param name="newOptions"></param>
+        /// <param name="newEvents"></param>
+        public WitRequest(WitConfiguration newConfiguration, string newPath,
+            WitRequestOptions newOptions, VoiceServiceRequestEvents newEvents)
+            : base(NLPRequestInputType.Audio, newOptions, newEvents)
         {
-            return path;
+            // Set Configuration & path
+            Configuration = newConfiguration;
+            Path = newPath;
+
+            // Finalize
+            _initialized = true;
+            SetState(VoiceRequestState.Initialized);
         }
-
-        public WitRequest(WitConfiguration configuration, string path,
-            params QueryParam[] queryParams)
+        /// <summary>
+        /// Only set state if initialized
+        /// </summary>
+        private bool _initialized = false;
+        protected override void SetState(VoiceRequestState newState)
         {
-            if (!configuration) throw new ArgumentException("Configuration is not set.");
-            configurationRequired = true;
-            this.configuration = configuration;
-            this._timeoutMs = configuration ? configuration.timeoutMS : 10000;
-            this.path = path;
-            this.queryParams = queryParams;
-            this.command = path.Split('/').First();
-            this.shouldPost = WitEndpointConfig.GetEndpointConfig(configuration).Speech == this.command ||
-                              WitEndpointConfig.GetEndpointConfig(configuration).Dictation == this.command;
-        }
-
-        public WitRequest(WitConfiguration configuration, string path, bool isServerAuthRequired,
-            params QueryParam[] queryParams)
-        {
-            if (!isServerAuthRequired && !configuration)
-                throw new ArgumentException("Configuration is not set.");
-            configurationRequired = true;
-            this.configuration = configuration;
-            this._timeoutMs = configuration ? configuration.timeoutMS : 10000;
-            this.isServerAuthRequired = isServerAuthRequired;
-            this.path = path;
-            this.queryParams = queryParams;
-            this.command = path.Split('/').First();
-            this.shouldPost = WitEndpointConfig.GetEndpointConfig(configuration).Speech == this.command ||
-                              WitEndpointConfig.GetEndpointConfig(configuration).Dictation == this.command;
-        }
-
-        public WitRequest(string serverToken, string path, params QueryParam[] queryParams)
-        {
-            configurationRequired = false;
-            this.isServerAuthRequired = true;
-            this.command = path.Split('/').First();
-            this.path = path;
-            this.queryParams = queryParams;
-            this._timeoutMs = 10000;
-            #if UNITY_EDITOR
-            this.configuration = new WitServerRequestConfiguration(serverToken);
-            #endif
+            if (_initialized)
+            {
+                base.SetState(newState);
+            }
         }
 
         /// <summary>
-        /// Key value pair that is sent as a query param in the Wit.ai uri
+        /// Finalize initialization
         /// </summary>
-        public class QueryParam
+        protected override void OnInit()
         {
-            public string key;
-            public string value;
+            // Determine configuration setting
+            TimeoutMs = Configuration == null ? TimeoutMs : Configuration.timeoutMS;
+
+            // Set request settings
+            Command = Path.Split('/').First();
+            IsPost = WitEndpointConfig.GetEndpointConfig(Configuration).Speech == this.Command
+                     || WitEndpointConfig.GetEndpointConfig(Configuration).Dictation == this.Command;
+
+            // Finalize bases
+            base.OnInit();
+        }
+        #endregion INITIALIZATION
+
+        #region AUDIO
+        // Handle audio activation
+        protected override void HandleAudioActivation()
+        {
+            SetAudioInputState(VoiceAudioInputState.On);
+        }
+        // Handle audio deactivation
+        protected override void HandleAudioDeactivation()
+        {
+            // If transmitting,
+            if (State == VoiceRequestState.Transmitting)
+            {
+                CloseRequestStream();
+            }
+            // Call deactivated
+            SetAudioInputState(VoiceAudioInputState.Off);
+        }
+        #endregion
+
+        #region REQUEST
+        // Errors that prevent request submission
+        protected override string GetSendError()
+        {
+            // No configuration found
+            if (Configuration == null)
+            {
+                return "Configuration is not set. Cannot start request.";
+            }
+            // Cannot start without client access token
+            if (string.IsNullOrEmpty(Configuration.GetClientAccessToken()))
+            {
+                return "Client access token is not defined. Cannot start request.";
+            }
+            // Cannot perform without input stream delegate
+            if (onInputStreamReady == null)
+            {
+                return "No input stream delegate found";
+            }
+            // Base
+            return base.GetSendError();
+        }
+        // Simple getter for final uri
+        private Uri GetUri()
+        {
+            // Get query parameters
+            Dictionary<string, string> queryParams = new Dictionary<string, string>(Options.QueryParams);
+
+            // Get uri using override
+            var uri = WitVRequest.GetWitUri(Configuration, Path, queryParams);
+            #pragma warning disable CS0618
+            if (onCustomizeUri != null)
+            {
+                #pragma warning disable CS0618
+                uri = onCustomizeUri(new UriBuilder(uri));
+            }
+
+            // Return uri
+            return uri;
+        }
+        // Simple getter for final uri
+        private Dictionary<string, string> GetHeaders()
+        {
+            // Get default headers
+            Dictionary<string, string> headers = WitVRequest.GetWitHeaders(Configuration, Options?.RequestId, false);
+
+            // Append additional headers
+            if (onProvideCustomHeaders != null)
+            {
+                foreach (OnProvideCustomHeadersEvent e in onProvideCustomHeaders.GetInvocationList())
+                {
+                    Dictionary<string, string> customHeaders = e();
+                    if (customHeaders != null)
+                    {
+                        foreach (var key in customHeaders.Keys)
+                        {
+                            headers[key] = customHeaders[key];
+                        }
+                    }
+                }
+            }
+
+            // Return headers
+            return headers;
         }
 
         /// <summary>
         /// Start the async request for data from the Wit.ai servers
         /// </summary>
-        public void Request()
+        protected override void HandleSend()
         {
-            responseStarted = false;
+            // Begin
+            HasResponseStarted = false;
 
-            Dictionary<string, string> requestParams = new Dictionary<string, string>();
-            foreach (var par in queryParams)
-            {
-                requestParams[par.key] = par.value;
-            }
-            Func<UriBuilder, Uri> provideUri = (uriBuilder) => onCustomizeUri == null ? uriBuilder.Uri : onCustomizeUri(uriBuilder);
-            WitVRequest.OnProvideCustomUri += provideUri;
-            var uri = WitVRequest.GetWitUri(configuration, path, requestParams);
-            WitVRequest.OnProvideCustomUri -= provideUri;
-            StartRequest(uri);
-        }
+            // Generate results
+            StatusCode = 0;
+            StatusDescription = "Starting request";
+            _bytesWritten = 0;
+            _requestStartTime = DateTime.UtcNow;
+            _stackTrace = "-";
 
-        private void StartRequest(Uri uri)
-        {
-            if (configuration == null && configurationRequired)
-            {
-                statusDescription = "Configuration is not set. Cannot start request.";
-                VLog.E(statusDescription);
-                statusCode = ERROR_CODE_NO_CONFIGURATION;
-                SafeInvoke(onResponse);
-                return;
-            }
+            // Get uri & headers
+            var uri = GetUri();
+            var headers = GetHeaders();
 
-            if (!isServerAuthRequired && string.IsNullOrEmpty(configuration.GetClientAccessToken()))
-            {
-                statusDescription = "Client access token is not defined. Cannot start request.";
-                VLog.E(statusDescription);
-                statusCode = ERROR_CODE_NO_CLIENT_TOKEN;
-                SafeInvoke(onResponse);
-                return;
-            }
-
-            // Get headers
-            Dictionary<string, string> headers = WitVRequest.GetWitHeaders(configuration, isServerAuthRequired);
-            if (!string.IsNullOrEmpty(requestIdOverride))
-            {
-                headers[WitConstants.HEADER_REQUEST_ID] = requestIdOverride;
-            }
-            // Append additional headers
-            if (onProvideCustomHeaders != null)
-            {
-                Dictionary<string, string> customHeaders = onProvideCustomHeaders();
-                if (customHeaders != null)
-                {
-                    foreach (var key in customHeaders.Keys)
-                    {
-                        headers[key] = customHeaders[key];
-                    }
-                }
-            }
             // Allow overrides
-            if (onPreSendRequest != null)
-            {
-                onPreSendRequest(ref uri, out headers);
-            }
+            onPreSendRequest?.Invoke(ref uri, out headers);
 
-            #if UNITY_WEBGL
+            #if UNITY_WEBGL && !UNITY_EDITOR
             StartUnityRequest(uri, headers);
             #else
+            #if UNITY_WEBGL && UNITY_EDITOR
+            if (IsPost)
+            {
+                VLog.W("Voice input is not supported in WebGL this functionality is fully enabled at edit time, but may not work at runtime.");
+            }
+            #endif
             StartThreadedRequest(uri, headers);
             #endif
         }
+        #endregion REQUEST
 
+        #region HTTP REQUEST
+        /// <summary>
+        /// Performs a threaded http request
+        /// </summary>
         private void StartThreadedRequest(Uri uri, Dictionary<string, string> headers)
         {
             // Create http web request
             _request = WebRequest.Create(uri.AbsoluteUri) as HttpWebRequest;
 
-            if (forcedHttpMethodType != null) {
+            // Off to not wait for a response indefinitely
+            _request.KeepAlive = false;
+
+            // Configure request method, content type & chunked
+            if (forcedHttpMethodType != null)
+            {
                 _request.Method = forcedHttpMethodType;
             }
-
-            #if UNITY_EDITOR
-            // Required for batch mode & to ensure connections close properly
-            _request.KeepAlive = false;
-            #endif
-
             if (null != postContentType)
             {
                 if (forcedHttpMethodType == null) {
@@ -347,316 +395,396 @@ namespace Meta.WitAi
                 _request.ContentType = postContentType;
                 _request.ContentLength = postData.Length;
             }
-
-            // Configure additional headers
-            if (shouldPost)
+            if (IsPost)
             {
-                _request.Method = forcedHttpMethodType == null ? "POST" : forcedHttpMethodType;
-                _request.ContentType = audioEncoding.ToString();
+                _request.Method = string.IsNullOrEmpty(forcedHttpMethodType) ? "POST" : forcedHttpMethodType;
+                _request.ContentType = AudioEncoding.ToString();
                 _request.SendChunked = true;
             }
 
-            requestRequiresBody = RequestRequiresBody(command);
-
-            // Set user agent
+            // Apply user agent
             if (headers.ContainsKey(WitConstants.HEADER_USERAGENT))
             {
                 _request.UserAgent = headers[WitConstants.HEADER_USERAGENT];
                 headers.Remove(WitConstants.HEADER_USERAGENT);
             }
-            // Apply all wit headers
-            if (headers != null)
+            // Apply all other headers
+            foreach (var key in headers.Keys)
             {
-                foreach (var key in headers.Keys)
-                {
-                    _request.Headers[key] = headers[key];
-                }
+                _request.Headers[key] = headers[key];
             }
 
-            requestStartTime = DateTime.UtcNow;
-            isActive = true;
-            statusCode = 0;
-            statusDescription = "Starting request";
-            _request.Timeout = Timeout;
+            // Apply timeout
+            _request.Timeout = TimeoutMs;
+
+            // Begin calling on main thread if needed
             WatchMainThreadCallbacks();
 
+            // Perform http post or put
             if (_request.Method == "POST" || _request.Method == "PUT")
             {
-                var getRequestTask = _request.BeginGetRequestStream(HandleRequestStream, _request);
+                var getRequestTask = _request.BeginGetRequestStream(HandleWriteStream, _request);
                 ThreadPool.RegisterWaitForSingleObject(getRequestTask.AsyncWaitHandle,
-                    HandleTimeoutTimer, _request, Timeout, true);
+                    HandleTimeoutMsTimer, _request, TimeoutMs, true);
             }
+            // Move right to response
             else
             {
                 StartResponse();
             }
         }
 
-        private void StartUnityRequest(Uri uri, Dictionary<string, string> headers)
-        {
-            UnityWebRequest request = new UnityWebRequest(uri, UnityWebRequest.kHttpVerbGET);
-
-            if (forcedHttpMethodType != null) {
-                request.method = forcedHttpMethodType;
-            }
-
-            if (null != postContentType)
-            {
-                if (forcedHttpMethodType == null)
-                {
-                    request.method = UnityWebRequest.kHttpVerbPOST;
-                }
-
-                request.uploadHandler = new UploadHandlerRaw(postData);
-                request.uploadHandler.contentType = postContentType;
-            }
-
-            // Configure additional headers
-            if (shouldPost)
-            {
-                request.method = string.IsNullOrEmpty(forcedHttpMethodType) ?
-                    UnityWebRequest.kHttpVerbPOST : forcedHttpMethodType;
-                request.SetRequestHeader("Content-Type", audioEncoding.ToString());
-            }
-
-            requestRequiresBody = RequestRequiresBody(command);
-
-            // Apply all wit headers
-            foreach (var header in headers)
-            {
-                request.SetRequestHeader(header.Key, header.Value);
-            }
-
-            requestStartTime = DateTime.UtcNow;
-            isActive = true;
-            statusCode = 0;
-            statusDescription = "Starting request";
-            request.timeout = Timeout;
-            request.downloadHandler = new DownloadHandlerBuffer();
-
-            if (request.method == UnityWebRequest.kHttpVerbPOST || request.method == UnityWebRequest.kHttpVerbPUT)
-            {
-                throw new NotImplementedException("Not yet implemented.");
-            }
-
-            VRequest performer = new VRequest();
-            performer.RequestText(request, OnUnityRequestComplete, OnUnityRequestProgress);
-        }
-
-        private void OnUnityRequestProgress(float progress)
-        {
-            VLog.D("Request Progress: " + progress);
-        }
-
-        private void OnUnityRequestComplete(string response, string error)
-        {
-            isActive = false;
-            responseStarted = false;
-            responseData = WitResponseNode.Parse(response);
-            statusCode = string.IsNullOrEmpty(error) ? 200 : 500;
-            statusDescription = error;
-            var responseString = response;
-            responseData = WitResponseNode.Parse(responseString);
-            try
-            {
-                onRawResponse?.Invoke(responseString);
-                onPartialResponse?.Invoke(this);
-                if (!string.IsNullOrEmpty(responseData.GetTranscription()))
-                {
-                    onFullTranscription?.Invoke(responseData.GetTranscription());
-                }
-            }
-            catch (Exception e)
-            {
-                VLog.E("Error parsing response: " + e + "\n" + responseString);
-                statusCode = ERROR_CODE_INVALID_DATA_FROM_SERVER;
-                statusDescription = "Error parsing response: " + e + "\n" + responseString;
-            }
-
-            onResponse?.Invoke(this);
-        }
-
-        private bool RequestRequiresBody(string command)
-        {
-            return shouldPost;
-        }
-
+        // Start response
         private void StartResponse()
         {
+            if (_request == null)
+            {
+                if (StatusCode == 0)
+                {
+                    StatusCode = WitConstants.ERROR_CODE_GENERAL;
+                    StatusDescription = $"Request canceled prior to start";
+                }
+                HandleFinalNlpResponse(null, StatusDescription);
+                return;
+            }
             var asyncResult = _request.BeginGetResponse(HandleResponse, _request);
-            ThreadPool.RegisterWaitForSingleObject(asyncResult.AsyncWaitHandle, HandleTimeoutTimer, _request, Timeout, true);
+            ThreadPool.RegisterWaitForSingleObject(asyncResult.AsyncWaitHandle, HandleTimeoutMsTimer, _request, TimeoutMs, true);
         }
 
-        private void HandleTimeoutTimer(object state, bool timeout)
+        // Handle timeout callback
+        private void HandleTimeoutMsTimer(object state, bool timeout)
         {
-            if (!timeout) return;
+            // Ignore false or too late
+            if (!timeout)
+            {
+                return;
+            }
+
+            // No longer active
+            StatusCode = WitConstants.ERROR_CODE_TIMEOUT;
 
             // Clean up the current request if it is still going
             if (null != _request)
             {
-                VLog.D("Request timed out after " + (DateTime.UtcNow - requestStartTime));
                 _request.Abort();
             }
 
-            isActive = false;
-
             // Close any open stream resources and clean up streaming state flags
-            CloseRequestStream();
+            CloseActiveStream();
 
-            // Update the error state to indicate the request timed out
-            statusCode = ERROR_CODE_TIMEOUT;
-            statusDescription = "Request timed out.";
+            // Complete
+            MainThreadCallback(() =>
+            {
+                string path = "";
+                if (null != _request?.RequestUri?.PathAndQuery)
+                {
+                    var uriSections = _request.RequestUri.PathAndQuery.Split(new char[] { '?' });
+                    path = uriSections[0].Substring(1);
+                }
 
-            SafeInvoke(onResponse);
+                // This was a cancellation due to actual timeout.
+                var elapsed = (DateTime.UtcNow - _requestStartTime).TotalMilliseconds;
+                if (elapsed >= TimeoutMs)
+                {
+                    StatusDescription = $"Request [{path}] timed out after {elapsed:0.00} ms";
+                }
+                else
+                {
+                    VLog.W($"Timeout called early {elapsed:0.00} ms");
+                }
+
+                HandleFinalNlpResponse(null, StatusDescription);
+            });
         }
 
-        private void HandleResponse(IAsyncResult asyncResult)
+        // Write stream
+        private void HandleWriteStream(IAsyncResult ar)
         {
-            bool sentResponse = false;
-            string stringResponse = "";
-            responseStarted = true;
             try
             {
-                WebResponse response = _request.EndGetResponse(asyncResult);
-                try
+                // Start response stream
+                StartResponse();
+
+                // Get write stream
+                var stream = _request.EndGetRequestStream(ar);
+
+                // Got write stream
+                _bytesWritten = 0;
+
+                // Immediate post
+                if (postData != null && postData.Length > 0)
                 {
-                    HttpWebResponse httpResponse = response as HttpWebResponse;
-                    statusCode = (int) httpResponse.StatusCode;
-                    statusDescription = httpResponse.StatusDescription;
-                    using (var responseStream = httpResponse.GetResponseStream())
+                    Debug.Log("Wrote directly");
+                    _bytesWritten += postData.Length;
+                    stream.Write(postData, 0, postData.Length);
+                    stream.Close();
+                }
+                // Wait for input stream
+                else
+                {
+                    // Request stream is ready to go
+                    IsInputStreamReady = true;
+                    _writeStream = stream;
+
+                    // Call input stream ready delegate
+                    if (onInputStreamReady != null)
                     {
-                        using (StreamReader reader = new StreamReader(responseStream))
-                        {
-                            string chunk;
-                            while ((chunk = ReadToDelimiter(reader, WitConstants.ENDPOINT_JSON_DELIMITER)) != null)
-                            {
-                                stringResponse = chunk;
-                                sentResponse |= ProcessStringResponse(stringResponse);
-                            }
-                            reader.Close();
-                        }
-                        // Call raw response for final
-                        if (stringResponse.Length > 0 && null != responseData)
-                        {
-                            MainThreadCallback(() => onRawResponse?.Invoke(stringResponse));
-                        }
-                        responseStream.Close();
+                        MainThreadCallback(() => onInputStreamReady(this));
                     }
-                }
-                catch (JSONParseException e)
-                {
-                    VLog.E("Server returned invalid data: " + e.Message + "\n" +
-                                   stringResponse);
-                    statusCode = ERROR_CODE_INVALID_DATA_FROM_SERVER;
-                    statusDescription = "Server returned invalid data.";
-                }
-                catch (WebException e)
-                {
-                    // Ensure was not cancelled
-                    if (e.Status != WebExceptionStatus.RequestCanceled)
-                    {
-                        VLog.E(
-                            $"{e.Message}\nRequest Stack Trace:\n{callingStackTrace}\nResponse Stack Trace:\n{e.StackTrace}");
-                        statusCode = (int) e.Status;
-                        statusDescription = e.Message;
-                    }
-                }
-                catch (Exception e)
-                {
-                    VLog.E(
-                        $"{e.Message}\nRequest Stack Trace:\n{callingStackTrace}\nResponse Stack Trace:\n{e.StackTrace}");
-                    statusCode = ERROR_CODE_GENERAL;
-                    statusDescription = e.Message;
-                }
-                finally
-                {
-                    response.Close();
                 }
             }
             catch (WebException e)
             {
-                statusCode = (int) e.Status;
-                if (e.Response is HttpWebResponse errorResponse)
+                // Ignore cancelation errors & if error already occured
+                if (e.Status == WebExceptionStatus.RequestCanceled
+                    || e.Status == WebExceptionStatus.Timeout
+                    || StatusCode != 0)
                 {
-                    statusCode = (int) errorResponse.StatusCode;
-                    try
+                    return;
+                }
+
+                // Write stream error
+                _stackTrace = e.StackTrace;
+                StatusCode = (int) e.Status;
+                StatusDescription = e.Message;
+                VLog.W(e);
+                MainThreadCallback(() => HandleFinalNlpResponse(null, StatusDescription));
+            }
+            catch (Exception e)
+            {
+                // Call an error if have not done so yet
+                if (StatusCode != 0)
+                {
+                    return;
+                }
+
+                // Non web error occured
+                _stackTrace = e.StackTrace;
+                StatusCode = WitConstants.ERROR_CODE_GENERAL;
+                StatusDescription = e.Message;
+                VLog.W(e);
+                MainThreadCallback(() => HandleFinalNlpResponse(null, StatusDescription));
+            }
+        }
+
+        /// <summary>
+        /// Write request data to the Wit.ai post's body input stream
+        ///
+        /// Note: If the stream is not open (IsActive) this will throw an IOException.
+        /// Data will be written synchronously. This should not be called from the main thread.
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        public void Write(byte[] data, int offset, int length)
+        {
+            // Ignore without write stream
+            if (!IsInputStreamReady || data == null || length == 0)
+            {
+                return;
+            }
+            try
+            {
+                _writeStream.Write(data, offset, length);
+                _bytesWritten += length;
+                if (audioDurationTracker != null)
+                {
+                    audioDurationTracker.AddBytes(length);
+                }
+            }
+            catch (ObjectDisposedException e)
+            {
+                // Handling edge case where stream is closed remotely
+                // This problem occurs when the Web server resets or closes the connection after
+                // the client application sends the HTTP header.
+                // https://support.microsoft.com/en-us/topic/fix-you-receive-a-system-objectdisposedexception-exception-when-you-try-to-access-a-stream-object-that-is-returned-by-the-endgetrequeststream-method-in-the-net-framework-2-0-bccefe57-0a61-517a-5d5f-2dce0cc63265
+                VLog.W($"Stream already disposed. It is likely the server reset the connection before streaming started.\n{e}");
+                // This prevents a very long holdup on _writeStream.Close
+                _writeStream = null;
+            }
+            catch (IOException e)
+            {
+                VLog.W(e.Message);
+            }
+            catch (Exception e)
+            {
+                VLog.E(e);
+            }
+
+            // Perform a cancellation if still waiting for a post
+            if (WaitingForPost())
+            {
+                MainThreadCallback(() => Cancel("Stream was closed with no data written."));
+            }
+        }
+
+        // Handles response from server
+        private void HandleResponse(IAsyncResult asyncResult)
+        {
+            // Begin response
+            HasResponseStarted = true;
+            string stringResponse = "";
+
+            try
+            {
+                // Get response
+                CheckStatus();
+                using (var response = _request.EndGetResponse(asyncResult))
+                {
+                    // Got response
+                    CheckStatus();
+                    HttpWebResponse httpResponse = response as HttpWebResponse;
+
+                    // Apply status & description
+                    StatusCode = (int) httpResponse.StatusCode;
+                    StatusDescription = httpResponse.StatusDescription;
+
+                    // Get stream
+                    using (var responseStream = httpResponse.GetResponseStream())
                     {
-                        using (var errorStream = errorResponse.GetResponseStream())
+                        using (var responseReader = new StreamReader(responseStream))
                         {
-                            if (errorStream != null)
+                            string chunk;
+                            while ((chunk = ReadToDelimiter(responseReader, WitConstants.ENDPOINT_JSON_DELIMITER)) != null)
                             {
-                                using (StreamReader errorReader = new StreamReader(errorStream))
-                                {
-                                    stringResponse = errorReader.ReadToEnd();
-                                    MainThreadCallback(() => onRawResponse?.Invoke(stringResponse));
-                                    sentResponse = ProcessStringResponses(stringResponse);
-                                }
+                                stringResponse = chunk;
+                                ProcessStringResponse(stringResponse);
                             }
                         }
                     }
-                    catch (JSONParseException)
-                    {
-                        // Response wasn't encoded error, ignore it.
-                    }
-                    catch (Exception errorResponseError)
-                    {
-                        // We've already caught that there is an error, we'll ignore any errors
-                        // reading error response data and use the status/original error for validation
-                        VLog.W(errorResponseError);
-                    }
-                }
-
-                statusDescription = e.Message;
-                if (e.Status != WebExceptionStatus.RequestCanceled)
-                {
-                    VLog.E(
-                        $"Http Request Failed [{statusCode}]: {e.Message}\nRequest Stack Trace:\n{callingStackTrace}\nResponse Stack Trace:\n{e.StackTrace}");
-                }
-                if (e.Response != null)
-                {
-                    e.Response.Close();
                 }
             }
-            finally
+            catch (JSONParseException e)
             {
-                isActive = false;
+                _stackTrace = e.StackTrace;
+                StatusCode = WitConstants.ERROR_CODE_INVALID_DATA_FROM_SERVER;
+                StatusDescription = "Server returned invalid data.";
+                VLog.W(e);
+            }
+            catch (WebException e)
+            {
+                if (e.Status != WebExceptionStatus.RequestCanceled
+                    && e.Status != WebExceptionStatus.Timeout)
+                {
+                    // Apply status & error
+                    _stackTrace = e.StackTrace;
+                    StatusCode = (int) e.Status;
+                    StatusDescription = e.Message;
+                    VLog.W(e);
+
+                    // Attempt additional parse
+                    if (e.Response is HttpWebResponse errorResponse)
+                    {
+                        StatusCode = (int) errorResponse.StatusCode;
+                        try
+                        {
+                            using (var errorStream = errorResponse.GetResponseStream())
+                            {
+                                if (errorStream != null)
+                                {
+                                    using (StreamReader errorReader = new StreamReader(errorStream))
+                                    {
+                                        stringResponse = errorReader.ReadToEnd();
+                                        if (!string.IsNullOrEmpty(stringResponse))
+                                        {
+                                            ProcessStringResponses(stringResponse);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        catch (JSONParseException)
+                        {
+                            // Response wasn't encoded error, ignore it.
+                        }
+                        catch (Exception errorResponseError)
+                        {
+                            // We've already caught that there is an error, we'll ignore any errors
+                            // reading error response data and use the status/original error for validation
+                            VLog.W(errorResponseError);
+                            _stackTrace = e.StackTrace;
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                _stackTrace = e.StackTrace;
+                StatusCode = WitConstants.ERROR_CODE_GENERAL;
+                StatusDescription = e.Message;
+                VLog.W(e);
             }
 
+            // Close request stream if possible
             CloseRequestStream();
 
-            if (null != responseData)
+            // Confirm valid response
+            if (null != _lastResponseData)
             {
-                var error = responseData["error"];
+                var error = _lastResponseData["error"];
                 if (!string.IsNullOrEmpty(error))
                 {
-                    statusDescription = $"Error: {responseData["code"]}. {error}";
-                    statusCode = statusCode == 200 ? ERROR_CODE_GENERAL : statusCode;
+                    // Get code if possible
+                    var code = _lastResponseData["code"];
+                    if (code != null)
+                    {
+                        StatusCode = code.AsInt;
+                    }
+                    // Use general error if code is not provided
+                    if (StatusCode == (int)HttpStatusCode.OK)
+                    {
+                        StatusCode = WitConstants.ERROR_CODE_GENERAL;
+                    }
+                    // Set error & description
+                    if (string.IsNullOrEmpty(StatusDescription))
+                    {
+                        StatusDescription = $"Error: {code}\n{error}";
+                    }
                 }
             }
-            else if (statusCode == 200)
+            // Invalid response
+            else if (StatusCode == (int)HttpStatusCode.OK)
             {
-                statusCode = ERROR_CODE_NO_DATA_FROM_SERVER;
-                statusDescription = "Server did not return a valid json response.";
-                VLog.W("No valid data was received from the server even though the request was successful. Actual potential response data: \n" +
-                    stringResponse);
+                StatusCode = WitConstants.ERROR_CODE_NO_DATA_FROM_SERVER;
+                StatusDescription = $"Server did not return a valid json response.";
+                #if UNITY_EDITOR
+                StatusDescription += $"\nActual Response\n{stringResponse}";
+                #endif
             }
 
-            // Send final response if have not yet
-            if (!sentResponse)
+            // Done
+            HasResponseStarted = false;
+
+            MainThreadCallback(() =>
             {
-                // Final transcription if not already sent
-                string transcription = responseData.GetTranscription();
-                if (!string.IsNullOrEmpty(transcription) && !responseData.GetIsFinal())
+                // Append error if needed
+                if (null != _lastResponseData)
                 {
-                    MainThreadCallback(() => onFullTranscription?.Invoke(transcription));
+                    var error = _lastResponseData["error"];
+                    if (!string.IsNullOrEmpty(error))
+                    {
+                        StatusDescription += $"\n{error}";
+                    }
                 }
-                // Final response
-                SafeInvoke(onResponse);
-            }
 
-            // Complete
-            responseStarted = false;
+                // Call completion delegate
+                HandleFinalNlpResponse(_lastResponseData, StatusCode == (int)HttpStatusCode.OK ? string.Empty : $"{StatusDescription}\n\nStackTrace:\n{_stackTrace}\n\n");
+            });
         }
+        // Check status
+        private void CheckStatus()
+        {
+            if (StatusCode == 0 || StatusCode == WitConstants.ERROR_CODE_TIMEOUT) return;
+
+            switch (StatusCode)
+            {
+                case WitConstants.ERROR_CODE_ABORTED:
+                    throw new WebException("Request was aborted", WebExceptionStatus.RequestCanceled);
+                default:
+                    throw new WebException("Status changed before response was received.", (WebExceptionStatus) StatusCode);
+            }
+        }
+        // Read stream until delimiter is hit
         private string ReadToDelimiter(StreamReader reader, string delimiter)
         {
             // Allocate all vars
@@ -708,165 +836,95 @@ namespace Meta.WitAi
             return results.Length == 0 ? null : results.ToString();
         }
         // Process individual piece
-        private bool ProcessStringResponses(string stringResponse)
+        private void ProcessStringResponses(string stringResponse)
         {
             // Split by delimiter
             foreach (var stringPart in stringResponse.Split(new string[]{WitConstants.ENDPOINT_JSON_DELIMITER}, StringSplitOptions.RemoveEmptyEntries))
             {
-                if (ProcessStringResponse(stringPart))
-                {
-                    return true;
-                }
+                ProcessStringResponse(stringPart);
             }
-            return false;
         }
         // Safely handles
-        private bool ProcessStringResponse(string stringResponse)
+        private void ProcessStringResponse(string stringResponse)
         {
+            // Call raw response for every received response
+            if (!string.IsNullOrEmpty(stringResponse))
+            {
+                MainThreadCallback(() => onRawResponse?.Invoke(stringResponse));
+            }
+
             // Decode full response
-            responseData = WitResponseNode.Parse(stringResponse);
+            WitResponseNode responseNode = WitResponseNode.Parse(stringResponse);
+            bool hasResponse = responseNode.HasResponse();
+            bool isFinal = responseNode.GetIsFinal();
+            string transcription = responseNode.GetTranscription();
+            _lastResponseData = responseNode;
 
-            // Handle responses
-            bool hasResponse = responseData.HasResponse();
-            bool final = responseData.GetIsFinal();
-
-            // Return transcription
-            string transcription = responseData.GetTranscription();
-            if (!string.IsNullOrEmpty(transcription) && (!hasResponse || final))
-            {
-                // Call partial transcription
-                if (!final)
-                {
-                    MainThreadCallback(() => onPartialTranscription?.Invoke(transcription));
-                }
-                // Call full transcription
-                else
-                {
-                    MainThreadCallback(() => onFullTranscription?.Invoke(transcription));
-                }
-            }
-
-            // No response
-            if (!hasResponse)
-            {
-                return false;
-            }
-
-            // Call partial response
-            SafeInvoke(onPartialResponse);
-
-            // Call final response
-            if (final)
-            {
-                SafeInvoke(onResponse);
-            }
-
-            // Return final
-            return final;
-        }
-        private void HandleRequestStream(IAsyncResult ar)
-        {
-            try
-            {
-                StartResponse();
-                var stream = _request.EndGetRequestStream(ar);
-                bytesWritten = 0;
-
-                if (null != postData)
-                {
-                    bytesWritten += postData.Length;
-                    stream.Write(postData, 0, postData.Length);
-                    CloseRequestStream();
-                }
-                else
-                {
-                    if (null == onInputStreamReady)
-                    {
-                        CloseRequestStream();
-                    }
-                    else
-                    {
-                        isRequestStreamActive = true;
-                        SafeInvoke(onInputStreamReady);
-                    }
-                }
-
-                _writeStream = stream;
-            }
-            catch (WebException e)
-            {
-                if (e.Status != WebExceptionStatus.RequestCanceled)
-                {
-                    statusCode = (int) e.Status;
-                    statusDescription = e.Message;
-                    SafeInvoke(onResponse);
-                }
-            }
-        }
-
-        private void SafeInvoke(Action<WitRequest> action)
-        {
-            if (action == null)
-            {
-                return;
-            }
+            // Apply on main thread
             MainThreadCallback(() =>
             {
-                // We want to allow each invocation to run even if there is an exception thrown by one
-                // of the callbacks in the invocation list. This protects shared invocations from
-                // clients blocking things like UI updates from other parts of the sdk being invoked.
-                foreach (Action<WitRequest> responseDelegate in action.GetInvocationList())
+                // Set transcription
+                if (!string.IsNullOrEmpty(transcription) && (!hasResponse || isFinal))
                 {
-                    try
-                    {
-                        responseDelegate.DynamicInvoke(this);
-                    }
-                    catch (Exception e)
-                    {
-                        VLog.E(e);
-                    }
+                    ApplyTranscription(transcription, isFinal);
+                }
+
+                // Set response
+                if (hasResponse)
+                {
+                    HandlePartialNlpResponse(responseNode);
                 }
             });
         }
-
-        public void AbortRequest()
+        // On text change callback
+        protected override void OnTranscriptionChanged()
         {
-            CloseActiveStream();
-            if (null != _request)
+            if (!IsFinalTranscription)
             {
-                _request.Abort();
-                _request = null;
+                onPartialTranscription?.Invoke(Transcription);
             }
-            if (statusCode == 0)
+            else
             {
-                statusCode = ERROR_CODE_ABORTED;
-                statusDescription = "Request was aborted";
+                onFullTranscription?.Invoke(Transcription);
             }
-            isActive = false;
+            base.OnTranscriptionChanged();
         }
-
-        /// <summary>
-        /// Method to close the input stream of data being sent during the lifecycle of this request
-        ///
-        /// If a post method was used, this will need to be called before the request will complete.
-        /// </summary>
-        public void CloseRequestStream()
+        // On response data change callback
+        protected override void OnPartialResponse()
         {
-            if (requestRequiresBody && bytesWritten == 0)
+            onPartialResponse?.Invoke(this);
+            base.OnPartialResponse();
+        }
+        // On full response
+        protected override void OnFullResponse()
+        {
+            base.OnFullResponse();
+        }
+        // Check if data has been written to post stream while still receiving data
+        private bool WaitingForPost()
+        {
+            return IsPost && _bytesWritten == 0 && StatusCode == 0;
+        }
+        // Close active stream & then abort if possible
+        private void CloseRequestStream()
+        {
+            // Cancel due to no audio if not an error
+            if (WaitingForPost())
             {
-                AbortRequest();
+                Cancel("Request was closed with no audio captured.");
             }
+            // Close
             else
             {
                 CloseActiveStream();
             }
         }
-
+        // Close stream
         private void CloseActiveStream()
         {
-            lock (streamLock)
+            IsInputStreamReady = false;
+            lock (_streamLock)
             {
-                isRequestStreamActive = false;
                 if (null != _writeStream)
                 {
                     try
@@ -882,108 +940,48 @@ namespace Meta.WitAi
             }
         }
 
-        /// <summary>
-        /// Write request data to the Wit.ai post's body input stream
-        ///
-        /// Note: If the stream is not open (IsActive) this will throw an IOException.
-        /// Data will be written synchronously. This should not be called from the main thread.
-        /// </summary>
-        /// <param name="data"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        public void Write(byte[] data, int offset, int length)
+        // Perform a cancellation/abort
+        protected override void HandleCancel()
         {
-            // Ignore without write stream
-            if (_writeStream == null)
+            // Close stream
+            CloseActiveStream();
+
+            // Apply abort code
+            if (StatusCode == 0)
             {
-                return;
-            }
-            try
-            {
-                _writeStream.Write(data, offset, length);
-                bytesWritten += length;
-            }
-            catch (ObjectDisposedException e)
-            {
-                // Handling edge case where stream is closed remotely
-                // This problem occurs when the Web server resets or closes the connection after
-                // the client application sends the HTTP header.
-                // https://support.microsoft.com/en-us/topic/fix-you-receive-a-system-objectdisposedexception-exception-when-you-try-to-access-a-stream-object-that-is-returned-by-the-endgetrequeststream-method-in-the-net-framework-2-0-bccefe57-0a61-517a-5d5f-2dce0cc63265
-                VLog.W($"Stream already disposed. It is likely the server reset the connection before streaming started.\n{e}");
-                // This prevents a very long holdup on _writeStream.Close
-                _writeStream = null;
-            }
-            catch (IOException e)
-            {
-                VLog.W(e.Message);
-            }
-            catch (Exception e)
-            {
-                VLog.E(e);
+                StatusCode = WitConstants.ERROR_CODE_ABORTED;
+                StatusDescription = Results.Message;
             }
 
-            if (requestRequiresBody && bytesWritten == 0)
+            // Abort request
+            if (null != _request)
             {
-                VLog.W("Stream was closed with no data written. Aborting request.");
-                AbortRequest();
+                _request.Abort();
+                _request = null;
             }
         }
 
-        #region CALLBACKS
-        // Check performing
-        private CoroutineUtility.CoroutinePerformer _performer = null;
-        // All actions
-        private ConcurrentQueue<Action> _mainThreadCallbacks = new ConcurrentQueue<Action>();
+        // Add response callback & log for abort
+        protected override void OnComplete()
+        {
+            base.OnComplete();
 
-        // Called from background thread
-        private void MainThreadCallback(Action action)
-        {
-            _mainThreadCallbacks.Enqueue(action);
-        }
-        // While active, perform any sent callbacks
-        private void WatchMainThreadCallbacks()
-        {
-            // Ifnore if already performing
-            if (_performer != null)
+            // Close write stream if still existing
+            if (null != _writeStream)
             {
-                return;
+                CloseActiveStream();
+            }
+            // Abort request if still existing
+            if (null != _request)
+            {
+                _request.Abort();
+                _request = null;
             }
 
-            // Check callbacks every frame (editor or runtime)
-            _performer = CoroutineUtility.StartCoroutine(PerformMainThreadCallbacks());
+            // Finalize response
+            onResponse?.Invoke(this);
+            onResponse = null;
         }
-        // Every frame check for callbacks & perform any found
-        private System.Collections.IEnumerator PerformMainThreadCallbacks()
-        {
-            // While checking, continue
-            while (HasMainThreadCallbacks())
-            {
-                // Wait for frame
-                if (Application.isPlaying && !Application.isBatchMode)
-                {
-                    yield return new WaitForEndOfFrame();
-                }
-                // Wait for a tick
-                else
-                {
-                    yield return null;
-                }
-
-                // Perform if possible
-                while (_mainThreadCallbacks.Count > 0 && _mainThreadCallbacks.TryDequeue(out var result))
-                {
-                    result();
-                }
-            }
-
-            // Done performing
-            _performer = null;
-        }
-        // Check actions
-        private bool HasMainThreadCallbacks()
-        {
-            return IsActive || isRequestStreamActive || HasResponseStarted || _mainThreadCallbacks.Count > 0;
-        }
-        #endregion
+        #endregion HTTP REQUEST
     }
 }

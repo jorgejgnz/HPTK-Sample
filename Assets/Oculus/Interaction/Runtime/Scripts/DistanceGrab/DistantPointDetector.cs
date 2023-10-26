@@ -83,7 +83,7 @@ namespace Oculus.Interaction
 
         public bool ComputeIsPointing(Collider[] colliders, bool isSelecting, out float bestScore, out Vector3 bestHitPoint)
         {
-            ConicalFrustum _searchFrustrum = (isSelecting || _frustums.DeselectionFrustum == null) ?
+            ConicalFrustum searchFrustrum = (isSelecting || _frustums.DeselectionFrustum == null) ?
                 _frustums.SelectionFrustum : _frustums.DeselectionFrustum;
             bestHitPoint = Vector3.zero;
             bestScore = float.NegativeInfinity;
@@ -92,7 +92,7 @@ namespace Oculus.Interaction
             foreach (Collider collider in colliders)
             {
                 float score = 0f;
-                if (!_searchFrustrum.HitsCollider(collider, out score, out Vector3 hitPoint))
+                if (!searchFrustrum.HitsCollider(collider, out score, out Vector3 hitPoint))
                 {
                     continue;
                 }

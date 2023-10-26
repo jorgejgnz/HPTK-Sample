@@ -68,6 +68,7 @@ namespace Meta.Conduit
         /// <param name="intent">The name of the intent to match.</param>
         /// <param name="minConfidence">The minimum confidence value (0-1) needed to match.</param>
         /// <param name="maxConfidence">The maximum confidence value(0-1) needed to match.</param>
+        /// <param name="validatePartial">When true will validate partial matches.</param>
         /// <param name="aliases">Other names to refer to this intent.</param>
         protected ConduitActionAttribute(string intent = "", float minConfidence = DEFAULT_MIN_CONFIDENCE, float maxConfidence = DEFAULT_MAX_CONFIDENCE, bool validatePartial = false, params string[] aliases)
         {

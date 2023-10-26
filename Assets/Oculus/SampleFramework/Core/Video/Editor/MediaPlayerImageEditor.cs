@@ -9,7 +9,6 @@ using UnityEditor;
 [CustomEditor(typeof(MediaPlayerImage), true)]
 public class MediaPlayerImageEditor : ImageEditor
 {
-
     SerializedProperty m_ButtonType;
 
     protected override void OnEnable()

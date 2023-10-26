@@ -8,12 +8,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using UnityEditor;
 using UnityEngine;
-using Meta.WitAi.Data.Configuration;
 
-namespace Meta.WitAi.Windows.Conponents
+namespace Meta.WitAi.Windows.Components
 {
   public static class WitMultiSelectionPopup
   {

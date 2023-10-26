@@ -11,15 +11,22 @@ namespace Gradle
         private static readonly string androidPluginsFolder = "Assets/Plugins/Android/";
         private static readonly string gradleTemplatePath = androidPluginsFolder + "mainTemplate.gradle";
         private static readonly string disabledGradleTemplatePath = gradleTemplatePath + ".DISABLED";
-        private static readonly string internalGradleTemplatePath = Path.Combine(Path.Combine(GetBuildToolsDirectory(BuildTarget.Android), "GradleTemplates"), "mainTemplate.gradle");
+
+        private static readonly string internalGradleTemplatePath = Path.Combine(
+            Path.Combine(GetBuildToolsDirectory(BuildTarget.Android), "GradleTemplates"), "mainTemplate.gradle");
 
         private static readonly string gradlePropertiesPath = androidPluginsFolder + "gradleTemplate.properties";
         private static readonly string disabledGradlePropertiesPath = gradleTemplatePath + ".DISABLED";
-        private static readonly string internalGradlePropertiesPath = Path.Combine(Path.Combine(GetBuildToolsDirectory(BuildTarget.Android), "GradleTemplates"), "gradleTemplate.properties");
+
+        private static readonly string internalGradlePropertiesPath = Path.Combine(
+            Path.Combine(GetBuildToolsDirectory(BuildTarget.Android), "GradleTemplates"), "gradleTemplate.properties");
 
         private static string GetBuildToolsDirectory(UnityEditor.BuildTarget bt)
         {
-            return (string)(typeof(BuildPipeline).GetMethod("GetBuildToolsDirectory", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic).Invoke(null, new object[] { bt }));
+            return (string)(typeof(BuildPipeline)
+                .GetMethod("GetBuildToolsDirectory",
+                    System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic)
+                .Invoke(null, new object[] { bt }));
         }
 
         public static void UseGradle()
@@ -43,6 +50,7 @@ namespace Gradle
                 {
                     File.Copy(internalGradleTemplatePath, gradleTemplatePath);
                 }
+
                 AssetDatabase.ImportAsset(gradleTemplatePath);
             }
 
@@ -57,6 +65,7 @@ namespace Gradle
                 {
                     File.Copy(internalGradlePropertiesPath, gradlePropertiesPath);
                 }
+
                 AssetDatabase.ImportAsset(gradlePropertiesPath);
             }
         }
@@ -64,9 +73,9 @@ namespace Gradle
         public static bool IsUsingGradle()
         {
             return EditorUserBuildSettings.androidBuildSystem == AndroidBuildSystem.Gradle
-                && Directory.Exists(androidPluginsFolder)
-                && File.Exists(gradleTemplatePath)
-                && File.Exists(gradlePropertiesPath);
+                   && Directory.Exists(androidPluginsFolder)
+                   && File.Exists(gradleTemplatePath)
+                   && File.Exists(gradlePropertiesPath);
         }
 
         public static Template OpenTemplate()
@@ -86,8 +95,10 @@ namespace Gradle
         {
             public static string GetVersion(string text)
             {
-                return new System.Text.RegularExpressions.Regex("com.android.tools.build:gradle:([0-9]+\\.[0-9]+\\.[0-9]+)").Match(text).Groups[1].Value;
+                return new System.Text.RegularExpressions.Regex(
+                    "com.android.tools.build:gradle:([0-9]+\\.[0-9]+\\.[0-9]+)").Match(text).Groups[1].Value;
             }
+
             public static int GoToSection(string section, List<string> lines)
             {
                 return GoToSection(section, 0, lines);
@@ -124,15 +135,18 @@ namespace Gradle
                     {
                         depth++;
                     }
+
                     if (lines[i].Contains("}"))
                     {
                         depth--;
                     }
+
                     if (depth < 0)
                     {
                         break;
                     }
                 }
+
                 return -1;
             }
 
@@ -146,10 +160,12 @@ namespace Gradle
                     {
                         depth++;
                     }
+
                     if (lines[i].Contains("}"))
                     {
                         depth--;
                     }
+
                     if (depth < 0)
                     {
                         return i;

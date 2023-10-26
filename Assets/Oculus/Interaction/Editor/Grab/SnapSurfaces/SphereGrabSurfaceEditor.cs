@@ -32,52 +32,63 @@ namespace Oculus.Interaction.Grab.GrabSurfaces.Editor
         private SphereBoundsHandle _sphereHandle = new SphereBoundsHandle();
         private SphereGrabSurface _surface;
         private SerializedProperty _relativeToProperty;
+        private Transform _relativeTo;
 
         private void OnEnable()
         {
             _sphereHandle.SetColor(EditorConstants.PRIMARY_COLOR);
             _sphereHandle.midpointHandleDrawFunction = null;
-
-            _surface = (target as SphereGrabSurface);
+            _surface = target as SphereGrabSurface;
             _relativeToProperty = serializedObject.FindProperty("_relativeTo");
+        }
+
+        public override void OnInspectorGUI()
+        {
+            base.OnInspectorGUI();
+            _relativeTo = _relativeToProperty.objectReferenceValue as Transform;
         }
 
         public void OnSceneGUI()
         {
-            DrawCentre(_surface);
+            if (_relativeTo == null)
+            {
+                return;
+            }
+
+            DrawCentre(_surface, _relativeTo);
             Handles.color = Color.white;
-            DrawSphereEditor(_surface);
+            DrawSphereEditor(_surface, _relativeTo);
 
             if (Event.current.type == EventType.Repaint)
             {
-                DrawSurfaceVolume(_surface);
+                DrawSurfaceVolume(_surface, _relativeTo);
             }
         }
 
-        private void DrawCentre(SphereGrabSurface surface)
+        private void DrawCentre(SphereGrabSurface surface, Transform relativeTo)
         {
             EditorGUI.BeginChangeCheck();
-            Transform relative = _relativeToProperty.objectReferenceValue as Transform ?? surface.transform;
-            Quaternion handleRotation = relative.rotation;
-            Vector3 centrePosition = Handles.PositionHandle(surface.Centre, handleRotation);
+            Quaternion handleRotation = relativeTo.rotation;
+            Vector3 centrePosition = Handles.PositionHandle(surface.GetCentre(relativeTo), handleRotation);
             if (EditorGUI.EndChangeCheck())
             {
                 Undo.RecordObject(surface, "Change Centre Sphere Position");
-                surface.Centre = centrePosition;
+                surface.SetCentre(centrePosition, relativeTo);
             }
         }
 
-        private void DrawSurfaceVolume(SphereGrabSurface surface)
+        private void DrawSurfaceVolume(SphereGrabSurface surface, Transform relativeTo)
         {
             Handles.color = EditorConstants.PRIMARY_COLOR;
-            Vector3 startLine = surface.Centre;
-            Vector3 endLine = startLine + surface.Rotation * Vector3.forward * surface.Radius;
+            Vector3 startLine = surface.GetCentre(relativeTo);
+            Vector3 endLine = startLine + surface.GetDirection(relativeTo) * surface.GetRadius(relativeTo);
             Handles.DrawDottedLine(startLine, endLine, 5);
         }
-        private void DrawSphereEditor(SphereGrabSurface surface)
+
+        private void DrawSphereEditor(SphereGrabSurface surface, Transform relativeTo)
         {
-            _sphereHandle.radius = surface.Radius;
-            _sphereHandle.center = surface.Centre;
+            _sphereHandle.radius = surface.GetRadius(relativeTo);
+            _sphereHandle.center = surface.GetCentre(relativeTo);
 
             EditorGUI.BeginChangeCheck();
             _sphereHandle.DrawHandle();

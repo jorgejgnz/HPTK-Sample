@@ -27,7 +27,7 @@ namespace Oculus.Interaction
     {
         [Tooltip("Events will fire based on the state of this IActiveState.")]
         [SerializeField, Interface(typeof(IActiveState))]
-        private MonoBehaviour _activeState;
+        private UnityEngine.Object _activeState;
         private IActiveState ActiveState;
 
         [Tooltip("This event will be fired when the provided IActiveState becomes active.")]
@@ -96,13 +96,23 @@ namespace Oculus.Interaction
 
         public void InjectActiveState(IActiveState activeState)
         {
-            _activeState = activeState as MonoBehaviour;
+            _activeState = activeState as UnityEngine.Object;
             ActiveState = activeState;
         }
 
         public void InjectOptionalEmitOnFirstUpdate(bool emitOnFirstUpdate)
         {
             _emitOnFirstUpdate = emitOnFirstUpdate;
+        }
+
+        public void InjectOptionalWhenActivated(UnityEvent whenActivated)
+        {
+            _whenActivated = whenActivated;
+        }
+
+        public void InjectOptionalWhenDeactivated(UnityEvent whenDeactivated)
+        {
+            _whenDeactivated = whenDeactivated;
         }
 
         #endregion

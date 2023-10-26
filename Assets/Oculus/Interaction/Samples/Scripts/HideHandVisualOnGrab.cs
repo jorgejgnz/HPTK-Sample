@@ -30,7 +30,7 @@ namespace Oculus.Interaction.Samples
         private HandGrabInteractor _handGrabInteractor;
 
         [SerializeField, Interface(typeof(IHandVisual))]
-        private MonoBehaviour _handVisual;
+        private UnityEngine.Object _handVisual;
 
         private IHandVisual HandVisual;
 
@@ -81,7 +81,7 @@ namespace Oculus.Interaction.Samples
 
         private void InjectHandVisual(IHandVisual handVisual)
         {
-            _handVisual = handVisual as MonoBehaviour;
+            _handVisual = handVisual as UnityEngine.Object;
             HandVisual = handVisual;
         }
 

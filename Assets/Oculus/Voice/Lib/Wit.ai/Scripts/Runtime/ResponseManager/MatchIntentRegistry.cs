@@ -54,6 +54,10 @@ namespace Meta.WitAi
 
         internal static void RefreshAssemblies()
         {
+            if (Thread.CurrentThread.ThreadState == ThreadState.Aborted)
+            {
+                return;
+            }
             // TODO: We could potentially build this list at compile time and cache it
             // Work on a local dictionary to avoid thread complications
             var dictionary = new DictionaryList<string, RegisteredMatchIntent>();
@@ -73,19 +77,19 @@ namespace Meta.WitAi
                                                 matchIntent = mi
                                             });
                                         } catch (Exception e) {
-                                            Debug.LogError(e);
+                                            VLog.E(e);
                                         }
                                     }
                                 } catch (Exception e) {
-                                    Debug.LogError(e);
+                                    VLog.E(e);
                                 }
                             }
                         } catch (Exception e) {
-                            Debug.LogError(e);
+                            VLog.E(e);
                         }
                     }
                 } catch (Exception e) {
-                    Debug.LogError(e);
+                    VLog.E(e);
                 }
             }
 

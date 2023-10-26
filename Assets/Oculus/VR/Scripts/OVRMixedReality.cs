@@ -35,103 +35,109 @@ using UnityEngine;
 /// </summary>
 internal static class OVRMixedReality
 {
-	/// <summary>
-	/// For Debugging purpose, we can use preset parameters to fake a camera when external camera is not available
-	/// </summary>
-	public static bool useFakeExternalCamera = false;
-	public static Vector3 fakeCameraFloorLevelPosition = new Vector3(0.0f, 2.0f, -0.5f);
-	public static Vector3 fakeCameraEyeLevelPosition = fakeCameraFloorLevelPosition - new Vector3(0.0f, 1.8f, 0.0f);
-	public static Quaternion fakeCameraRotation = Quaternion.LookRotation((new Vector3(0.0f, fakeCameraFloorLevelPosition.y, 0.0f) - fakeCameraFloorLevelPosition).normalized, Vector3.up);
-	public static float fakeCameraFov = 60.0f;
-	public static float fakeCameraAspect = 16.0f / 9.0f;
+    /// <summary>
+    /// For Debugging purpose, we can use preset parameters to fake a camera when external camera is not available
+    /// </summary>
+    public static bool useFakeExternalCamera = false;
 
-	/// <summary>
-	/// Composition object
-	/// </summary>
-	public static OVRComposition currentComposition = null;
+    public static Vector3 fakeCameraFloorLevelPosition = new Vector3(0.0f, 2.0f, -0.5f);
+    public static Vector3 fakeCameraEyeLevelPosition = fakeCameraFloorLevelPosition - new Vector3(0.0f, 1.8f, 0.0f);
 
-	/// <summary>
-	/// Updates the internal state of the Mixed Reality Camera. Called by OVRManager.
-	/// </summary>
+    public static Quaternion fakeCameraRotation = Quaternion.LookRotation(
+        (new Vector3(0.0f, fakeCameraFloorLevelPosition.y, 0.0f) - fakeCameraFloorLevelPosition).normalized,
+        Vector3.up);
 
-	public static void Update(GameObject parentObject, Camera mainCamera, OVRMixedRealityCaptureConfiguration configuration, OVRManager.TrackingOrigin trackingOrigin)
-	{
-		if (!OVRPlugin.initialized)
-		{
-			Debug.LogError("OVRPlugin not initialized");
-			return;
-		}
+    public static float fakeCameraFov = 60.0f;
+    public static float fakeCameraAspect = 16.0f / 9.0f;
 
-		if (!OVRPlugin.IsMixedRealityInitialized())
-		{
-			OVRPlugin.InitializeMixedReality();
-			if (OVRPlugin.IsMixedRealityInitialized())
-			{
-				Debug.Log("OVRPlugin_MixedReality initialized");
-			}
-			else
-			{
-				Debug.LogError("Unable to initialize OVRPlugin_MixedReality");
-				return;
-			}
-		}
+    /// <summary>
+    /// Composition object
+    /// </summary>
+    public static OVRComposition currentComposition = null;
 
-		if (!OVRPlugin.IsMixedRealityInitialized())
-		{
-			return;
-		}
+    /// <summary>
+    /// Updates the internal state of the Mixed Reality Camera. Called by OVRManager.
+    /// </summary>
+    public static void Update(GameObject parentObject, Camera mainCamera,
+        OVRMixedRealityCaptureConfiguration configuration, OVRManager.TrackingOrigin trackingOrigin)
+    {
+        if (!OVRPlugin.initialized)
+        {
+            Debug.LogError("OVRPlugin not initialized");
+            return;
+        }
 
-		OVRPlugin.UpdateExternalCamera();
+        if (!OVRPlugin.IsMixedRealityInitialized())
+        {
+            OVRPlugin.InitializeMixedReality();
+            if (OVRPlugin.IsMixedRealityInitialized())
+            {
+                Debug.Log("OVRPlugin_MixedReality initialized");
+            }
+            else
+            {
+                Debug.LogError("Unable to initialize OVRPlugin_MixedReality");
+                return;
+            }
+        }
+
+        if (!OVRPlugin.IsMixedRealityInitialized())
+        {
+            return;
+        }
+
+        OVRPlugin.UpdateExternalCamera();
 #if !OVR_ANDROID_MRC
-		OVRPlugin.UpdateCameraDevices();
+        OVRPlugin.UpdateCameraDevices();
 #endif
 
 #if OVR_ANDROID_MRC
-		useFakeExternalCamera = OVRPlugin.Media.UseMrcDebugCamera();
+        useFakeExternalCamera = OVRPlugin.Media.UseMrcDebugCamera();
 #endif
 
-		if (currentComposition != null && (currentComposition.CompositionMethod() != configuration.compositionMethod))
-		{
-			currentComposition.Cleanup();
-			currentComposition = null;
-		}
+        if (currentComposition != null && (currentComposition.CompositionMethod() != configuration.compositionMethod))
+        {
+            currentComposition.Cleanup();
+            currentComposition = null;
+        }
 
-		if (configuration.compositionMethod == OVRManager.CompositionMethod.External)
-		{
-			if (currentComposition == null)
-			{
-				currentComposition = new OVRExternalComposition(parentObject, mainCamera, configuration);
-			}
-		}
-		else
-		{
-			Debug.LogError("Unknown/Unsupported CompositionMethod : " + configuration.compositionMethod);
-			return;
-		}
-		currentComposition.Update(parentObject, mainCamera, configuration, trackingOrigin);
-	}
+        if (configuration.compositionMethod == OVRManager.CompositionMethod.External)
+        {
+            if (currentComposition == null)
+            {
+                currentComposition = new OVRExternalComposition(parentObject, mainCamera, configuration);
+            }
+        }
+        else
+        {
+            Debug.LogError("Unknown/Unsupported CompositionMethod : " + configuration.compositionMethod);
+            return;
+        }
 
-	public static void Cleanup()
-	{
-		if (currentComposition != null)
-		{
-			currentComposition.Cleanup();
-			currentComposition = null;
-		}
-		if (OVRPlugin.IsMixedRealityInitialized())
-		{
-			OVRPlugin.ShutdownMixedReality();
-		}
-	}
+        currentComposition.Update(parentObject, mainCamera, configuration, trackingOrigin);
+    }
 
-	public static void RecenterPose()
-	{
-		if (currentComposition != null)
-		{
-			currentComposition.RecenterPose();
-		}
-	}
+    public static void Cleanup()
+    {
+        if (currentComposition != null)
+        {
+            currentComposition.Cleanup();
+            currentComposition = null;
+        }
 
+        if (OVRPlugin.IsMixedRealityInitialized())
+        {
+            OVRPlugin.ShutdownMixedReality();
+        }
+    }
+
+    public static void RecenterPose()
+    {
+        if (currentComposition != null)
+        {
+            currentComposition.RecenterPose();
+        }
+    }
 }
 
 #endif

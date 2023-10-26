@@ -23,5 +23,7 @@ using UnityEngine;
 /// <summary>
 /// Dummy subtype of PropertyAttribute for custom inspector to use.
 /// </summary>
-public class OVRLayerAttribute : PropertyAttribute {
+[HelpURL("https://developer.oculus.com/reference/unity/latest/class_o_v_r_layer_attribute")]
+public class OVRLayerAttribute : PropertyAttribute
+{
 }

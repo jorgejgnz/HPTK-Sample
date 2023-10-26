@@ -20,9 +20,13 @@
 
 using System.Collections.Generic;
 using System;
+using System.ComponentModel;
 using System.Linq;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.Assertions;
+using Component = UnityEngine.Component;
 
 /// <summary>
 /// Custom Editor for <see cref="OVRCustomFace">
@@ -37,99 +41,151 @@ using UnityEngine;
 /// The tokenization is based on some common string seperation characters and seperation by camel case.
 /// </remarks>
 [CustomEditor(typeof(OVRCustomFace))]
-internal sealed class OVRCustomFaceEditor : Editor
+public class OVRCustomFaceEditor : Editor
 {
     private SerializedProperty _expressionsProp;
     private SerializedProperty _mappings;
     private SerializedProperty _strengthMultiplier;
+    private SerializedProperty _allowDuplicateMapping;
     private bool _showBlendshapes = true;
 
-    private void OnEnable()
+    protected virtual void OnEnable()
     {
         _expressionsProp = serializedObject.FindProperty(nameof(OVRCustomFace._faceExpressions));
         _mappings = serializedObject.FindProperty(nameof(OVRCustomFace._mappings));
         _strengthMultiplier = serializedObject.FindProperty(nameof(OVRCustomFace._blendShapeStrengthMultiplier));
+        _allowDuplicateMapping = serializedObject.FindProperty(nameof(OVRCustomFace._allowDuplicateMapping));
     }
 
     public override void OnInspectorGUI()
     {
+        var face = (OVRCustomFace)target;
+
         serializedObject.Update();
+
+        if (_expressionsProp.objectReferenceValue == null)
+        {
+            _expressionsProp.objectReferenceValue = face.SearchFaceExpressions();
+        }
+
+        if (!IsFaceExpressionsConfigured(face))
+        {
+            if (OVREditorUIElements.RenderWarningWithButton(
+                    "OVRFaceExpressions is required.", "Configure OVRFaceExpressions"))
+            {
+                FixFaceExpressions(face);
+            }
+        }
 
         EditorGUILayout.PropertyField(_expressionsProp, new GUIContent(nameof(OVRFaceExpressions)));
 
         EditorGUILayout.PropertyField(_strengthMultiplier, new GUIContent("Blend Shape Strength Multiplier"));
 
-        if(_expressionsProp.objectReferenceValue == null)
-        {
-            _expressionsProp.objectReferenceValue = FindFaceExpressionsComponent(_expressionsProp);
-        }
 
-        SkinnedMeshRenderer renderer = GetSkinnedMeshRenderer(_expressionsProp);//need to pass out some property to find the component from
+        //need to pass out some property to find the component from
+        SkinnedMeshRenderer renderer = GetSkinnedMeshRenderer(_expressionsProp);
 
-        if(renderer == null || renderer.sharedMesh == null)
+        if (renderer == null || renderer.sharedMesh == null)
         {
             if (_mappings.arraySize > 0)
             {
                 _mappings.ClearArray();
             }
+
             serializedObject.ApplyModifiedProperties();
             return;
         }
 
-        if(_mappings.arraySize != renderer.sharedMesh.blendShapeCount)
+        if (_mappings.arraySize != renderer.sharedMesh.blendShapeCount)
         {
             _mappings.ClearArray();
             _mappings.arraySize = renderer.sharedMesh.blendShapeCount;
             for (int i = 0; i < renderer.sharedMesh.blendShapeCount; ++i)
             {
-                _mappings.GetArrayElementAtIndex(i).enumValueIndex = (int)OVRFaceExpressions.FaceExpression.Max;
+                _mappings.GetArrayElementAtIndex(i).intValue = (int)OVRFaceExpressions.FaceExpression.Invalid;
             }
         }
 
         EditorGUILayout.Space();
 
-        _showBlendshapes = EditorGUILayout.BeginFoldoutHeaderGroup(_showBlendshapes, "Blendshapes");
+        var enumValues = Enum.GetNames(typeof(OVRCustomFace.RetargetingType));
+        face.retargetingType = (OVRCustomFace.RetargetingType)
+            EditorGUILayout.Popup("Custom face structure", (int)face.retargetingType, enumValues);
 
-        if(_showBlendshapes)
+        if (face.retargetingType == OVRCustomFace.RetargetingType.OculusFace
+            || face.retargetingType == OVRCustomFace.RetargetingType.Custom
+           )
         {
-            if(GUILayout.Button("Auto Generate Mapping"))
+            _showBlendshapes = EditorGUILayout.BeginFoldoutHeaderGroup(_showBlendshapes, "Blendshapes");
+            if (_showBlendshapes)
             {
-                OVRFaceExpressions.FaceExpression[] generatedMapping = AutoGenerateMapping(renderer.sharedMesh);
+                if (GUILayout.Button("Auto Generate Mapping"))
+                {
+                    face.AutoMapBlendshapes();
+                    Refresh(face);
+                }
+
+                if (GUILayout.Button("Clear Mapping"))
+                {
+                    face.ClearBlendshapes();
+                    Refresh(face);
+                }
+
+                EditorGUILayout.Space();
 
                 for (int i = 0; i < renderer.sharedMesh.blendShapeCount; ++i)
                 {
-                    _mappings.GetArrayElementAtIndex(i).enumValueIndex = (int)generatedMapping[i];
+                    EditorGUILayout.PropertyField(_mappings.GetArrayElementAtIndex(i),
+                        new GUIContent(renderer.sharedMesh.GetBlendShapeName(i)));
                 }
-            }
-
-            EditorGUILayout.Space();
-
-            for (int i = 0; i < renderer.sharedMesh.blendShapeCount; ++i)
-            {
-                EditorGUILayout.PropertyField(_mappings.GetArrayElementAtIndex(i), new GUIContent(renderer.sharedMesh.GetBlendShapeName(i)));
             }
         }
 
         EditorGUILayout.EndFoldoutHeaderGroup();
 
+        EditorGUILayout.PropertyField(_allowDuplicateMapping,
+            new GUIContent("Allow duplicate mapping"));
+
         serializedObject.ApplyModifiedProperties();
+
+        static void Refresh(OVRCustomFace face)
+        {
+            EditorUtility.SetDirty(face);
+            EditorSceneManager.MarkSceneDirty(face.gameObject.scene);
+        }
     }
 
-    private static OVRFaceExpressions FindFaceExpressionsComponent(SerializedProperty property)
+    internal static bool IsFaceExpressionsConfigured(OVRFace face)
     {
-        GameObject targetObject = GetGameObject(property);
+        return face._faceExpressions != null;
+    }
 
-        if(!targetObject)
-            return null;
+    internal static void FixFaceExpressions(OVRFace face)
+    {
+        Undo.IncrementCurrentGroup();
+        var gameObject = face.gameObject;
 
-        return (OVRFaceExpressions)targetObject.GetComponentInParent(typeof(OVRFaceExpressions));
+        var faceExpressions = face.SearchFaceExpressions();
+        if (!faceExpressions)
+        {
+            faceExpressions = gameObject.AddComponent<OVRFaceExpressions>();
+            Undo.RegisterCreatedObjectUndo(faceExpressions, "Create OVRFaceExpressions component");
+        }
+
+        Undo.RecordObject(face, "Linked OVRFaceExpression");
+        face._faceExpressions = faceExpressions;
+
+        EditorUtility.SetDirty(face);
+        EditorSceneManager.MarkSceneDirty(gameObject.scene);
+
+        Undo.SetCurrentGroupName("Configure OVRFaceExpressions for OVRCustomFace");
     }
 
     private static SkinnedMeshRenderer GetSkinnedMeshRenderer(SerializedProperty property)
     {
         GameObject targetObject = GetGameObject(property);
 
-        if(!targetObject)
+        if (!targetObject)
             return null;
 
         return targetObject.GetComponent<SkinnedMeshRenderer>();
@@ -143,85 +199,8 @@ internal sealed class OVRCustomFaceEditor : Editor
         {
             return targetComponent.gameObject;
         }
+
         return null;
     }
-
-    /// <summary>
-    /// Find the best matching blend shape for each facial expression based on their names
-    /// </summary>
-    /// <remarks>
-    /// Auto generation idea is to tokenize expression enum strings and blend shape name strings and find matching tokens
-    /// We quantify the quality of the match by the total number of characters in the matching tokens
-    /// We require at least a total of more than 2 characters to match, to avoid matching just L/R LB/RB etc.
-    /// A better technique might be to use Levenshtein distance to match the tokens to allow some typos while still being loose on order of tokens
-    /// </remarks>
-    /// <param name="skinnedMesh">The mesh to find a mapping for.</param>
-    /// <returns>Returns an array of <see cref="OVRFaceExpressions.FaceExpression"/> of the same length as the number of blendshapes on the <paramref name="skinnedMesh"/> with each element identifying the closest found match</returns>
-    private static OVRFaceExpressions.FaceExpression[] AutoGenerateMapping(Mesh skinnedMesh)
-    {
-        var result = new OVRFaceExpressions.FaceExpression[skinnedMesh.blendShapeCount];
-
-        var expressionTokens = new HashSet<string>[(int)OVRFaceExpressions.FaceExpression.Max];
-        string[] enumNames = Enum.GetNames(typeof(OVRFaceExpressions.FaceExpression));
-
-        for(int i = 0; i < (int)OVRFaceExpressions.FaceExpression.Max; ++i)
-        {
-            expressionTokens[i] = TokenizeString(enumNames[i]);
-        }
-
-        for (int i = 0; i < skinnedMesh.blendShapeCount; ++i)
-        {
-            result[i] = (OVRFaceExpressions.FaceExpression)FindBestMatch(expressionTokens, skinnedMesh.GetBlendShapeName(i), (int)OVRFaceExpressions.FaceExpression.Max);
-        }
-
-        return result;
-    }
-
-    private static int FindBestMatch(HashSet<string>[] tokenizedOptions, string searchString, int defaultReturn)
-    {
-        HashSet<string> blendShapeTokens = TokenizeString(searchString);
-
-        int bestMatchEnumIndex = defaultReturn;
-        int bestMatchCount = 2; // require more than two characters to match in an expression, to avoid just matching L/ LB/ R/RB
-
-        for (int j = 0; j < tokenizedOptions.Length; ++j)
-        {
-            int thisMatchCount = 0;
-            HashSet<string> thisSet = tokenizedOptions[j];
-            // Currently we only allow exact matches, using Levenshtein distance for fuzzy matches
-            // would allow for handling of common typos and other slight mismatches
-            foreach(string matchingToken in blendShapeTokens.Intersect(thisSet))
-            {
-                thisMatchCount += matchingToken.Length;
-            }
-
-            if(thisMatchCount > bestMatchCount)
-            {
-                bestMatchCount = thisMatchCount;
-                bestMatchEnumIndex = j;
-            }
-        }
-
-        return bestMatchEnumIndex;
-    }
-
-    private static HashSet<string> TokenizeString(string s)
-    {
-        var separators = new char[]{' ','_','-',',','.',';'};
-        // add both the camel case and non-camel case split versions since the
-        // camel case split doesn't handle all caps
-        //(it's fundamentally ambigous without natural language comprehension)
-        // duplicates don't matter as we later will hash them and they should match
-        var splitTokens = SplitCamelCase(s).Split(separators).Concat(s.Split(separators));
-
-        var hashCodes = new HashSet<string>();
-        foreach(string token in splitTokens)
-        {
-            hashCodes.Add(token.ToLowerInvariant());
-        }
-
-        return hashCodes;
-    }
-
-    private static string SplitCamelCase(string input) => System.Text.RegularExpressions.Regex.Replace(input, "([A-Z])", " $1", System.Text.RegularExpressions.RegexOptions.Compiled).Trim();
 }
+

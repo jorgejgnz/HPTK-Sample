@@ -18,7 +18,7 @@ namespace Meta.WitAi.Utilities
         // Log error
         private static void LogError(string error)
         {
-            Debug.LogError($"IO Utility - {error}");
+            VLog.E($"IO Utility - {error}");
         }
 
         /// <summary>

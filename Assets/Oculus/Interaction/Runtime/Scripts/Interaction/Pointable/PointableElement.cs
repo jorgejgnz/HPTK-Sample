@@ -34,7 +34,7 @@ namespace Oculus.Interaction
         private bool _addNewPointsToFront = false;
 
         [SerializeField, Interface(typeof(IPointableElement)), Optional]
-        private MonoBehaviour _forwardElement;
+        private UnityEngine.Object _forwardElement;
 
         public IPointableElement ForwardElement { get; private set; }
 
@@ -284,7 +284,7 @@ namespace Oculus.Interaction
         public void InjectOptionalForwardElement(IPointableElement forwardElement)
         {
             ForwardElement = forwardElement;
-            _forwardElement = forwardElement as MonoBehaviour;
+            _forwardElement = forwardElement as UnityEngine.Object;
         }
 
         #endregion

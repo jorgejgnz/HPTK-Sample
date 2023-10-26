@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
  *
@@ -36,7 +36,7 @@ public class SerializableDictionary<TKey, TValue> : Dictionary<TKey, TValue>, IS
     {
         keys.Clear();
         values.Clear();
-        foreach(var pair in this)
+        foreach (var pair in this)
         {
             keys.Add(pair.Key);
             values.Add(pair.Value);
@@ -50,13 +50,13 @@ public class SerializableDictionary<TKey, TValue> : Dictionary<TKey, TValue>, IS
 
         if (keys.Count != values.Count)
         {
-	        throw new System.Exception(string.Format(
-		        "there are {0} keys and {1} values after deserialization. Make sure that both key and value types are serializable."));
+            throw new System.Exception(string.Format(
+                "there are {0} keys and {1} values after deserialization. Make sure that both key and value types are serializable."));
         }
 
         for (var i = 0; i < keys.Count; i++)
         {
-	        this.Add(keys[i], values[i]);
+            this.Add(keys[i], values[i]);
         }
     }
 }

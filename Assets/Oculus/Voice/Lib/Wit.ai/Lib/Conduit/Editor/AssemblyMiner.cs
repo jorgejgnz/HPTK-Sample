@@ -25,7 +25,7 @@ namespace Meta.Conduit.Editor
         /// Validates that parameters are compatible.
         /// </summary>
         private readonly IParameterValidator _parameterValidator;
-        
+
         /// <summary>
         /// Set to true once the miner is initialized. No interactions with the class should be allowed before then.
         /// </summary>
@@ -35,13 +35,13 @@ namespace Meta.Conduit.Editor
         public Dictionary<string, int> SignatureFrequency { get; private set; } = new Dictionary<string, int>();
 
         /// <inheritdoc/>
-        public Dictionary<string, int> IncompatibleSignatureFrequency { get; private set; } = new Dictionary<string, int>();
+        public Dictionary<string, int> IncompatibleSignatureFrequency { get; private set; } =
+            new Dictionary<string, int>();
 
         /// <summary>
         /// Initializes the class with a target assembly.
         /// </summary>
         /// <param name="parameterValidator">The parameter validator.</param>
-        /// <param name="parameterFilter">The parameter filter.</param>
         public AssemblyMiner(IParameterValidator parameterValidator)
         {
             this._parameterValidator = parameterValidator;
@@ -112,7 +112,7 @@ namespace Meta.Conduit.Editor
                         VLog.E("Unexpected null enum value");
                         continue;
                     }
-                    
+
                     values.Add(new WitKeyword(enumValue.ToString(), synonyms));
                 }
 
@@ -122,8 +122,8 @@ namespace Meta.Conduit.Editor
 
             return entities;
         }
-        
-        private static T GetAttribute<T>(object enumValue) where T:Attribute
+
+        private static T GetAttribute<T>(object enumValue) where T : Attribute
         {
             var type = enumValue.GetType();
             var memberInfos = type.GetMember(enumValue.ToString());
@@ -131,6 +131,7 @@ namespace Meta.Conduit.Editor
             {
                 return null;
             }
+
             var attributes = memberInfos.First().GetCustomAttributes(typeof(ConduitValueAttribute), false);
             if (attributes.Length == 0)
             {
@@ -140,8 +141,44 @@ namespace Meta.Conduit.Editor
             return attributes.First() as T;
         }
 
-        /// <inheritdoc/>
-        public List<ManifestAction> ExtractActions(IConduitAssembly assembly)
+        private ManifestParameter GetManifestParameters(ParameterInfo parameter, Type attributeType, string actionID)
+        {
+
+            List<string> aliases;
+            List<string> examples;
+
+            if (parameter.GetCustomAttributes(attributeType, false).Length > 0)
+            {
+                var parameterAttribute =
+                    parameter.GetCustomAttributes(attributeType, false).First() as
+                        ConduitParameterAttribute;
+                aliases = parameterAttribute.Aliases;
+                examples = parameterAttribute.Examples;
+            }
+            else
+            {
+                aliases = new List<string>();
+                examples = new List<string>();
+            }
+
+            var snakeCaseName = ConduitUtilities.DelimitWithUnderscores(parameter.Name).ToLower()
+                .TrimStart('_');
+            var snakeCaseAction = actionID.Replace('.', '_');
+
+            var manifestParameter = new ManifestParameter
+            {
+                Name = ConduitUtilities.SanitizeName(parameter.Name),
+                InternalName = parameter.Name,
+                QualifiedTypeName = parameter.ParameterType.FullName,
+                TypeAssembly = parameter.ParameterType.Assembly.FullName,
+                Aliases = aliases,
+                Examples = examples,
+                QualifiedName = $"{snakeCaseAction}_{snakeCaseName}"
+            };
+
+            return manifestParameter;
+        }
+        private List<ManifestAction> ExtractActionsInternal(Type attributeType, IConduitAssembly assembly)
         {
             if (!_initialized)
             {
@@ -154,6 +191,24 @@ namespace Meta.Conduit.Editor
 
             foreach (var method in methods)
             {
+                if (method == null)
+                {
+                    VLog.E($"Found a null method in assembly: {assembly.FullName}");
+                    continue;
+                }
+
+                if (method.DeclaringType == null)
+                {
+                    VLog.E($"Method {method.Name} in assembly {assembly.FullName} had null declaring type");
+                    continue;
+                }
+
+                if (method.DeclaringType != method.ReflectedType)
+                {
+                    // This method was declared elsewhere, so we should process it where it's declared only.
+                    continue;
+                }
+
                 var attributes = method.GetCustomAttributes(typeof(ConduitActionAttribute), false);
                 if (attributes.Length == 0)
                 {
@@ -161,7 +216,7 @@ namespace Meta.Conduit.Editor
                 }
 
                 var actionAttribute = attributes.First() as ConduitActionAttribute;
-                var actionName = actionAttribute.Intent;
+                var actionName = actionAttribute?.Intent;
                 if (string.IsNullOrEmpty(actionName))
                 {
                     actionName = $"{method.Name}";
@@ -173,7 +228,7 @@ namespace Meta.Conduit.Editor
                 {
                     ID = $"{method.DeclaringType.FullName}.{method.Name}",
                     Name = actionName,
-                    Assembly = assembly.FullName
+                    Assembly = assembly.FullName,
                 };
 
                 var compatibleParameters = true;
@@ -193,39 +248,7 @@ namespace Meta.Conduit.Editor
                         VLog.W($"Conduit does not currently support parameter type: {parameter.ParameterType}");
                         continue;
                     }
-                    
-                    List<string> aliases;
-                    List<string> examples;
-
-                    if (parameter.GetCustomAttributes(typeof(ConduitParameterAttribute), false).Length > 0)
-                    {
-                        var parameterAttribute =
-                            parameter.GetCustomAttributes(typeof(ConduitParameterAttribute), false).First() as
-                                ConduitParameterAttribute;
-                        aliases = parameterAttribute.Aliases;
-                        examples = parameterAttribute.Examples;
-                    }
-                    else
-                    {
-                        aliases = new List<string>();
-                        examples = new List<string>();
-                    }
-
-                    var snakeCaseName= ConduitUtilities.DelimitWithUnderscores(parameter.Name).ToLower().TrimStart('_');
-                    var snakeCaseAction = action.ID.Replace('.', '_');
-
-                    var manifestParameter = new ManifestParameter
-                    {
-                        Name = ConduitUtilities.SanitizeName(parameter.Name),
-                        InternalName = parameter.Name,
-                        QualifiedTypeName = parameter.ParameterType.FullName,
-                        TypeAssembly = parameter.ParameterType.Assembly.FullName,
-                        Aliases = aliases,
-                        Examples = examples,
-                        QualifiedName = $"{snakeCaseAction}_{snakeCaseName}"
-                    };
-
-                    parameters.Add(manifestParameter);
+                    parameters.Add(GetManifestParameters(parameter, attributeType, action.ID));
                 }
 
                 if (compatibleParameters)
@@ -242,6 +265,100 @@ namespace Meta.Conduit.Editor
             }
 
             return actions;
+        }
+
+        private List<ManifestErrorHandler> ExtractErrorHandlersInternal(Type attributeType, IConduitAssembly assembly)
+        {
+            if (!_initialized)
+            {
+                throw new InvalidOperationException("Assembly Miner not initialized");
+            }
+
+            var methods = assembly.GetMethods();
+
+            var actions = new List<ManifestErrorHandler>();
+
+            foreach (var method in methods)
+            {
+                var attributes = method.GetCustomAttributes(attributeType, false);
+                if (attributes.Length == 0)
+                {
+                    continue;
+                }
+
+                var parameters = new List<ManifestParameter>();
+
+                var action = new ManifestErrorHandler()
+                {
+                    ID = $"{method.DeclaringType.FullName}.{method.Name}",
+                    // Name = actionName,
+                    Assembly = assembly.FullName,
+                    Name = method.Name
+                };
+
+                var compatibleParameters = true;
+
+                var signature = GetMethodSignature(method);
+
+                // We track this first regardless of whether or not Conduit supports it to identify gaps.
+                SignatureFrequency.TryGetValue(signature, out var currentFrequency);
+                SignatureFrequency[signature] = currentFrequency + 1;
+
+                var methodParameters = method.GetParameters();
+                if (methodParameters.Length < 2)
+                {
+                    VLog.E("Not enough parameters provided for error handler " + method.Name);
+                    continue;
+                }
+                if (methodParameters[0].ParameterType != typeof(string))
+                {
+                    VLog.E("First parameter must be a string for error handler " + method.Name);
+                    continue;
+                }
+                if (methodParameters[1].ParameterType != typeof(Exception))
+                {
+                    VLog.E("Second parameter must be an exception for error handler " + method.Name);
+                    continue;
+                }
+
+                foreach (var parameter in methodParameters)
+                {
+                    var supported = _parameterValidator.IsSupportedParameterType(parameter.ParameterType);
+                    if (!supported)
+                    {
+                        compatibleParameters = false;
+                        VLog.W($"Conduit does not currently support parameter type: {parameter.ParameterType}");
+                        continue;
+                    }
+
+                    parameters.Add(GetManifestParameters(parameter, attributeType, action.ID));
+                }
+
+                if (compatibleParameters)
+                {
+                    action.Parameters = parameters;
+                    actions.Add(action);
+                }
+                else
+                {
+                    VLog.W($"{method} has Conduit-Incompatible Parameters");
+                    IncompatibleSignatureFrequency.TryGetValue(signature, out currentFrequency);
+                    IncompatibleSignatureFrequency[signature] = currentFrequency + 1;
+                }
+            }
+
+            return actions;
+        }
+
+        /// <inheritdoc/>
+        public List<ManifestAction> ExtractActions(IConduitAssembly assembly)
+        {
+            return ExtractActionsInternal(typeof(ConduitActionAttribute), assembly);
+        }
+
+        public List<ManifestErrorHandler> ExtractErrorHandlers(IConduitAssembly assembly)
+        {
+            return ExtractErrorHandlersInternal(typeof(HandleEntityResolutionFailure), assembly);
         }
 
         /// <summary>

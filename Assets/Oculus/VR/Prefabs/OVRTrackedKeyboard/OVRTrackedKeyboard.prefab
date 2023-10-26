@@ -150,21 +150,18 @@ MonoBehaviour:
   trackingEnabled: 1
   connectionRequired: 1
   showUntracked: 0
-  useCustomModel: 0
   keyboardQueryFlags: 2
   presentation: 0
-  allowRuntimeTextureQuality: 0
   textureFiltering: 2
   mipmapBias: -0.3
-  PassthroughBorderMultiplier: 0.2
+  PassthroughBorderMultiplier: 0.1
   keyboardModelShader: {fileID: 4800000, guid: 31d0aa80bfd61974cb31771e0a522854, type: 3}
   keyboardModelAlphaBlendShader: {fileID: 4800000, guid: d2d85b7dbb1832e4bb13239ecd555f29,
     type: 3}
-  KeyLabelModeShader: {fileID: 4800000, guid: d2d85b7dbb1832e4bb13239ecd555f29, type: 3}
   PassthroughShader: {fileID: 4800000, guid: 8120257754b48344b8a1a0961bad0c46, type: 3}
   projectedPassthroughRoot: {fileID: 1142419901555515376}
   projectedPassthroughMesh: {fileID: 3337000877942556230}
-  ProjectedPassthroughKeyLabel: {fileID: 365103210938825357}
+  ProjectedPassthroughMR: {fileID: 365103210938825357}
   ActiveKeyboardTransform: {fileID: 3051129225537410085}
   HandsOverKeyboard: 0
   UseHeuristicRollback: 0
@@ -202,6 +199,7 @@ MonoBehaviour:
   overlayType: 1
   compositionDepth: 1
   hidden: 0
+  depthTestEnabled: 0
   overridePerLayerColorScaleAndOffset: 0
   colorScale: {x: 1, y: 1, z: 1, w: 1}
   colorOffset: {x: 0, y: 0, z: 0, w: 0}
@@ -241,6 +239,12 @@ MonoBehaviour:
   colorMapEditorContrast: 0
   colorMapEditorBrightness: 0
   colorMapEditorPosterize: 0
+  colorMapEditorSaturation: 0
+  _colorLutSourceTexture: {fileID: 0}
+  _colorLutTargetTexture: {fileID: 0}
+  _lutWeight: 1
+  _flipLutY: 1
+  serializedSurfaceGeometry: []
   textureOpacity_: 1
   edgeRenderingEnabled_: 0
   edgeColor_: {r: 1, g: 1, b: 1, a: 1}

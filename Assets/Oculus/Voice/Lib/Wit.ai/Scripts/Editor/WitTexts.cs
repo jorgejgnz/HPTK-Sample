@@ -23,7 +23,11 @@ namespace Meta.WitAi
             public string WitAppSettingsEndpoint;
             public string WitAppUnderstandingEndpoint;
             public string WitOpenButtonLabel;
+            public string WitDocsTitle;
+            public string WitDocsUrl;
             public string VLogLevelLabel;
+            public string TelemetryLevelLabel;
+            public string TelemetryEnabledLabel;
             public string ConfigurationFileManagerLabel;
             public string ConfigurationFileNameLabel;
             public string ConfigurationSelectLabel;
@@ -77,6 +81,9 @@ namespace Meta.WitAi
             public string ConfigurationEndpointSpeechLabel;
             public string ConfigurationEndpointMessageLabel;
             public string ConfigurationEndpointDictationLabel;
+            public string ConfigurationEndpointSynthesizeLabel;
+            public string ConfigurationEndpointComposerEventLabel;
+            public string ConfigurationEndpointComposerConverseLabel;
             [Header("Configuration Application Texts")]
             public string ConfigurationApplicationTabLabel;
             public string ConfigurationApplicationMissingLabel;
@@ -93,6 +100,15 @@ namespace Meta.WitAi
 
             [Header("Configuration Conduit Texts")]
             public string ConfigurationConduitMissingTokenLabel;
+            public string ConfigurationConduitUseConduitLabel;
+            public string ConfigurationConduitRelaxedResolutionsLabel;
+            public string ConfigurationConduitRelaxedResolutionsTooltip;
+            public string ConfigurationConduitUpdateManifestLabel;
+            public string ConfigurationConduitGenerateManifestLabel;
+            public string ConfigurationConduitSelectManifestLabel;
+            public string ConfigurationConduitSpecifyAssembliesLabel;
+            public string ConfigurationConduitSyncEntitiesLabel;
+            public string ConfigurationConduitAutoTrainLabel;
 
             [Header("Configuration Intent Texts")]
             public string ConfigurationIntentsTabLabel;
@@ -114,6 +130,11 @@ namespace Meta.WitAi
             [Header("Configuration Voice Texts")]
             public string ConfigurationVoicesTabLabel;
             public string ConfigurationVoicesMissingLabel;
+            [Header("Configuration Composer Texts")]
+            public string ConfigurationComposerTabLabel;
+            public string ConfigurationComposerMissingLabel;
+            [Header("Tooltip Texts")]
+            public string ShowTooltipsLabel;
         }
 
         // Wit
@@ -144,7 +165,7 @@ namespace Meta.WitAi
             TextAsset textAsset = Resources.Load<TextAsset>(textFilePath);
             if (textAsset == null)
             {
-                Debug.LogError($"WitStyles - Add localization to Resources/{textFilePath}\nLanguage: {languageID}");
+                VLog.E($"WitStyles - Add localization to Resources/{textFilePath}\nLanguage: {languageID}");
                 return;
             }
             Texts = JsonUtility.FromJson<WitText>(textAsset.text);

@@ -31,10 +31,13 @@ namespace Oculus.Voice.Core.Bindings.Android.PlatformLogger
         public bool IsUsingPlatformIntegration { get; set; }
         public string WitApplication { get; set; }
         public bool ShouldLogToConsole { get; set; }
-        private static readonly string TAG = "VoiceSDKConsoleLogger"; 
+        private static readonly string TAG = "VoiceSDKConsoleLogger";
+
+        private bool loggedFirstTranscriptionTime = false;
         public void LogInteractionStart(string requestId, string witApi)
         {
             if (!ShouldLogToConsole) return;
+            loggedFirstTranscriptionTime = false;
             Debug.Log($"{TAG}: Interaction started with request ID: " + requestId);
             Debug.Log($"{TAG}: WitApi: " + witApi);
             Debug.Log($"{TAG}: request_start_time: " + DateTimeUtility.ElapsedMilliseconds.ToString());
@@ -68,5 +71,14 @@ namespace Oculus.Voice.Core.Bindings.Android.PlatformLogger
             if (!ShouldLogToConsole) return;
             Debug.Log($"{TAG}: Logging key-value pair: {annotationKey}::{annotationValue}");
         }
+        
+        public void LogFirstTranscriptionTime()
+        {
+            if (!loggedFirstTranscriptionTime)
+            {
+                loggedFirstTranscriptionTime = true;
+                LogInteractionPoint("firstPartialTranscriptionTime");
+            }
+        } 
     }
 }

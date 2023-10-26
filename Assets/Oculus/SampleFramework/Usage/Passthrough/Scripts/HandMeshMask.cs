@@ -2,7 +2,7 @@ using UnityEngine;
 
 /*
  * This script creates a custom mesh, specifically for hand masking in the Passthrough SDK:
- * 
+ *
  * 1. Created with 2D screen space in mind, since it's 2D triangles facing the camera.
  *    Not advised to use this mesh in any other way.
  * 2. The look of it should be coupled with maskMaterial, which defines the falloff of the fade and
@@ -21,13 +21,20 @@ public class HandMeshMask : MonoBehaviour
     // these feel like good defaults
     [Tooltip("The segments around the tip of a finger")]
     public int radialDivisions = 9;
+
     [Tooltip("The fade range (finger width is 2x this)")]
     public float borderSize = 0.2f;
-    [Tooltip("Along the fingers, each knuckle scales down by this amount.  Default is zero for uniform width along entire finger.")]
+
+    [Tooltip("Along the fingers, each knuckle scales down by this amount. " +
+             "Default is zero for uniform width along entire finger.")]
     public float fingerTaper = 0.13f;
-    [Tooltip("Shorten the last bone of each finger; need this to account for bone structure (end bone is at finger tip instead of center). Default is 1.")]
+
+    [Tooltip("Shorten the last bone of each finger; need this to account for bone structure " +
+             "(end bone is at finger tip instead of center). Default is 1.")]
     public float fingerTipLength = 0.8f;
-    [Tooltip("Move the base of the 4 main fingers towards the tips, to avoid a visible mesh crack between finger webbing. Default is 0.")]
+
+    [Tooltip("Move the base of the 4 main fingers towards the tips, to avoid a visible mesh crack " +
+             "between finger webbing. Default is 0.")]
     public float webOffset = 0.25f;
 
     // retrieved by OVRHands at runtime
@@ -71,9 +78,9 @@ public class HandMeshMask : MonoBehaviour
         }
 
         bool handsActive = (
-          OVRInput.GetActiveController() == OVRInput.Controller.Hands ||
-          OVRInput.GetActiveController() == OVRInput.Controller.LHand ||
-          OVRInput.GetActiveController() == OVRInput.Controller.RHand);
+            OVRInput.GetActiveController() == OVRInput.Controller.Hands ||
+            OVRInput.GetActiveController() == OVRInput.Controller.LHand ||
+            OVRInput.GetActiveController() == OVRInput.Controller.RHand);
         maskMeshObject.SetActive(handsActive);
     }
 
@@ -112,8 +119,11 @@ public class HandMeshMask : MonoBehaviour
                 k0taper *= 1.2f;
                 k1taper *= 1.1f;
             }
-            AddKnuckleMesh(knuckleVerts, k0taper, k1taper, referenceHand.Bones[baseId].Transform.position, referenceHand.Bones[baseId + 1].Transform.position);
-            AddKnuckleMesh(knuckleVerts, k1taper, k2taper, referenceHand.Bones[baseId + 1].Transform.position, referenceHand.Bones[baseId + 2].Transform.position);
+
+            AddKnuckleMesh(knuckleVerts, k0taper, k1taper, referenceHand.Bones[baseId].Transform.position,
+                referenceHand.Bones[baseId + 1].Transform.position);
+            AddKnuckleMesh(knuckleVerts, k1taper, k2taper, referenceHand.Bones[baseId + 1].Transform.position,
+                referenceHand.Bones[baseId + 2].Transform.position);
 
             // for the tip of the finger, the mask needs to be a bit different:
             // the final joint of the skeleton's finger is at the tip, but
@@ -160,7 +170,8 @@ public class HandMeshMask : MonoBehaviour
         for (int i = 0; i < fanVerts * 2; i++)
         {
             int basePoint = (i / fanVerts) + baseVertId;
-            Vector3 vertPos = handVertices[basePoint] + windingVec * borderSize * handScale * (basePoint != baseVertId ? point1scale : point2scale);
+            Vector3 vertPos = handVertices[basePoint] + windingVec * borderSize * handScale *
+                (basePoint != baseVertId ? point1scale : point2scale);
             AddVertex(vertPos, new Vector2(1, 0), Color.black);
             if (i != radialDivisions) // after making the first fan, don't wind for one vert
             {
@@ -206,36 +217,42 @@ public class HandMeshMask : MonoBehaviour
         // make a few vertices that aren't bone positions
 
         // vertex between middle and ring fingers
-        Vector3 customVert1 = (referenceHand.Bones[9].Transform.position + referenceHand.Bones[12].Transform.position) * 0.5f;
+        Vector3 customVert1 = (referenceHand.Bones[9].Transform.position + referenceHand.Bones[12].Transform.position) *
+                              0.5f;
         // vertex at "saddle" between thumb and index
-        Vector3 customVert2 = (referenceHand.Bones[4].Transform.position + referenceHand.Bones[6].Transform.position) * 0.5f;
-        customVert2 = (customVert2 - referenceHand.Bones[15].Transform.position) * 0.9f + referenceHand.Bones[15].Transform.position;
+        Vector3 customVert2 = (referenceHand.Bones[4].Transform.position + referenceHand.Bones[6].Transform.position) *
+                              0.5f;
+        customVert2 = (customVert2 - referenceHand.Bones[15].Transform.position) * 0.9f +
+                      referenceHand.Bones[15].Transform.position;
         // vertex further up thumb, between bones 4 and 5
-        Vector3 thumbPos = (referenceHand.Bones[5].Transform.position - referenceHand.Bones[4].Transform.position) * webOffset;
+        Vector3 thumbPos = (referenceHand.Bones[5].Transform.position - referenceHand.Bones[4].Transform.position) *
+                           webOffset;
         thumbPos += referenceHand.Bones[4].Transform.position;
         // at knuckles - move the mesh down the fingers to avoid the ugly mesh gap at finger-webs
-        Vector3 indexPos = (referenceHand.Bones[7].Transform.position - referenceHand.Bones[6].Transform.position) * webOffset;
+        Vector3 indexPos = (referenceHand.Bones[7].Transform.position - referenceHand.Bones[6].Transform.position) *
+                           webOffset;
         indexPos += referenceHand.Bones[6].Transform.position;
-        Vector3 pinkyPos = (referenceHand.Bones[17].Transform.position - referenceHand.Bones[16].Transform.position) * webOffset;
+        Vector3 pinkyPos = (referenceHand.Bones[17].Transform.position - referenceHand.Bones[16].Transform.position) *
+                           webOffset;
         pinkyPos += referenceHand.Bones[16].Transform.position;
         Vector3 middlePos = (referenceHand.Bones[10].Transform.position - referenceHand.Bones[9].Transform.position) +
-          (referenceHand.Bones[13].Transform.position - referenceHand.Bones[12].Transform.position);
+                            (referenceHand.Bones[13].Transform.position - referenceHand.Bones[12].Transform.position);
         middlePos *= 0.5f * webOffset;
         middlePos += customVert1;
 
         // first, make solid low-poly palm
-        AddVertex(referenceHand.Bones[0].Transform.position, Vector2.zero, Color.black);  // baseVertId + 0
-        AddVertex(referenceHand.Bones[3].Transform.position, Vector2.zero, Color.black);  // +1
-        AddVertex(referenceHand.Bones[4].Transform.position, Vector2.zero, Color.black);  // +2
-        AddVertex(thumbPos, Vector2.zero, Color.black);                                   // +3
-        AddVertex(customVert2, Vector2.zero, Color.black);                                // +4
-        AddVertex(referenceHand.Bones[6].Transform.position, Vector2.zero, Color.black);  // +5
-        AddVertex(customVert1, Vector2.zero, Color.black);                                // +6
+        AddVertex(referenceHand.Bones[0].Transform.position, Vector2.zero, Color.black); // baseVertId + 0
+        AddVertex(referenceHand.Bones[3].Transform.position, Vector2.zero, Color.black); // +1
+        AddVertex(referenceHand.Bones[4].Transform.position, Vector2.zero, Color.black); // +2
+        AddVertex(thumbPos, Vector2.zero, Color.black); // +3
+        AddVertex(customVert2, Vector2.zero, Color.black); // +4
+        AddVertex(referenceHand.Bones[6].Transform.position, Vector2.zero, Color.black); // +5
+        AddVertex(customVert1, Vector2.zero, Color.black); // +6
         AddVertex(referenceHand.Bones[15].Transform.position, Vector2.zero, Color.black); // +7
         AddVertex(referenceHand.Bones[16].Transform.position, Vector2.zero, Color.black); // +8
-        AddVertex(indexPos, Vector2.zero, Color.black);                                   // +9
-        AddVertex(middlePos, Vector2.zero, Color.black);                                  // +10
-        AddVertex(pinkyPos, Vector2.zero, Color.black);                                   // +11
+        AddVertex(indexPos, Vector2.zero, Color.black); // +9
+        AddVertex(middlePos, Vector2.zero, Color.black); // +10
+        AddVertex(pinkyPos, Vector2.zero, Color.black); // +11
 
         // then, assign triangles
         // unfortunately there's no elegant way to do this
@@ -347,10 +364,14 @@ public class HandMeshMask : MonoBehaviour
         AddKnuckleMesh(knuckleVerts, 1.0f, 1.0f, referenceHand.Bones[6].Transform.position, customVert1);
         AddKnuckleMesh(knuckleVerts, 1.0f, 1.0f, customVert1, referenceHand.Bones[16].Transform.position);
 
-        AddKnuckleMesh(knuckleVerts, 1.2f, 1.0f, referenceHand.Bones[15].Transform.position, referenceHand.Bones[16].Transform.position);
-        AddKnuckleMesh(knuckleVerts, 1.3f, 1.2f, referenceHand.Bones[0].Transform.position, referenceHand.Bones[15].Transform.position);
-        AddKnuckleMesh(knuckleVerts, 1.3f, 1.2f, referenceHand.Bones[0].Transform.position, referenceHand.Bones[3].Transform.position);
-        AddKnuckleMesh(knuckleVerts, 1.3f, 1.0f, referenceHand.Bones[0].Transform.position, referenceHand.Bones[6].Transform.position);
+        AddKnuckleMesh(knuckleVerts, 1.2f, 1.0f, referenceHand.Bones[15].Transform.position,
+            referenceHand.Bones[16].Transform.position);
+        AddKnuckleMesh(knuckleVerts, 1.3f, 1.2f, referenceHand.Bones[0].Transform.position,
+            referenceHand.Bones[15].Transform.position);
+        AddKnuckleMesh(knuckleVerts, 1.3f, 1.2f, referenceHand.Bones[0].Transform.position,
+            referenceHand.Bones[3].Transform.position);
+        AddKnuckleMesh(knuckleVerts, 1.3f, 1.0f, referenceHand.Bones[0].Transform.position,
+            referenceHand.Bones[6].Transform.position);
     }
 
     void AddVertex(Vector3 position, Vector2 uv, Color color)

@@ -7,19 +7,24 @@
  */
 
 using System;
-using System.Text;
 using System.Collections.Generic;
-using System.Linq;
 using Meta.WitAi.Data.Info;
 using Meta.WitAi.Json;
-using UnityEditor;
 
 namespace Meta.WitAi.Requests
 {
     internal class WitSyncVRequest : WitVRequest, IWitSyncVRequest
     {
-        // Constructor
-        public WitSyncVRequest(IWitRequestConfiguration configuration) : base(configuration, true) {}
+        /// <summary>
+        /// Constructor for wit based editor data sync VRequests
+        /// </summary>
+        /// <param name="configuration">The configuration interface to be used</param>
+        /// <param name="onDownloadProgress">The callback for progress related to downloading</param>
+        /// <param name="onFirstResponse">The callback for the first response of data from a request</param>
+        public WitSyncVRequest(IWitRequestConfiguration configuration,
+            RequestProgressDelegate onDownloadProgress = null,
+            RequestFirstResponseDelegate onFirstResponse = null)
+            : base(configuration, null, true, onDownloadProgress, onFirstResponse) {}
 
         /// <summary>
         /// Submits an intent to be added to the current wit app
@@ -31,7 +36,7 @@ namespace Meta.WitAi.Requests
             RequestCompleteDelegate<WitIntentInfo> onComplete)
         {
             string json = JsonConvert.SerializeObject(intentInfo);
-            return RequestWit(WitEditorConstants.ENDPOINT_ADD_INTENT, null, json, onComplete);
+            return RequestWitPost(WitEditorConstants.ENDPOINT_ADD_INTENT, null, json, onComplete);
         }
 
         /// <summary>
@@ -44,7 +49,7 @@ namespace Meta.WitAi.Requests
             RequestCompleteDelegate<WitEntityInfo> onComplete)
         {
             string json = JsonConvert.SerializeObject(entityInfo);
-            return RequestWit(WitEditorConstants.ENDPOINT_ADD_ENTITY, null, json, onComplete);
+            return RequestWitPost(WitEditorConstants.ENDPOINT_ADD_ENTITY, null, json, onComplete);
         }
 
         /// <summary>
@@ -59,10 +64,10 @@ namespace Meta.WitAi.Requests
             RequestCompleteDelegate<WitEntityInfo> onComplete)
         {
             string json = JsonConvert.SerializeObject(keywordInfo);
-            return RequestWit($"{WitEditorConstants.ENDPOINT_ADD_ENTITY}/{entityId}/{WitEditorConstants.ENDPOINT_ADD_ENTITY_KEYWORD}",
+            return RequestWitPost($"{WitEditorConstants.ENDPOINT_ADD_ENTITY}/{entityId}/{WitEditorConstants.ENDPOINT_ADD_ENTITY_KEYWORD}",
                 null, json, onComplete);
         }
-        
+
         /// <summary>
         /// Submits a synonym to be added to a keyword on the specified entity on the current wit app
         /// </summary>
@@ -71,13 +76,12 @@ namespace Meta.WitAi.Requests
         /// <param name="synonym">The synonym we're adding</param>
         /// <param name="onComplete">On completion that returns updated entity if successful</param>
         /// <returns>False if fails to make request</returns>
-
         public bool RequestAddSynonym(string entityId, string keyword, string synonym, RequestCompleteDelegate<WitEntityInfo> onComplete)
         {
             string json = $"{{\"synonym\": \"{synonym}\"}}";
-            return RequestWit(
+            return RequestWitPost(
                 $"{WitEditorConstants.ENDPOINT_ENTITIES}/{entityId}/{WitEditorConstants.ENDPOINT_ADD_ENTITY_KEYWORD}/{keyword}/{WitEditorConstants.ENDPOINT_ADD_ENTITY_KEYWORD_SYNONYMS}",
-                null, json, onComplete);        
+                null, json, onComplete);
         }
 
         /// <summary>
@@ -92,7 +96,7 @@ namespace Meta.WitAi.Requests
             List<JsonConverter> converters = new List<JsonConverter>(JsonConvert.DefaultConverters);
             converters.Add(new WitTraitValueInfoAddConverter());
             string json = JsonConvert.SerializeObject(traitInfo, converters.ToArray());
-            return RequestWit(WitEditorConstants.ENDPOINT_ADD_TRAIT, null, json, onComplete);
+            return RequestWitPost(WitEditorConstants.ENDPOINT_ADD_TRAIT, null, json, onComplete);
         }
         // Simple trait value converter since post requires string array
         private class WitTraitValueInfoAddConverter : JsonConverter
@@ -123,8 +127,32 @@ namespace Meta.WitAi.Requests
                 value = traitValue
             };
             string json = JsonConvert.SerializeObject(traitValInfo);
-            return RequestWit($"{WitEditorConstants.ENDPOINT_ADD_TRAIT}/{traitId}/{WitEditorConstants.ENDPOINT_ADD_TRAIT_VALUE}",
+            return RequestWitPost($"{WitEditorConstants.ENDPOINT_ADD_TRAIT}/{traitId}/{WitEditorConstants.ENDPOINT_ADD_TRAIT_VALUE}",
                 null, json, onComplete);
+        }
+
+        /// <summary>
+        /// Import app data from generated manifest JSON
+        /// </summary>
+        /// <param name="config"></param>
+        /// <param name="appName">The name of the app as it is defined in wit.ai</param>
+        /// <param name="manifestData">The serialized manifest to import from</param>
+        /// <returns>Built request object</returns>
+        public bool RequestImportData(string manifestData,
+            RequestCompleteDelegate<WitResponseData> onComplete)
+        {
+            var jsonNode = new WitResponseClass()
+            {
+                { "text", manifestData ?? string.Empty },
+                { "config_type", "1" },
+                { "config_value", "" }
+            };
+            string json = JsonConvert.SerializeObject(jsonNode);
+            Dictionary<string, string> queryParams = new Dictionary<string, string>();
+            queryParams["name"] = Configuration.GetApplicationId();
+            queryParams["private"] = "true";
+            queryParams["action_graph"] = "true";
+            return RequestWitPost(WitEditorConstants.ENDPOINT_IMPORT, queryParams, json, onComplete);
         }
     }
 }

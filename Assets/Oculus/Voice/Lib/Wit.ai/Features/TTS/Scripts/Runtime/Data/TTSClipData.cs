@@ -8,6 +8,7 @@
 
 using System;
 using System.Collections.Generic;
+using Meta.Voice.Audio;
 using UnityEngine;
 
 namespace Meta.WitAi.TTS.Data
@@ -29,17 +30,53 @@ namespace Meta.WitAi.TTS.Data
         // Unique identifier
         public string clipID;
         // Audio type
-        public AudioType audioType = AudioType.WAV; // Default
+        public AudioType audioType;
         // Voice settings for request
         public TTSVoiceSettings voiceSettings;
         // Cache settings for request
         public TTSDiskCacheSettings diskCacheSettings;
 
+        /// <summary>
+        /// Unique request id used for tracking & logging
+        /// </summary>
+        public string queryRequestId => _queryRequestId;
+        private string _queryRequestId = Guid.NewGuid().ToString();
+        // Whether service should stream audio or just provide all at once
+        public bool queryStream;
         // Request data
         public Dictionary<string, string> queryParameters;
 
-        // Clip
-        [NonSerialized] public AudioClip clip;
+        // Clip stream
+        public IAudioClipStream clipStream
+        {
+            get => _clipStream;
+            set
+            {
+                // Unload previous clip stream
+                IAudioClipStream v = value;
+                if (_clipStream != null && _clipStream != v)
+                {
+                    clipStream.OnStreamReady = null;
+                    clipStream.OnStreamUpdated = null;
+                    clipStream.OnStreamComplete = null;
+                    _clipStream.Unload();
+                }
+                // Apply new clip stream
+                _clipStream = v;
+            }
+        }
+        private IAudioClipStream _clipStream;
+        public AudioClip clip
+        {
+            get
+            {
+                if (clipStream is IAudioClipProvider uacs)
+                {
+                    return uacs.Clip;
+                }
+                return null;
+            }
+        }
         // Clip load state
         [NonSerialized] public TTSClipLoadState loadState;
         // Clip load progress
@@ -75,7 +112,7 @@ namespace Meta.WitAi.TTS.Data
         /// </summary>
         public bool Equals(TTSClipData other)
         {
-            return HasClipId(other.clipID);
+            return HasClipId(other?.clipID);
         }
         /// <summary>
         /// Compare clip ids
@@ -94,7 +131,5 @@ namespace Meta.WitAi.TTS.Data
             hash = hash * 31 + clipID.GetHashCode();
             return hash;
         }
-
-
     }
 }

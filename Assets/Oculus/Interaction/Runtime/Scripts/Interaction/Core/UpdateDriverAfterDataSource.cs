@@ -30,11 +30,11 @@ namespace Oculus.Interaction
     public class UpdateDriverAfterDataSource : MonoBehaviour, IUpdateDriver
     {
         [SerializeField, Interface(typeof(IUpdateDriver))]
-        private MonoBehaviour _updateDriver;
+        private UnityEngine.Object _updateDriver;
         private IUpdateDriver UpdateDriver;
 
         [SerializeField, Interface(typeof(IDataSource))]
-        private MonoBehaviour _dataSource;
+        private UnityEngine.Object _dataSource;
         private IDataSource DataSource;
 
         protected bool _started = false;
@@ -89,13 +89,13 @@ namespace Oculus.Interaction
         public void InjectUpdateDriver(IUpdateDriver updateDriver)
         {
             UpdateDriver = updateDriver;
-            _updateDriver = updateDriver as MonoBehaviour;
+            _updateDriver = updateDriver as UnityEngine.Object;
         }
 
         public void InjectDataSource(IDataSource dataSource)
         {
             DataSource = dataSource;
-            _dataSource = dataSource as MonoBehaviour;
+            _dataSource = dataSource as UnityEngine.Object;
         }
 
         #endregion

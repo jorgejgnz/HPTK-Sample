@@ -16,17 +16,19 @@ public class SampleUI : MonoBehaviour
 #if OVR_SAMPLES_ENABLE_FIREBASE
         DebugUIBuilder.instance.AddButton("Log", Log);
         DebugUIBuilder.instance.AddButton("Record Exception", RecordException);
-        collectionButton = DebugUIBuilder.instance.AddButton("Toggle Crashlytics Collection (true)", ToggleCrashlyticsCollection);
+        collectionButton =
+            DebugUIBuilder.instance.AddButton("Toggle Crashlytics Collection (true)", ToggleCrashlyticsCollection);
         DebugUIBuilder.instance.AddButton("Set Custom Key", ToggleCrashlyticsCollection);
         DebugUIBuilder.instance.AddButton("Set User ID", SetUserID);
         DebugUIBuilder.instance.AddButton("Crash", Crash);
-        
+
         DebugUIBuilder.instance.AddLabel("(Text input used by most methods)", DebugUIBuilder.DEBUG_PANE_RIGHT);
         inputText = DebugUIBuilder.instance.AddTextField("Input Text", DebugUIBuilder.DEBUG_PANE_RIGHT);
         DebugUIBuilder.instance.AddLabel("(The value of Set Custom Key)", DebugUIBuilder.DEBUG_PANE_RIGHT);
         valueText = DebugUIBuilder.instance.AddTextField("Value", DebugUIBuilder.DEBUG_PANE_RIGHT);
 #else
-        DebugUIBuilder.instance.AddLabel("Enable Firebase in your project before running this sample", DebugUIBuilder.DEBUG_PANE_RIGHT);
+        DebugUIBuilder.instance.AddLabel("Enable Firebase in your project before running this sample",
+            DebugUIBuilder.DEBUG_PANE_RIGHT);
 #endif
         DebugUIBuilder.instance.Show();
         inMenu = true;
@@ -42,11 +44,12 @@ public class SampleUI : MonoBehaviour
         }
     }
 
+#if OVR_SAMPLES_ENABLE_FIREBASE
     string GetText()
     {
         return inputText.GetComponentInChildren<InputField>().text;
     }
-#if OVR_SAMPLES_ENABLE_FIREBASE
+
     void Log()
     {
         Firebase.Crashlytics.Crashlytics.Log(GetText());
@@ -59,12 +62,15 @@ public class SampleUI : MonoBehaviour
 
     void ToggleCrashlyticsCollection()
     {
-        Firebase.Crashlytics.Crashlytics.IsCrashlyticsCollectionEnabled = !Firebase.Crashlytics.Crashlytics.IsCrashlyticsCollectionEnabled;
+        Firebase.Crashlytics.Crashlytics.IsCrashlyticsCollectionEnabled =
+            !Firebase.Crashlytics.Crashlytics.IsCrashlyticsCollectionEnabled;
         Text buttonText = collectionButton.GetComponentInChildren<Text>();
-        if(buttonText)
+        if (buttonText)
         {
-            buttonText.text = string.Format("Toggle Crashlytics Collection ({0})", Firebase.Crashlytics.Crashlytics.IsCrashlyticsCollectionEnabled);
-        }        
+            buttonText.text =
+                string.Format("Toggle Crashlytics Collection ({0})",
+                    Firebase.Crashlytics.Crashlytics.IsCrashlyticsCollectionEnabled);
+        }
     }
 
     void SetCustomKey()
@@ -85,5 +91,6 @@ public class SampleUI : MonoBehaviour
             *i = 0;
         }
     }
+
 #endif
 }

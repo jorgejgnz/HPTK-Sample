@@ -30,7 +30,7 @@ namespace Oculus.Interaction
     public class SurfaceSnapPoseDelegate : MonoBehaviour, ISnapPoseDelegate
     {
         [SerializeField, Interface(typeof(ISurface))]
-        private MonoBehaviour _surface;
+        private UnityEngine.Object _surface;
         protected ISurface Surface;
 
         private Dictionary<int, Pose> _snappedPoses;

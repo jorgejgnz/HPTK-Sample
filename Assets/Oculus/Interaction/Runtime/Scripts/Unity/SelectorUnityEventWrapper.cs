@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
  *
@@ -28,7 +28,7 @@ namespace Oculus.Interaction
     public class SelectorUnityEventWrapper : MonoBehaviour
     {
         [SerializeField, Interface(typeof(ISelector))]
-        private MonoBehaviour _selector;
+        private UnityEngine.Object _selector;
         private ISelector Selector;
 
         [SerializeField]
@@ -91,7 +91,7 @@ namespace Oculus.Interaction
 
         public void InjectSelector(ISelector selector)
         {
-            _selector = selector as MonoBehaviour;
+            _selector = selector as UnityEngine.Object;
             Selector = selector;
         }
 

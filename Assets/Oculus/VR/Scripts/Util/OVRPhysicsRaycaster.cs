@@ -19,13 +19,15 @@
  */
 
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace UnityEngine.EventSystems
 {
     /// <summary>
     /// Simple event system using physics raycasts. Very closely based on UnityEngine.EventSystems.PhysicsRaycaster
     /// </summary>
-    [RequireComponent(typeof(OVRCameraRig))]
+    [HelpURL("https://developer.oculus.com/reference/unity/latest/class_o_v_r_physics_raycaster")]
+
     public class OVRPhysicsRaycaster : BaseRaycaster
     {
         /// <summary>
@@ -41,14 +43,12 @@ namespace UnityEngine.EventSystems
         protected LayerMask m_EventMask = kNoEventMaskSet;
 
         protected OVRPhysicsRaycaster()
-        { }
+        {
+        }
 
         public override Camera eventCamera
         {
-            get
-            {
-                return GetComponent<OVRCameraRig>().leftEyeCamera;
-            }
+            get { return GetComponent<OVRCameraRig>().leftEyeCamera; }
         }
 
         /// <summary>
@@ -60,12 +60,10 @@ namespace UnityEngine.EventSystems
         }
 
         public int sortOrder = 0;
+
         public override int sortOrderPriority
         {
-            get
-            {
-                return sortOrder;
-            }
+            get { return sortOrder; }
         }
 
         /// <summary>
@@ -169,6 +167,7 @@ namespace UnityEngine.EventSystems
                 }
             }
         }
+
         /// <summary>
         /// Get screen position of this world position as seen by the event camera of this OVRPhysicsRaycaster
         /// </summary>

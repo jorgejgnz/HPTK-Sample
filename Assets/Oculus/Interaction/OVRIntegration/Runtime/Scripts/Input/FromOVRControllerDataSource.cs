@@ -91,7 +91,7 @@ namespace Oculus.Interaction.Input
     {
         [Header("OVR Data Source")]
         [SerializeField, Interface(typeof(IOVRCameraRigRef))]
-        private MonoBehaviour _cameraRigRef;
+        private UnityEngine.Object _cameraRigRef;
         public IOVRCameraRigRef CameraRigRef { get; private set; }
 
         [SerializeField]
@@ -102,7 +102,7 @@ namespace Oculus.Interaction.Input
         private Handedness _handedness;
 
         [SerializeField, Interface(typeof(ITrackingToWorldTransformer))]
-        private MonoBehaviour _trackingToWorldTransformer;
+        private UnityEngine.Object _trackingToWorldTransformer;
         private ITrackingToWorldTransformer TrackingToWorldTransformer;
 
         public bool ProcessLateUpdates
@@ -233,7 +233,7 @@ namespace Oculus.Interaction.Input
         protected override void UpdateData()
         {
             _controllerDataAsset.Config = Config;
-            var worldToTrackingSpace = CameraRigRef.CameraRig.transform.worldToLocalMatrix;
+            var worldToTrackingSpace = TrackingToWorldTransformer.Transform.worldToLocalMatrix;
             Transform ovrController = _ovrControllerAnchor;
 
             _controllerDataAsset.IsDataValid = true;
@@ -276,21 +276,21 @@ namespace Oculus.Interaction.Input
 
             // Update poses
 
-            // Convert controller pose from world to tracking space.
-            Pose worldRoot = new Pose(ovrController.position, ovrController.rotation);
-            _controllerDataAsset.RootPose.position = worldToTrackingSpace.MultiplyPoint3x4(worldRoot.position);
-            _controllerDataAsset.RootPose.rotation = worldToTrackingSpace.rotation * worldRoot.rotation;
+            // Root pose, in tracking space.
+            _controllerDataAsset.RootPose = new Pose(
+                OVRInput.GetLocalControllerPosition(_ovrController),
+                OVRInput.GetLocalControllerRotation(_ovrController));
             _controllerDataAsset.RootPoseOrigin = PoseOrigin.RawTrackedPose;
 
-
             // Convert controller pointer pose from local to tracking space.
-            Pose pointerPose =
-                new Pose(ovrController.transform.TransformPoint(_pointerPoseSelector.LocalPointerPose.position),
-                    worldRoot.rotation * _pointerPoseSelector.LocalPointerPose.rotation);
-            _controllerDataAsset.PointerPose.position = worldToTrackingSpace.MultiplyPoint3x4(pointerPose.position);
-            _controllerDataAsset.PointerPose.rotation = worldToTrackingSpace.rotation * pointerPose.rotation;
-            _controllerDataAsset.PointerPoseOrigin = PoseOrigin.RawTrackedPose;
+            Matrix4x4 controllerModelToTracking = Matrix4x4.TRS(
+                _controllerDataAsset.RootPose.position, _controllerDataAsset.RootPose.rotation,
+                Vector3.one);
+            _controllerDataAsset.PointerPose =
+                new Pose(controllerModelToTracking.MultiplyPoint3x4(_pointerPoseSelector.LocalPointerPose.position),
+                    _controllerDataAsset.RootPose.rotation * _pointerPoseSelector.LocalPointerPose.rotation);
 
+            _controllerDataAsset.PointerPoseOrigin = PoseOrigin.RawTrackedPose;
         }
 
         protected override ControllerDataAsset DataAsset => _controllerDataAsset;
@@ -312,7 +312,7 @@ namespace Oculus.Interaction.Input
 
         public void InjectTrackingToWorldTransformer(ITrackingToWorldTransformer trackingToWorldTransformer)
         {
-            _trackingToWorldTransformer = trackingToWorldTransformer as MonoBehaviour;
+            _trackingToWorldTransformer = trackingToWorldTransformer as UnityEngine.Object;
             TrackingToWorldTransformer = trackingToWorldTransformer;
         }
 

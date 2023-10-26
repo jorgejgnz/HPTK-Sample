@@ -52,8 +52,8 @@ MonoBehaviour:
   _data: {fileID: 0}
   _pointableElement: {fileID: 7780865689132456738}
   _rigidbody: {fileID: 675784305044643026}
-  _resetGrabOnGrabsUpdated: 1
   _physicsGrabbable: {fileID: 0}
+  _resetGrabOnGrabsUpdated: 1
   _scoringModifier:
     _positionRotationWeight: 0.5
   _supportedGrabTypes: 2
@@ -4967,7 +4967,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 88f3e02252cf62c41bf2d9f45cc4d551, type: 2}
+  - {fileID: 1360074879266755484, guid: 134e9118804c640d1b832467ae5e0213, type: 3}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -5090,8 +5090,8 @@ MonoBehaviour:
   _data: {fileID: 0}
   _pointableElement: {fileID: 7780865689132456738}
   _rigidbody: {fileID: 675784305044643026}
-  _resetGrabOnGrabsUpdated: 1
   _physicsGrabbable: {fileID: 0}
+  _resetGrabOnGrabsUpdated: 1
   _scoringModifier:
     _positionRotationWeight: 0.5
   _supportedGrabTypes: 2
@@ -9975,8 +9975,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 622db80eec0bd344f920b1aa056ae8d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _relativeTo: {fileID: 6035498533402622012}
   _surface: {fileID: 3467086613020190896}
+  _relativeTo: {fileID: 6035498533402622012}
   _usesHandPose: 1
   _handPose:
     _handedness: 0
@@ -10017,7 +10017,6 @@ MonoBehaviour:
     arcOffset: 0
     arcLength: 360
   _relativeTo: {fileID: 6035498533402622012}
-  _referencePoint: {fileID: 4934018181619517941}
 --- !u!1 &3621640340988106548
 GameObject:
   m_ObjectHideFlags: 0
@@ -14928,8 +14927,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 622db80eec0bd344f920b1aa056ae8d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _relativeTo: {fileID: 6035498533402622012}
   _surface: {fileID: 7405259131966247329}
+  _relativeTo: {fileID: 6035498533402622012}
   _usesHandPose: 1
   _handPose:
     _handedness: 1
@@ -14970,7 +14969,6 @@ MonoBehaviour:
     arcOffset: 0
     arcLength: 360
   _relativeTo: {fileID: 6035498533402622012}
-  _referencePoint: {fileID: 1272538754}
 --- !u!1 &5261280314052967557
 GameObject:
   m_ObjectHideFlags: 0
@@ -15047,8 +15045,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 622db80eec0bd344f920b1aa056ae8d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _relativeTo: {fileID: 6035498533402622012}
   _surface: {fileID: 5873392120096980714}
+  _relativeTo: {fileID: 6035498533402622012}
   _usesHandPose: 1
   _handPose:
     _handedness: 1
@@ -15089,7 +15087,6 @@ MonoBehaviour:
     arcOffset: 0
     arcLength: 360
   _relativeTo: {fileID: 6035498533402622012}
-  _referencePoint: {fileID: 698287359173294496}
 --- !u!1 &6341510018324738223
 GameObject:
   m_ObjectHideFlags: 0
@@ -15134,8 +15131,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 622db80eec0bd344f920b1aa056ae8d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _relativeTo: {fileID: 6035498533402622012}
   _surface: {fileID: 6708587478607825246}
+  _relativeTo: {fileID: 6035498533402622012}
   _usesHandPose: 1
   _handPose:
     _handedness: 0
@@ -15176,7 +15173,6 @@ MonoBehaviour:
     arcOffset: 0
     arcLength: 360
   _relativeTo: {fileID: 6035498533402622012}
-  _referencePoint: {fileID: 2775108796301020662}
 --- !u!1 &6379829757502743174
 GameObject:
   m_ObjectHideFlags: 0
@@ -15247,6 +15243,7 @@ MonoBehaviour:
   _forwardElement: {fileID: 0}
   _oneGrabTransformer: {fileID: 0}
   _twoGrabTransformer: {fileID: 0}
+  _targetTransform: {fileID: 0}
   _maxGrabPoints: -1
 --- !u!114 &8196890649205836185
 MonoBehaviour:
@@ -15541,8 +15538,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 622db80eec0bd344f920b1aa056ae8d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _relativeTo: {fileID: 6035498533402622012}
   _surface: {fileID: 5956396624077920875}
+  _relativeTo: {fileID: 6035498533402622012}
   _usesHandPose: 1
   _handPose:
     _handedness: 0
@@ -15583,7 +15580,6 @@ MonoBehaviour:
     arcOffset: 0
     arcLength: 360
   _relativeTo: {fileID: 6035498533402622012}
-  _referencePoint: {fileID: 3239688337022731110}
 --- !u!1 &7035269852814676659
 GameObject:
   m_ObjectHideFlags: 0
@@ -15628,8 +15624,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 622db80eec0bd344f920b1aa056ae8d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _relativeTo: {fileID: 6035498533402622012}
   _surface: {fileID: 373118072935606353}
+  _relativeTo: {fileID: 6035498533402622012}
   _usesHandPose: 1
   _handPose:
     _handedness: 1
@@ -15670,7 +15666,6 @@ MonoBehaviour:
     arcOffset: 0
     arcLength: 360
   _relativeTo: {fileID: 6035498533402622012}
-  _referencePoint: {fileID: 5821209463426970199}
 --- !u!1001 &182265765092334302
 PrefabInstance:
   m_ObjectHideFlags: 0

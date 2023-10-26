@@ -10,7 +10,7 @@ Shader "Punch Through Passthrough"
         ZWrite On
         Cull Off
         ZTest Always
-        
+
         Blend Zero Zero
 
         Pass
@@ -18,7 +18,7 @@ Shader "Punch Through Passthrough"
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-            
+
             #include "UnityCG.cginc"
 
             struct appdata
@@ -35,7 +35,7 @@ Shader "Punch Through Passthrough"
 
             sampler2D _MainTex;
             float4 _MainTex_ST;
-            
+
             v2f vert (appdata v)
             {
                 v2f o;
@@ -43,7 +43,7 @@ Shader "Punch Through Passthrough"
                 o.uv = v.uv;
                 return o;
             }
-            
+
             fixed4 frag (v2f i) : SV_Target
             {
                 return fixed4(0, 0, 0, 0);

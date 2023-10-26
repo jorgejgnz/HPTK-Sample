@@ -3,7 +3,7 @@
 Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 See SampleFramework license.txt for license terms.  Unless required by applicable law
-or agreed to in writing, the sample code is provided “AS IS” WITHOUT WARRANTIES OR
+or agreed to in writing, the sample code is provided "AS IS" WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied.  See the license for specific
 language governing permissions and limitations under the license.
 
@@ -27,7 +27,7 @@ Shader "Oculus Sample/Train Props Shader" {
     #include "UnityCG.cginc"
     // no deferred. support lightmaps and one light. use half vector instead of
     // view vector (less accurate but faster)
-    #pragma surface surf BlinnPhong exclude_path:prepass noforwardadd halfasview 
+    #pragma surface surf BlinnPhong exclude_path:prepass noforwardadd halfasview
 
     sampler2D _MainTex;
 

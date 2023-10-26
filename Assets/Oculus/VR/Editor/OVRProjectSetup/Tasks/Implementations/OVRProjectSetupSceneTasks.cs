@@ -23,23 +23,25 @@ using UnityEditor;
 [InitializeOnLoad]
 internal static class OVRProjectSetupSceneTasks
 {
-	private const OVRProjectSetup.TaskGroup Group = OVRProjectSetup.TaskGroup.Features;
+    private const OVRProjectSetup.TaskGroup Group = OVRProjectSetup.TaskGroup.Features;
 
-	static OVRProjectSetupSceneTasks()
-	{
-		OVRProjectSetup.AddTask(
-			level: OVRProjectSetup.TaskLevel.Required,
-			group: Group,
-			isDone: buildTargetGroup => OVRProjectSetupUtils.FindComponentInScene<OVRSceneManager>() == null || OVRProjectConfig.CachedProjectConfig.anchorSupport == OVRProjectConfig.AnchorSupport.Enabled,
-			message: "When using Scene in your project it's required to enable it's capability in the project config",
-			fix: buildTargetGroup =>
-			{
-				var projectConfig = OVRProjectConfig.CachedProjectConfig;
-				projectConfig.anchorSupport = OVRProjectConfig.AnchorSupport.Enabled;
-				OVRProjectConfig.CommitProjectConfig(projectConfig);
-			},
-			fixMessage: "Enable Anchor Support in the project config"
-			);
+    static OVRProjectSetupSceneTasks()
+    {
+        OVRProjectSetup.AddTask(
+            level: OVRProjectSetup.TaskLevel.Required,
+            group: Group,
+            isDone: buildTargetGroup => OVRProjectSetupUtils.FindComponentInScene<OVRSceneManager>() == null ||
+                                        OVRProjectConfig.CachedProjectConfig.anchorSupport ==
+                                        OVRProjectConfig.AnchorSupport.Enabled,
+            message: "When using Scene in your project it's required to enable its capability in the project config",
+            fix: buildTargetGroup =>
+            {
+                var projectConfig = OVRProjectConfig.CachedProjectConfig;
+                projectConfig.anchorSupport = OVRProjectConfig.AnchorSupport.Enabled;
+                OVRProjectConfig.CommitProjectConfig(projectConfig);
+            },
+            fixMessage: "Enable Anchor Support in the project config"
+        );
 
-	}
+    }
 }

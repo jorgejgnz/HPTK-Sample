@@ -9,6 +9,7 @@ public class SceneSettings : MonoBehaviour
 
     [Header("Physics")]
     [SerializeField] private float m_gravityScalar = 0.75f;
+
     [SerializeField] private float m_defaultContactOffset = 0.001f;
 
     private void Awake()

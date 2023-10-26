@@ -11,7 +11,8 @@ public class Flashlight : MonoBehaviour
         // ensure all the light volume quads are camera-facing
         for (int i = 0; i < lightVolume.transform.childCount; i++)
         {
-            lightVolume.transform.GetChild(i).rotation = Quaternion.LookRotation((lightVolume.transform.GetChild(i).position - Camera.main.transform.position).normalized);
+            lightVolume.transform.GetChild(i).rotation = Quaternion.LookRotation(
+                (lightVolume.transform.GetChild(i).position - Camera.main.transform.position).normalized);
         }
     }
 

@@ -56,7 +56,7 @@ namespace Oculus.Interaction.Editor
             Incomplete,
         }
 
-        public const string PACKAGE_VERSION = "0.50.0";
+        public const string PACKAGE_VERSION = "0.57.0";
         public const string DEPRECATED_TAG = "oculus_interaction_deprecated";
         public const string MOVED_TAG = "oculus_interaction_moved_";
         private const string MENU_NAME = "Oculus/Interaction/Clean Up Package";

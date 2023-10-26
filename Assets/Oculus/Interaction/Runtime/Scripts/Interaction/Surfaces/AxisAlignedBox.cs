@@ -19,7 +19,7 @@
  */
 
 
-using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Oculus.Interaction.Surfaces
@@ -28,6 +28,15 @@ namespace Oculus.Interaction.Surfaces
     {
         [SerializeField, Tooltip("Size of the axis-aligned box, default to mesh size")]
         private Vector3 _size = new Vector3(0.0f, 0.0f, 0.0f);
+        private readonly Dictionary<BoxSurface, float> _distances = new Dictionary<BoxSurface, float>()
+        {
+            { BoxSurface.XMin, 0 },
+            { BoxSurface.YMin, 0 },
+            { BoxSurface.ZMin, 0 },
+            { BoxSurface.XMax, 0 },
+            { BoxSurface.YMax, 0 },
+            { BoxSurface.ZMax, 0 },
+        };
 
         public Vector3 Size
         {
@@ -37,129 +46,42 @@ namespace Oculus.Interaction.Surfaces
 
         public Transform Transform => transform;
 
-        private Bounds Bounds
-        {
-            get
-            {
-                return new Bounds(transform.position, _size);
-            }
-        }
-
-        protected void Start()
-        {
-            if (GetComponent<MeshFilter>())
-            {
-                // get the local size of mesh as the size of axis-aligned box; does not account for the scale of parent objects
-                _size = Vector3.Scale(transform.localScale, GetComponent<MeshFilter>().mesh.bounds.size);
-            }
-            if (_size.magnitude == 0.0f)
-            {
-                // if no mesh is found, default to 0.1f
-                _size = new Vector3(0.1f, 0.1f, 0.1f);
-            }
-            Size = _size;
-        }
-
-        private bool isWithinVolume(Vector3 point)
-        {
-
-            return point.x >= Bounds.min.x && point.x <= Bounds.max.x && point.y >= Bounds.min.y &&
-                point.y <= Bounds.max.y && point.z >= Bounds.min.z && point.z <= Bounds.max.z;
-        }
-
-        // find closest surface and return corresponding index:
-        // 0 - XMin, 1 - YMin, 2 - ZMin, 3 - XMax, 4 - YMax, 5 - ZMax
-        private int findClosestBoxSide(Vector3 point)
-        {
-            Vector3 pointRef = transform.position - point;
-            Vector3 halfSize = Bounds.extents;
-            float[] sideDist = new float[] {halfSize.x - pointRef.x,
-                                            halfSize.y - pointRef.y,
-                                            halfSize.z - pointRef.z,
-                                            halfSize.x + pointRef.x,
-                                            halfSize.y + pointRef.y,
-                                            halfSize.z + pointRef.z };
-            float value = float.PositiveInfinity;
-            int index = -1;
-            for (int i = 0; i < sideDist.Length; i++)
-            {
-                if (sideDist[i] < value)
-                {
-                    index = i;
-                    value = sideDist[i];
-                }
-            }
-            return index;
-        }
-
-        private Vector3 ClosestSurfaceNormal(Vector3 point, int side)
-        {
-            int closestSide = -1;
-            if (0 <= side && side >= 5)
-            {
-                closestSide = side;
-            } else
-            {
-                closestSide = findClosestBoxSide(point);
-            }
-            switch (closestSide)
-            {
-                case 0:
-                    return new Vector3(-1.0f, 0.0f, 0.0f);
-
-                case 1:
-                    return new Vector3(0.0f, -1.0f, 0.0f);
-
-                case 2:
-                    return new Vector3(0.0f, 0.0f, -1.0f);
-
-                case 3:
-                    return new Vector3(1.0f, 0.0f, 0.0f);
-
-                case 4:
-                    return new Vector3(0.0f, 1.0f, 0.0f);
-
-                case 5:
-                    return new Vector3(0.0f, 0.0f, 1.0f);
-            }
-            return new Vector3(0, 0, 0);
-        }
+        public Bounds Bounds => new Bounds(transform.position, _size);
 
         public bool ClosestSurfacePoint(in Vector3 point, out SurfaceHit hit, float maxDistance)
         {
             hit = new SurfaceHit();
             Vector3 boundPoint = Vector3.Min(Vector3.Max(point, Bounds.min), Bounds.max);
-            int closestSide = findClosestBoxSide(point);
+            var closestSide = FindClosestBoxSide(point);
             hit.Normal = ClosestSurfaceNormal(point, closestSide);
-            if (!isWithinVolume(point))
+            if (!IsWithinVolume(point))
             {
-                // if boundPoint is inside the Axis-Aligned box, push to boundary
-                switch (closestSide)
-                {
-                    case 0:
-                        boundPoint.x = Bounds.min.x;
-                        break;
+                hit.Point = boundPoint;
+                hit.Distance = (point - boundPoint).magnitude;
+                return maxDistance <= 0 || hit.Distance <= maxDistance;
+            }
 
-                    case 1:
-                        boundPoint.y = Bounds.min.y;
-                        break;
-
-                    case 2:
-                        boundPoint.z = Bounds.min.z;
-                        break;
-
-                    case 3:
-                        boundPoint.x = Bounds.max.x;
-                        break;
-
-                    case 4:
-                        boundPoint.y = Bounds.max.y;
-                        break;
-
-                    case 5:
-                        boundPoint.z = Bounds.max.z;
-                        break;
-                }
+            // if boundPoint is inside the Axis-Aligned box, push to boundary
+            switch (closestSide)
+            {
+                case BoxSurface.XMin:
+                    boundPoint.x = Bounds.min.x;
+                    break;
+                case BoxSurface.YMin:
+                    boundPoint.y = Bounds.min.y;
+                    break;
+                case BoxSurface.ZMin:
+                    boundPoint.z = Bounds.min.z;
+                    break;
+                case BoxSurface.XMax:
+                    boundPoint.x = Bounds.max.x;
+                    break;
+                case BoxSurface.YMax:
+                    boundPoint.y = Bounds.max.y;
+                    break;
+                case BoxSurface.ZMax:
+                    boundPoint.z = Bounds.max.z;
+                    break;
             }
 
             hit.Point = boundPoint;
@@ -183,12 +105,14 @@ namespace Oculus.Interaction.Surfaces
             float tmin = Mathf.Max(Mathf.Max(Mathf.Min(vecMin.x, vecMax.x), Mathf.Min(vecMin.y, vecMax.y)), Mathf.Min(vecMin.z, vecMax.z));
             float tmax = Mathf.Min(Mathf.Min(Mathf.Max(vecMin.x, vecMax.x), Mathf.Max(vecMin.y, vecMax.y)), Mathf.Max(vecMin.z, vecMax.z));
 
+            // box is behind the ray origin
             if (tmax < 0)
             {
                 hit.Distance = tmax;
                 return false;
             }
 
+            // ray does not intersect the box
             if (tmin > tmax)
             {
                 hit.Distance = tmax;
@@ -197,14 +121,83 @@ namespace Oculus.Interaction.Surfaces
 
             hit.Distance = tmin;
 
+            // too far
             if (maxDistance > 0 && hit.Distance > maxDistance)
             {
                 return false;
             }
 
-            hit.Point = ray.origin + ray.direction * tmin;
-            hit.Normal = ClosestSurfaceNormal(hit.Point, -1);
+            // ray origin inside the box
+            if (Mathf.Sign(tmin) != Mathf.Sign(tmax))
+            {
+                hit.Distance = Mathf.Max(tmax, tmin);
+            }
+
+            hit.Point = ray.origin + ray.direction * hit.Distance;
+            hit.Normal = ClosestSurfaceNormal(hit.Point);
             return true;
+        }
+
+        protected void Start()
+        {
+            if (GetComponent<MeshFilter>())
+            {
+                // get the local size of mesh as the size of axis-aligned box; does not account for the scale of parent objects
+                _size = Vector3.Scale(transform.localScale, GetComponent<MeshFilter>().mesh.bounds.size);
+            }
+            if (_size.magnitude == 0.0f)
+            {
+                // if no mesh is found, default to 0.1f
+                _size = new Vector3(0.1f, 0.1f, 0.1f);
+            }
+            Size = _size;
+        }
+
+        private bool IsWithinVolume(Vector3 point) => Bounds.Contains(point);
+
+        private BoxSurface FindClosestBoxSide(Vector3 point)
+        {
+            Vector3 pointRef = transform.position - point;
+            Vector3 halfSize = Bounds.extents;
+
+            _distances[BoxSurface.XMin] = halfSize.x - pointRef.x;
+            _distances[BoxSurface.YMin] = halfSize.y - pointRef.y;
+            _distances[BoxSurface.ZMin] = halfSize.z - pointRef.z;
+            _distances[BoxSurface.XMax] = halfSize.x + pointRef.x;
+            _distances[BoxSurface.YMax] = halfSize.y + pointRef.y;
+            _distances[BoxSurface.ZMax] = halfSize.z + pointRef.z;
+
+            var closest = BoxSurface.XMin;
+            foreach (var key in _distances.Keys)
+            {
+                if (_distances[key] < _distances[closest])
+                {
+                    closest = key;
+                }
+            }
+            return closest;
+        }
+
+        private Vector3 ClosestSurfaceNormal(Vector3 point, BoxSurface? side = null) =>
+            (side ?? FindClosestBoxSide(point)) switch
+            {
+                BoxSurface.XMin => new Vector3(-1.0f, 0.0f, 0.0f),
+                BoxSurface.YMin => new Vector3(0.0f, -1.0f, 0.0f),
+                BoxSurface.ZMin => new Vector3(0.0f, 0.0f, -1.0f),
+                BoxSurface.XMax => new Vector3(1.0f, 0.0f, 0.0f),
+                BoxSurface.YMax => new Vector3(0.0f, 1.0f, 0.0f),
+                BoxSurface.ZMax => new Vector3(0.0f, 0.0f, 1.0f),
+                _ => throw new System.NotImplementedException(),
+            };
+
+        private enum BoxSurface
+        {
+            XMin,
+            YMin,
+            ZMin,
+            XMax,
+            YMax,
+            ZMax,
         }
     }
 }

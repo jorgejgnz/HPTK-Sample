@@ -1,16 +1,16 @@
 Shader "MixedReality/SelectivePassthroughSoft" {
   Properties{
-	  _MainTex("Texture", 2D) = "white" {}
-	  _SoftFade("Soft Fade Distance", Float) = 0.05
-	 _Inflation("Inflation", float) = 0
+      _MainTex("Texture", 2D) = "white" {}
+      _SoftFade("Soft Fade Distance", Float) = 0.05
+     _Inflation("Inflation", float) = 0
   }
-	  SubShader {
+      SubShader {
     Tags{"RenderType" = "Transparent"} LOD 100
 
         Pass {
-			ZWrite Off
-			BlendOp RevSub, Min 
-			Blend Zero One, One OneMinusSrcAlpha
+            ZWrite Off
+            BlendOp RevSub, Min
+            Blend Zero One, One OneMinusSrcAlpha
 
               CGPROGRAM
       // Upgrade NOTE: excluded shader from DX11; has structs without semantics (struct v2f members

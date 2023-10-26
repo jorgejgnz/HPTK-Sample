@@ -30,15 +30,10 @@ namespace Oculus.Interaction
     public class FirstHoverInteractorGroup : InteractorGroup
     {
         private IInteractor _bestInteractor = null;
-
-        private static readonly InteractorPredicate ShouldHoverPredicate =
-            (interactor, index) => interactor.ShouldHover;
+        private int _bestInteractorIndex = -1;
 
         private static readonly InteractorPredicate IsNormalAndShouldHoverPredicate =
             (interactor, index) => interactor.State == InteractorState.Normal && interactor.ShouldHover;
-
-        private static readonly InteractorPredicate HasCandidatePredicate =
-            (interactor, index) => interactor.HasCandidate;
 
         public override bool ShouldHover
         {
@@ -48,8 +43,8 @@ namespace Oculus.Interaction
                 {
                     return false;
                 }
-
                 return AnyInteractor(IsNormalAndShouldHoverPredicate);
+
             }
         }
 
@@ -62,7 +57,8 @@ namespace Oculus.Interaction
                     return false;
                 }
 
-                return _bestInteractor != null && _bestInteractor.ShouldUnhover;
+                return _bestInteractor != null
+                    && _bestInteractor.ShouldUnhover;
             }
         }
 
@@ -75,7 +71,8 @@ namespace Oculus.Interaction
                     return false;
                 }
 
-                return _bestInteractor != null && _bestInteractor.ShouldSelect;
+                return _bestInteractor != null
+                    && _bestInteractor.ShouldSelect;
             }
         }
 
@@ -88,87 +85,220 @@ namespace Oculus.Interaction
                     return false;
                 }
 
-                return _bestInteractor != null && _bestInteractor.ShouldUnselect;
+                return _bestInteractor != null
+                    && _bestInteractor.ShouldUnselect;
             }
         }
 
         public override void Hover()
         {
-            int interactorIndex = InteractorIndexWithBestCandidate(ShouldHoverPredicate);
-            if (interactorIndex >= 0)
+            if (TryHover())
             {
-                _bestInteractor = Interactors[interactorIndex];
-                _bestInteractor.Hover();
-                DisableAllExcept(_bestInteractor);
-                State = _bestInteractor.State;
+                State = InteractorState.Hover;
             }
+        }
+
+        private bool TryHover(int skipIndex = -1)
+        {
+            if (TryGetBestCandidateIndex(IsNormalAndShouldHoverPredicate,
+                out int interactorIndex, -1, skipIndex))
+            {
+                HoverAtIndex(interactorIndex);
+                return true;
+            }
+            return false;
+        }
+
+        private bool TryReplaceHover()
+        {
+            for (int i = 0; i < Interactors.Count; i++)
+            {
+                IInteractor interactor = Interactors[i];
+                if (interactor.State != InteractorState.Disabled)
+                {
+                    continue;
+                }
+                interactor.Enable();
+                if (interactor.State == InteractorState.Normal)
+                {
+                    interactor.ProcessCandidate();
+                }
+            }
+
+            if (TryHover(_bestInteractorIndex))
+            {
+                return true;
+            }
+
+            DisableAllExcept(_bestInteractor);
+            return false;
+        }
+
+        private void HoverAtIndex(int interactorIndex)
+        {
+            UnsuscribeBestInteractor();
+            _bestInteractorIndex = interactorIndex;
+            _bestInteractor = Interactors[_bestInteractorIndex];
+            _bestInteractor.Hover();
+            _bestInteractor.WhenStateChanged += HandleBestInteractorStateChanged;
+            DisableAllExcept(_bestInteractor);
         }
 
         public override void Unhover()
         {
+            if (State != InteractorState.Hover)
+            {
+                return;
+            }
+
             if (_bestInteractor != null)
             {
                 _bestInteractor.Unhover();
-                State = _bestInteractor.State;
-                if (_bestInteractor.State == InteractorState.Normal)
+                if (_bestInteractor != null
+                    && _bestInteractor.State == InteractorState.Hover)
                 {
-                    _bestInteractor = null;
+                    return;
                 }
             }
+            State = InteractorState.Normal;
         }
 
         public override void Select()
         {
-            if (_bestInteractor != null)
+            if (State != InteractorState.Hover)
             {
-                _bestInteractor.Select();
-                State = _bestInteractor.State;
+                return;
             }
+
+            _bestInteractor.Select();
+
+            State = InteractorState.Select;
         }
 
         public override void Unselect()
         {
+            if (State != InteractorState.Select)
+            {
+                return;
+            }
+
             if (_bestInteractor != null)
             {
                 _bestInteractor.Unselect();
-                State = _bestInteractor.State;
+                if (_bestInteractor != null
+                    && _bestInteractor.State == InteractorState.Select)
+                {
+                    return;
+                }
+            }
+
+            State = InteractorState.Hover;
+        }
+
+        public override void Preprocess()
+        {
+            base.Preprocess();
+
+            if (_bestInteractor == null
+                && (State == InteractorState.Hover || State == InteractorState.Select))
+            {
+                this.ProcessCandidate();
+                base.Process();
+
+                if (TryHover())
+                {
+                    if (State == InteractorState.Select)
+                    {
+                        _bestInteractor.Process();
+                        if (ShouldSelect)
+                        {
+                            Select();
+                            State = InteractorState.Select;
+                            return;
+                        }
+                    }
+
+                    State = InteractorState.Hover;
+                    return;
+                }
+
+                if (State == InteractorState.Select)
+                {
+                    State = InteractorState.Hover;
+                }
+                if (State == InteractorState.Hover)
+                {
+                    State = InteractorState.Normal;
+                }
+            }
+            else if (_bestInteractor != null
+                && State == InteractorState.Select
+                && _bestInteractor.State == InteractorState.Hover)
+            {
+                State = InteractorState.Hover;
+            }
+        }
+
+        public override void Process()
+        {
+            base.Process();
+
+            if (_bestInteractor != null
+                && ShouldUnhover)
+            {
+                if (TryReplaceHover())
+                {
+                    _bestInteractor.Process();
+                }
+            }
+        }
+
+        private void HandleBestInteractorStateChanged(InteractorStateChangeArgs stateChange)
+        {
+            if (stateChange.PreviousState == InteractorState.Hover
+                && stateChange.NewState == InteractorState.Normal)
+            {
+                IInteractor prevBest = _bestInteractor;
+                UnsuscribeBestInteractor();
+                EnableAllExcept(prevBest);
             }
         }
 
         public override void Enable()
         {
-            if (State == InteractorState.Disabled
-                || State == InteractorState.Normal)
-            {
-                base.Enable();
-                return;
-            }
-
-            if (!UpdateActiveState())
-            {
-                return;
-            }
-
             if (_bestInteractor != null)
             {
                 _bestInteractor.Enable();
-                State = _bestInteractor.State;
+            }
+            else
+            {
+                base.Enable();
             }
         }
 
         public override void Disable()
         {
+            UnsuscribeBestInteractor();
             base.Disable();
-            _bestInteractor = null;
+        }
+
+        private void UnsuscribeBestInteractor()
+        {
+            if (_bestInteractor != null)
+            {
+                _bestInteractor.WhenStateChanged -= HandleBestInteractorStateChanged;
+                _bestInteractor = null;
+                _bestInteractorIndex = -1;
+            }
         }
 
         public override bool HasCandidate
         {
             get
             {
-                if (_bestInteractor != null)
+                if (_bestInteractor != null && _bestInteractor.HasCandidate)
                 {
-                    return _bestInteractor.HasCandidate;
+                    return true;
                 }
                 return AnyInteractor(HasCandidatePredicate);
             }
@@ -191,12 +321,18 @@ namespace Oculus.Interaction
         {
             get
             {
-                if (_bestInteractor != null)
+                if (_bestInteractor != null && _bestInteractor.HasCandidate)
                 {
                     return _bestInteractor.CandidateProperties;
                 }
-                int interactorIndex = InteractorIndexWithBestCandidate(TruePredicate);
-                return interactorIndex >= 0 ? Interactors[interactorIndex].CandidateProperties : null;
+                if (TryGetBestCandidateIndex(TruePredicate, out int interactorIndex))
+                {
+                    return Interactors[interactorIndex].CandidateProperties;
+                }
+                else
+                {
+                    return null;
+                }
             }
         }
 

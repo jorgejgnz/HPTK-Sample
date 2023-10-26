@@ -39,12 +39,14 @@ public class PassthroughProjectionSurface : MonoBehaviour
             passthroughLayer.RemoveSurfaceGeometry(projectionObject.gameObject);
             quadOutline.enabled = true;
         }
+
         if (OVRInput.Get(OVRInput.Button.One))
         {
             OVRInput.Controller controllingHand = OVRInput.Controller.RTouch;
             transform.position = OVRInput.GetLocalControllerPosition(controllingHand);
             transform.rotation = OVRInput.GetLocalControllerRotation(controllingHand);
         }
+
         if (OVRInput.GetUp(OVRInput.Button.One))
         {
             passthroughLayer.AddSurfaceGeometry(projectionObject.gameObject);

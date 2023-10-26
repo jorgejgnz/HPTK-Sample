@@ -9,7 +9,7 @@
 Shader "Unlit/Texture MMBias" {
 Properties {
     _MainTex ("Base (RGB)", 2D) = "white" {}
-	_MainTexMMBias("Base MipMap Bias", Float) = 0.0
+    _MainTexMMBias("Base MipMap Bias", Float) = 0.0
 }
 
 SubShader {

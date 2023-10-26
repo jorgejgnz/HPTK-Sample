@@ -1,5 +1,6 @@
 //This file is deprecated.  Use the high level voip system instead:
 // https://developer3.oculus.com/documentation/platform/latest/concepts/dg-core-content/#dg-cc-voip
+
 #if false
 using UnityEngine;
 using System.Collections;
@@ -29,7 +30,8 @@ namespace Oculus.Platform {
     public float[] Decode(byte[] data) {
       CAPI.ovr_VoipDecoder_Decode(dec, data, (uint)data.Length);
 
-      ulong gotSize = (ulong)CAPI.ovr_VoipDecoder_GetDecodedPCM(dec, decodedScratchBuffer, (UIntPtr)decodedScratchBuffer.Length);
+      ulong gotSize =
+          (ulong)CAPI.ovr_VoipDecoder_GetDecodedPCM(dec, decodedScratchBuffer, (UIntPtr)decodedScratchBuffer.Length);
 
       if (gotSize > 0)
       {

@@ -10,6 +10,7 @@ public class UiSceneMenu : MonoBehaviour
 {
     [Header("Settings")]
     [SerializeField] private VerticalLayoutGroup m_layoutGroup = null;
+
     [SerializeField] private TextMeshProUGUI m_labelPf = null;
 
     private static Vector2 s_lastThumbstickL;
@@ -47,12 +48,14 @@ public class UiSceneMenu : MonoBehaviour
 
     private bool InputPrevScene()
     {
-        return KeyboardPrevScene() || ThumbstickPrevScene(OVRInput.Controller.LTouch) || ThumbstickPrevScene(OVRInput.Controller.RTouch);
+        return KeyboardPrevScene() || ThumbstickPrevScene(OVRInput.Controller.LTouch) ||
+               ThumbstickPrevScene(OVRInput.Controller.RTouch);
     }
 
     private bool InputNextScene()
     {
-        return KeyboardNextScene() || ThumbstickNextScene(OVRInput.Controller.LTouch) || ThumbstickNextScene(OVRInput.Controller.RTouch);
+        return KeyboardNextScene() || ThumbstickNextScene(OVRInput.Controller.LTouch) ||
+               ThumbstickNextScene(OVRInput.Controller.RTouch);
     }
 
     private bool KeyboardPrevScene()
@@ -67,13 +70,14 @@ public class UiSceneMenu : MonoBehaviour
 
     private bool ThumbstickPrevScene(OVRInput.Controller controller)
     {
-
-        return (OVRInput.Get(OVRInput.Axis2D.PrimaryThumbstick, controller).y >= 0.9f) && (GetLastThumbstickValue(controller).y < 0.9f);
+        return (OVRInput.Get(OVRInput.Axis2D.PrimaryThumbstick, controller).y >= 0.9f) &&
+               (GetLastThumbstickValue(controller).y < 0.9f);
     }
 
     private bool ThumbstickNextScene(OVRInput.Controller controller)
     {
-        return (OVRInput.Get(OVRInput.Axis2D.PrimaryThumbstick, controller).y <= -0.9f) && (GetLastThumbstickValue(controller).y > -0.9f);
+        return (OVRInput.Get(OVRInput.Axis2D.PrimaryThumbstick, controller).y <= -0.9f) &&
+               (GetLastThumbstickValue(controller).y > -0.9f);
     }
 
     private Vector2 GetLastThumbstickValue(OVRInput.Controller controller)

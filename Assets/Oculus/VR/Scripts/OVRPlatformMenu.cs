@@ -25,103 +25,105 @@ using System.Collections.Generic;
 /// <summary>
 /// Shows the Oculus plaform UI.
 /// </summary>
+[HelpURL("https://developer.oculus.com/reference/unity/latest/class_o_v_r_platform_menu")]
 public class OVRPlatformMenu : MonoBehaviour
 {
-	/// <summary>
-	/// The key code.
-	/// </summary>
-	private OVRInput.RawButton inputCode = OVRInput.RawButton.Back;
+    /// <summary>
+    /// The key code.
+    /// </summary>
+    private OVRInput.RawButton inputCode = OVRInput.RawButton.Back;
 
-	public enum eHandler
-	{
-		ShowConfirmQuit,
-		RetreatOneLevel,
-	};
+    public enum eHandler
+    {
+        ShowConfirmQuit,
+        RetreatOneLevel,
+    };
 
-	public eHandler shortPressHandler = eHandler.ShowConfirmQuit;
+    public eHandler shortPressHandler = eHandler.ShowConfirmQuit;
 
-	/// <summary>
-	/// Callback to handle short press. Returns true if ConfirmQuit menu should be shown.
-	/// </summary>
-	public System.Func<bool> OnShortPress;
-	private static Stack<string> sceneStack = new Stack<string>();
+    /// <summary>
+    /// Callback to handle short press. Returns true if ConfirmQuit menu should be shown.
+    /// </summary>
+    public System.Func<bool> OnShortPress;
 
-	enum eBackButtonAction
-	{
-		NONE,
-		SHORT_PRESS
-	};
+    private static Stack<string> sceneStack = new Stack<string>();
 
-	eBackButtonAction HandleBackButtonState()
-	{
-		eBackButtonAction action = eBackButtonAction.NONE;
+    enum eBackButtonAction
+    {
+        NONE,
+        SHORT_PRESS
+    };
 
-		if (OVRInput.GetDown(inputCode))
-		{
-			action = eBackButtonAction.SHORT_PRESS;
-		}
+    eBackButtonAction HandleBackButtonState()
+    {
+        eBackButtonAction action = eBackButtonAction.NONE;
 
-		return action;
-	}
+        if (OVRInput.GetDown(inputCode))
+        {
+            action = eBackButtonAction.SHORT_PRESS;
+        }
 
-	/// <summary>
-	/// Instantiate the cursor timer
-	/// </summary>
-	void Awake()
-	{
-		if (shortPressHandler == eHandler.RetreatOneLevel && OnShortPress == null)
-			OnShortPress = RetreatOneLevel;
+        return action;
+    }
 
-		if (!OVRManager.isHmdPresent)
-		{
-			enabled = false;
-			return;
-		}
+    /// <summary>
+    /// Instantiate the cursor timer
+    /// </summary>
+    void Awake()
+    {
+        if (shortPressHandler == eHandler.RetreatOneLevel && OnShortPress == null)
+            OnShortPress = RetreatOneLevel;
 
-		sceneStack.Push(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
-	}
+        if (!OVRManager.isHmdPresent)
+        {
+            enabled = false;
+            return;
+        }
 
-	/// <summary>
-	/// Show the confirm quit menu
-	/// </summary>
-	void ShowConfirmQuitMenu()
-	{
+        sceneStack.Push(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
+    }
+
+    /// <summary>
+    /// Show the confirm quit menu
+    /// </summary>
+    void ShowConfirmQuitMenu()
+    {
 #if UNITY_ANDROID && !UNITY_EDITOR
-		Debug.Log("[PlatformUI-ConfirmQuit] Showing @ " + Time.time);
-		OVRManager.PlatformUIConfirmQuit();
+        Debug.Log("[PlatformUI-ConfirmQuit] Showing @ " + Time.time);
+        OVRManager.PlatformUIConfirmQuit();
 #endif
-	}
+    }
 
-	/// <summary>
-	/// Sample handler for short press which retreats to the previous scene that used OVRPlatformMenu.
-	/// </summary>
-	private static bool RetreatOneLevel()
-	{
-		if (sceneStack.Count > 1)
-		{
-			string parentScene = sceneStack.Pop();
-			UnityEngine.SceneManagement.SceneManager.LoadSceneAsync (parentScene);
-			return false;
-		}
+    /// <summary>
+    /// Sample handler for short press which retreats to the previous scene that used OVRPlatformMenu.
+    /// </summary>
+    private static bool RetreatOneLevel()
+    {
+        if (sceneStack.Count > 1)
+        {
+            string parentScene = sceneStack.Pop();
+            UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(parentScene);
+            return false;
+        }
 
-		return true;
-	}
+        return true;
+    }
 
-	/// <summary>
-	/// Tests for long-press and activates global platform menu when detected.
-	/// as per the Unity integration doc, the back button responds to "mouse 1" button down/up/etc
-	/// </summary>
-	void Update()
-	{
+    /// <summary>
+    /// Tests for long-press and activates global platform menu when detected.
+    /// as per the Unity integration doc, the back button responds to "mouse 1" button down/up/etc
+    /// </summary>
+    void Update()
+    {
 #if UNITY_ANDROID
-		eBackButtonAction action = HandleBackButtonState();
-		if (action == eBackButtonAction.SHORT_PRESS)
-		{
-			if (OnShortPress == null || OnShortPress())
-			{
-				ShowConfirmQuitMenu();
-			}
-		}
+        eBackButtonAction action = HandleBackButtonState();
+        if (action == eBackButtonAction.SHORT_PRESS)
+        {
+            if (OnShortPress == null || OnShortPress())
+            {
+                ShowConfirmQuitMenu();
+            }
+        }
 #endif
-	}
+    }
 }

@@ -11,14 +11,16 @@ using UnityEditor;
 using UnityEngine;
 using System.Reflection;
 using Meta.WitAi.Data.Configuration;
+using Meta.WitAi.Data.Info;
 
 namespace Meta.WitAi.Windows
 {
+    [CustomPropertyDrawer(typeof(WitIntentInfo))]
     public class WitIntentPropertyDrawer : WitPropertyDrawer
     {
         // Maps the expansion status of references foldouts
         private readonly Dictionary<string, bool> _referencesExpanded = new Dictionary<string, bool>();
-        
+
         // Use name value for title if possible
         protected override string GetLocalizedText(SerializedProperty property, string key)
         {
@@ -58,7 +60,7 @@ namespace Meta.WitAi.Windows
             {
                 return;
             }
-            
+
             EditorGUI.indentLevel++;
             if (subfieldProperty.arraySize == 0)
             {
@@ -83,8 +85,8 @@ namespace Meta.WitAi.Windows
             {
                 return;
             }
-            
-            var assemblyWalker = WitConfigurationEditor.AssemblyWalker;
+
+            var assemblyWalker = ConduitManifestGenerationManager.GetInstance(configuration).AssemblyWalker;
             if (assemblyWalker == null)
             {
                 return;
@@ -100,7 +102,7 @@ namespace Meta.WitAi.Windows
             }
 
             var contexts = manifest.GetInvocationContexts(intentName);
-            
+
             if (!_referencesExpanded.ContainsKey(intentName))
             {
                 _referencesExpanded[intentName] = false;
@@ -110,7 +112,7 @@ namespace Meta.WitAi.Windows
             {
                 return;
             }
-            
+
             EditorGUI.indentLevel++;
             foreach (var context in contexts)
             {

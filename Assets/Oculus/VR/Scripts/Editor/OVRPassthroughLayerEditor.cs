@@ -19,57 +19,78 @@
  */
 
 using System;
-
 using UnityEditor;
 using UnityEngine;
-
 using ColorMapEditorType = OVRPassthroughLayer.ColorMapEditorType;
 
 [CustomPropertyDrawer(typeof(OVRPassthroughLayer.SerializedSurfaceGeometry))]
 class SerializedSurfaceGeometryPropertyDrawer : PropertyDrawer
 {
-    public override void OnGUI(Rect rect, SerializedProperty property, GUIContent label)
+    public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
     {
         // Find the SerializedProperties by name
-        var meshFilterProperty = property.FindPropertyRelative(nameof(OVRPassthroughLayer.SerializedSurfaceGeometry.meshFilter));
-        var updateTransformProperty = property.FindPropertyRelative(nameof(OVRPassthroughLayer.SerializedSurfaceGeometry.updateTransform));
+        var meshFilterProperty =
+            property.FindPropertyRelative(nameof(OVRPassthroughLayer.SerializedSurfaceGeometry.meshFilter));
+        var updateTransformProperty =
+            property.FindPropertyRelative(nameof(OVRPassthroughLayer.SerializedSurfaceGeometry.updateTransform));
+        var propertyHeight = position.height / 2;
 
-        using (new EditorGUI.PropertyScope(rect, label, property))
+        using (new EditorGUI.PropertyScope(position, label, property))
         {
-            var r = rect;
-            r.width /= 2;
-            EditorGUI.PropertyField(r, meshFilterProperty, new GUIContent("Surface Geometry",
-                "The GameObject from which to generate surface geometry."));
-            r.x += r.width + 16;
-            r.width -= 16;
-            EditorGUI.PropertyField(r, updateTransformProperty, new GUIContent("Update Transform",
+            var surfaceGeometryPropertyPosition = new Rect(position.x, position.y, position.width, propertyHeight);
+            EditorGUI.PropertyField(surfaceGeometryPropertyPosition, meshFilterProperty,
+                new GUIContent("Surface Geometry", "The GameObject from which to generate surface geometry."));
+
+            var heightOffset = EditorGUI.GetPropertyHeight(updateTransformProperty) +
+                               EditorGUIUtility.standardVerticalSpacing;
+            var updateTransformPosition =
+                new Rect(position.x, position.y + heightOffset, position.width, propertyHeight);
+            EditorGUI.PropertyField(updateTransformPosition, updateTransformProperty, new GUIContent("Update Transform",
                 "When enabled, updates the mesh's transform every frame. Use this if the GameObject is dynamic."));
         }
+    }
+
+    public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+    {
+        return base.GetPropertyHeight(property, label) * 2.2f;
     }
 }
 
 [CustomEditor(typeof(OVRPassthroughLayer))]
-public class OVRPassthroughLayerEditor : Editor {
-    private readonly static string[] _selectableColorMapNames = {
+public class OVRPassthroughLayerEditor : Editor
+{
+    private readonly static string[] _colorMapNames =
+    {
         "None",
         "Color Adjustment",
         "Grayscale",
-        "Grayscale To Color"
-    };
-    private readonly static string[] _colorMapNames = {
-        "None",
-        "Color Adjustment",
-        "Grayscale",
-        "Grayscale to color",
+        "Grayscale to Color",
+        "Color LUT",
+        "Blended Color LUTs",
         "Custom"
     };
-    private ColorMapEditorType[] _colorMapTypes = {
+
+    private readonly static string[] _selectableColorMapNames =
+    {
+        _colorMapNames[0],
+        _colorMapNames[1],
+        _colorMapNames[2],
+        _colorMapNames[3],
+        _colorMapNames[4],
+        _colorMapNames[5]
+    };
+
+    private ColorMapEditorType[] _colorMapTypes =
+    {
         ColorMapEditorType.None,
         ColorMapEditorType.ColorAdjustment,
         ColorMapEditorType.Grayscale,
         ColorMapEditorType.GrayscaleToColor,
+        ColorMapEditorType.ColorLut,
+        ColorMapEditorType.InterpolatedColorLut,
         ColorMapEditorType.Custom
     };
+
     private SerializedProperty _projectionSurfaces;
 
     private SerializedProperty _propProjectionSurfaceType;
@@ -85,6 +106,10 @@ public class OVRPassthroughLayerEditor : Editor {
     private SerializedProperty _propColorMapEditorGradient;
     private SerializedProperty _propColorMapEditorSaturation;
 
+    private SerializedProperty _propColorLutSourceTexture;
+    private SerializedProperty _propColorLutTargetTexture;
+    private SerializedProperty _propLutWeight;
+    private SerializedProperty _propFlipLutY;
 
     void OnEnable()
     {
@@ -97,11 +122,18 @@ public class OVRPassthroughLayerEditor : Editor {
         _propEdgeRenderingEnabled = serializedObject.FindProperty(nameof(OVRPassthroughLayer.edgeRenderingEnabled_));
         _propEdgeColor = serializedObject.FindProperty(nameof(OVRPassthroughLayer.edgeColor_));
         _propColorMapEditorContrast = serializedObject.FindProperty(nameof(OVRPassthroughLayer.colorMapEditorContrast));
-        _propColorMapEditorBrightness = serializedObject.FindProperty(nameof(OVRPassthroughLayer.colorMapEditorBrightness));
-        _propColorMapEditorPosterize = serializedObject.FindProperty(nameof(OVRPassthroughLayer.colorMapEditorPosterize));
-        _propColorMapEditorSaturation = serializedObject.FindProperty(nameof(OVRPassthroughLayer.colorMapEditorSaturation));
+        _propColorMapEditorBrightness =
+            serializedObject.FindProperty(nameof(OVRPassthroughLayer.colorMapEditorBrightness));
+        _propColorMapEditorPosterize =
+            serializedObject.FindProperty(nameof(OVRPassthroughLayer.colorMapEditorPosterize));
+        _propColorMapEditorSaturation =
+            serializedObject.FindProperty(nameof(OVRPassthroughLayer.colorMapEditorSaturation));
         _propColorMapEditorGradient = serializedObject.FindProperty(nameof(OVRPassthroughLayer.colorMapEditorGradient));
 
+        _propColorLutSourceTexture = serializedObject.FindProperty(nameof(OVRPassthroughLayer._colorLutSourceTexture));
+        _propColorLutTargetTexture = serializedObject.FindProperty(nameof(OVRPassthroughLayer._colorLutTargetTexture));
+        _propLutWeight = serializedObject.FindProperty(nameof(OVRPassthroughLayer._lutWeight));
+        _propFlipLutY = serializedObject.FindProperty(nameof(OVRPassthroughLayer._flipLutY));
     }
 
     public override void OnInspectorGUI()
@@ -134,7 +166,8 @@ public class OVRPassthroughLayerEditor : Editor {
 
         EditorGUILayout.Space();
 
-        EditorGUILayout.PropertyField(_propEdgeRenderingEnabled, new GUIContent("Edge Rendering", "Highlight salient edges in the camera images in a specific color"));
+        EditorGUILayout.PropertyField(_propEdgeRenderingEnabled,
+            new GUIContent("Edge Rendering", "Highlight salient edges in the camera images in a specific color"));
         EditorGUILayout.PropertyField(_propEdgeColor, new GUIContent("Edge Color"));
 
         if (serializedObject.ApplyModifiedProperties())
@@ -155,8 +188,10 @@ public class OVRPassthroughLayerEditor : Editor {
             Debug.LogWarning("Invalid color map type encountered");
             colorMapTypeIndex = 0;
         }
+
         // Dropdown list contains "Custom" only if it is currently selected.
-        string[] colorMapNames = layer.colorMapEditorType == ColorMapEditorType.Custom ? _colorMapNames
+        string[] colorMapNames = layer.colorMapEditorType == ColorMapEditorType.Custom
+            ? _colorMapNames
             : _selectableColorMapNames;
         GUIContent[] colorMapLabels = new GUIContent[colorMapNames.Length];
         for (int i = 0; i < colorMapNames.Length; i++)
@@ -170,8 +205,8 @@ public class OVRPassthroughLayerEditor : Editor {
 
         if (layer.colorMapEditorType == ColorMapEditorType.Grayscale
             || layer.colorMapEditorType == ColorMapEditorType.GrayscaleToColor
-            || layer.colorMapEditorType == ColorMapEditorType.ColorAdjustment
-        ) {
+            || layer.colorMapEditorType == ColorMapEditorType.ColorAdjustment)
+        {
             EditorGUILayout.PropertyField(_propColorMapEditorContrast, new GUIContent("Contrast"));
             EditorGUILayout.PropertyField(_propColorMapEditorBrightness, new GUIContent("Brightness"));
         }
@@ -192,6 +227,98 @@ public class OVRPassthroughLayerEditor : Editor {
             EditorGUILayout.PropertyField(_propColorMapEditorGradient, new GUIContent("Colorize"));
         }
 
+        if (layer.colorMapEditorType == ColorMapEditorType.ColorLut
+            || layer.colorMapEditorType == ColorMapEditorType.InterpolatedColorLut)
+        {
+            var sourceLutLabel = layer.colorMapEditorType == ColorMapEditorType.ColorLut
+                ? "LUT"
+                : "Source LUT";
+
+            EditorGUILayout.PropertyField(_propColorLutSourceTexture, new GUIContent(sourceLutLabel));
+            PerformLutTextureCheck((Texture2D)_propColorLutSourceTexture.objectReferenceValue);
+
+            if (layer.colorMapEditorType == ColorMapEditorType.InterpolatedColorLut)
+            {
+                EditorGUILayout.PropertyField(_propColorLutTargetTexture, new GUIContent("Target LUT"));
+                PerformLutTextureCheck((Texture2D)_propColorLutTargetTexture.objectReferenceValue);
+            }
+
+            var flipLutYTooltip = "Flip LUT textures along the vertical axis on load. This is needed for LUT " +
+                                  "images which have color (0, 0, 0) in the top-left corner. Some color grading systems, " +
+                                  "e.g. Unity post-processing, have color (0, 0, 0) in the bottom-left corner, " +
+                                  "in which case flipping is not needed.";
+            EditorGUILayout.PropertyField(_propFlipLutY, new GUIContent("Flip Vertically", flipLutYTooltip));
+
+            var weightTooltip = layer.colorMapEditorType == ColorMapEditorType.ColorLut
+                ? "Blend between the original colors and the specified LUT. A value of 0 leaves the colors unchanged, a value of 1 fully applies the LUT."
+                : "Blend between the source and the target LUT. A value of 0 fully applies the source LUT and a value of 1 fully applies the target LUT.";
+            EditorGUILayout.PropertyField(_propLutWeight, new GUIContent("Blend", weightTooltip));
+        }
+
         serializedObject.ApplyModifiedProperties();
+    }
+
+    private void PerformLutTextureCheck(Texture2D texture)
+    {
+        if (texture != null)
+        {
+            if (!OVRPassthroughColorLut.IsTextureSupported(texture, out var message))
+            {
+                EditorGUILayout.HelpBox(message, MessageType.Error);
+            }
+
+            CheckLutImportSettings(texture);
+        }
+    }
+
+    private void CheckLutImportSettings(Texture lut)
+    {
+        if (lut != null)
+        {
+            var importer = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(lut)) as TextureImporter;
+
+            // Fails when using an internal texture as you can't change import settings on
+            // builtin resources, thus the check for null
+            if (importer != null)
+            {
+                bool isReadable = importer.isReadable == true;
+                bool isUncompressed = importer.textureCompression == TextureImporterCompression.Uncompressed;
+                bool valid = isReadable && isUncompressed;
+
+                if (!valid)
+                {
+                    string warningMessage = ""
+                                            + (isReadable ? "" : "Texture is not readable. ")
+                                            + (isUncompressed ? "" : "Texture is compressed.");
+                    DrawFixMeBox(warningMessage, () => SetLutImportSettings(importer));
+                }
+            }
+        }
+    }
+
+    private void SetLutImportSettings(TextureImporter importer)
+    {
+        importer.isReadable = true;
+        importer.textureCompression = TextureImporterCompression.Uncompressed;
+        importer.SaveAndReimport();
+        AssetDatabase.Refresh();
+    }
+
+    private void DrawFixMeBox(string text, Action action)
+    {
+        EditorGUILayout.HelpBox(text, MessageType.Warning);
+
+        GUILayout.Space(-32);
+        using (new EditorGUILayout.HorizontalScope())
+        {
+            GUILayout.FlexibleSpace();
+
+            if (GUILayout.Button("Fix", GUILayout.Width(60)))
+                action();
+
+            GUILayout.Space(8);
+        }
+
+        GUILayout.Space(11);
     }
 }

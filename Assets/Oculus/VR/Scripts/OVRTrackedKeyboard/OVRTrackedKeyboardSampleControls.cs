@@ -42,15 +42,18 @@ public class OVRTrackedKeyboardSampleControls : MonoBehaviour
     {
         StartingFocusField.Select();
         StartingFocusField.ActivateInputField();
-        if(TrackingToggle.isOn != trackedKeyboard.TrackingEnabled){
+        if (TrackingToggle.isOn != trackedKeyboard.TrackingEnabled)
+        {
             TrackingToggle.isOn = trackedKeyboard.TrackingEnabled;
         }
+
         if (ConnectionToggle.isOn != trackedKeyboard.ConnectionRequired)
         {
             ConnectionToggle.isOn = trackedKeyboard.ConnectionRequired;
         }
 
-        if (RemoteKeyboardToggle.isOn != trackedKeyboard.RemoteKeyboard) {
+        if (RemoteKeyboardToggle.isOn != trackedKeyboard.RemoteKeyboard)
+        {
             RemoteKeyboardToggle.isOn = trackedKeyboard.RemoteKeyboard;
         }
 
@@ -59,7 +62,9 @@ public class OVRTrackedKeyboardSampleControls : MonoBehaviour
     void Update()
     {
         NameValue.text = trackedKeyboard.SystemKeyboardInfo.Name;
-        ConnectedValue.text = ((bool)((trackedKeyboard.SystemKeyboardInfo.KeyboardFlags & OVRPlugin.TrackedKeyboardFlags.Connected) > 0)).ToString();
+        ConnectedValue.text =
+            ((bool)((trackedKeyboard.SystemKeyboardInfo.KeyboardFlags & OVRPlugin.TrackedKeyboardFlags.Connected) > 0))
+            .ToString();
         StateValue.text = trackedKeyboard.TrackingState.ToString();
         SelectKeyboardValue.text = "Select " + trackedKeyboard.KeyboardQueryFlags.ToString() + " Keyboard";
         TypeValue.text = trackedKeyboard.KeyboardQueryFlags.ToString();
@@ -76,7 +81,6 @@ public class OVRTrackedKeyboardSampleControls : MonoBehaviour
                 StateValue.color = GoodStateColor;
                 break;
         }
-
     }
 
     public void SetPresentationOpaque()
@@ -84,9 +88,9 @@ public class OVRTrackedKeyboardSampleControls : MonoBehaviour
         trackedKeyboard.Presentation = OVRTrackedKeyboard.KeyboardPresentation.PreferOpaque;
     }
 
-    public void SetPresentationKeyLabels()
+    public void SetPresentationMR()
     {
-        trackedKeyboard.Presentation = OVRTrackedKeyboard.KeyboardPresentation.PreferKeyLabels;
+        trackedKeyboard.Presentation = OVRTrackedKeyboard.KeyboardPresentation.PreferMR;
     }
 
     public void SetUnlitShader()
@@ -103,7 +107,8 @@ public class OVRTrackedKeyboardSampleControls : MonoBehaviour
     {
         bool trackingWasEnabled = trackedKeyboard.TrackingEnabled;
         trackedKeyboard.TrackingEnabled = false;
-        yield return new WaitWhile(() => trackedKeyboard.TrackingState != OVRTrackedKeyboard.TrackedKeyboardState.Offline);
+        yield return new WaitWhile(() =>
+            trackedKeyboard.TrackingState != OVRTrackedKeyboard.TrackedKeyboardState.Offline);
         trackedKeyboard.keyboardModelShader = Shader.Find(shaderName);
         trackedKeyboard.TrackingEnabled = trackingWasEnabled;
     }

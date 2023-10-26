@@ -52,7 +52,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTexture:
-        m_Texture: {fileID: 2800000, guid: 36532bb67ccd4bf49aa15a717ea43f3d, type: 3}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
@@ -68,7 +68,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _TextureSample0:
-        m_Texture: {fileID: 2800000, guid: 84508b93f15f2b64386ec07486afc7a3, type: 3}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1.71, y: 0.93}
         m_Offset: {x: 0, y: 0}
     - _texcoord:
@@ -87,12 +87,16 @@ Material:
     - _FresnelOpacity: 0
     - _FresnelOpacityPower: 3.66
     - _FresnelPower: 1.75
+    - _GenerateGlow: 0
     - _GlobalOpacity: 0.714
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
+    - _IndexGlowValue: 0
     - _Metallic: 0
+    - _MiddleGlowValue: 0
     - _Mode: 0
+    - _OcclusionEnabled: 0
     - _OcclusionStrength: 1
     - _Opacity: 0.79
     - _OutlineFresnelOpacity: 0
@@ -103,14 +107,17 @@ Material:
     - _OutlineOpacity: 1
     - _OutlinePinchRange: 0.15
     - _OutlineSphereHardness: 0.15
-    - _OutlineWidth: 0.00093
+    - _OutlineWidth: 0.0014
     - _Parallax: 0.02
     - _PinchIntensity: 0
     - _PinchRange: 0.12
+    - _PinkyGlowValue: 0
+    - _RingGlowValue: 0
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _TextureOpacity: 1
+    - _ThumbGlowValue: 0
     - _UVSec: 0
     - _UseTexture: 0
     - _WristFade: 0
@@ -128,6 +135,7 @@ Material:
     - _ColorTop: {r: 0.19607843, g: 0.20392157, b: 0.21176471, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _FingerGlowColor: {r: 1, g: 1, b: 1, a: 1}
+    - _GlowColor: {r: 1, g: 1, b: 1, a: 1}
     - _MainColor: {r: 0.1960784, g: 0.2039215, b: 0.2117647, a: 1}
     - _OutlineColor: {r: 0.5377358, g: 0.5377358, b: 0.5377358, a: 1}
     - _OutlineColorBottom: {r: 0, g: 0.19427729, b: 1, a: 1}

@@ -24,12 +24,15 @@ using UnityEngine.Assertions;
 
 namespace Oculus.Interaction
 {
+    /// <summary>
+    /// Selects and unselects based on the Active State. If this component is piped into the Selector property of the Interactor component, it can replace poses for existing interactors with custom poses.
+    /// </summary>
     public class ActiveStateSelector : MonoBehaviour, ISelector
     {
         [Tooltip("ISelector events will be raised " +
             "based on state changes of this IActiveState.")]
         [SerializeField, Interface(typeof(IActiveState))]
-        private MonoBehaviour _activeState;
+        private UnityEngine.Object _activeState;
         protected IActiveState ActiveState { get; private set; }
 
         private bool _selecting = false;
@@ -72,7 +75,7 @@ namespace Oculus.Interaction
 
         public void InjectActiveState(IActiveState activeState)
         {
-            _activeState = activeState as MonoBehaviour;
+            _activeState = activeState as UnityEngine.Object;
             ActiveState = activeState;
         }
         #endregion

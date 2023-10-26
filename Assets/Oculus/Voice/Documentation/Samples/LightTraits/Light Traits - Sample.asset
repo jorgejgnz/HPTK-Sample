@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0e3df96a2504a0085121315689deb30, type: 3}
+  m_Name: Light Traits - Sample
+  m_EditorClassIdentifier: 
+  title: Light Traits Sample
+  description: A scene that demonstrates using traits to turn a light on or off with
+    voice.
+  tileImage: {fileID: 2800000, guid: c1711d6e3de49474c98e1c4311398598, type: 3}
+  screenshot: {fileID: 0}
+  sceneReference: {fileID: 102900000, guid: f6550828a620ba34aba5738d783f1006, type: 3}
+  packageSampleName: Light Traits
+  sampleSetId: Voice SDK Samples
+  priority: 5

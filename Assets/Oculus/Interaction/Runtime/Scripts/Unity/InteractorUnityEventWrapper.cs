@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
  *
@@ -32,7 +32,7 @@ namespace Oculus.Interaction
     public class InteractorUnityEventWrapper : MonoBehaviour
     {
         [SerializeField, Interface(typeof(IInteractorView))]
-        private MonoBehaviour _interactorView;
+        private UnityEngine.Object _interactorView;
         private IInteractorView InteractorView;
 
         [SerializeField]
@@ -132,7 +132,7 @@ namespace Oculus.Interaction
 
         public void InjectInteractorView(IInteractorView interactorView)
         {
-            _interactorView = interactorView as MonoBehaviour;
+            _interactorView = interactorView as UnityEngine.Object;
             InteractorView = interactorView;
         }
 

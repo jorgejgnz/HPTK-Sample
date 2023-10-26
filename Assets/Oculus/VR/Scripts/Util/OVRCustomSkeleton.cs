@@ -21,65 +21,68 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[HelpURL("https://developer.oculus.com/reference/unity/latest/class_o_v_r_custom_skeleton")]
 public class OVRCustomSkeleton : OVRSkeleton, ISerializationCallbackReceiver
 {
-	[HideInInspector] [SerializeField] private List<Transform> _customBones_V2;
-	public List<Transform> CustomBones => _customBones_V2;
+    [HideInInspector][SerializeField] private List<Transform> _customBones_V2;
+    public List<Transform> CustomBones => _customBones_V2;
 
-	/// <summary>
-	/// List of skeleton structures to be retargeted to the supported format for body tracking.
-	/// </summary>
-	public enum RetargetingType
-	{
-		/// <summary>The default skeleton structure of the Oculus tracking system</summary>
-		OculusSkeleton,
-	}
+    /// <summary>
+    /// List of skeleton structures to be retargeted to the supported format for body tracking.
+    /// </summary>
+    public enum RetargetingType
+    {
+        /// <summary>The default skeleton structure of the Oculus tracking system</summary>
+        OculusSkeleton
+    }
 
-	[SerializeField, HideInInspector]
-	internal RetargetingType retargetingType;
+    [SerializeField, HideInInspector]
+    internal RetargetingType retargetingType = RetargetingType.OculusSkeleton;
 
-	protected override Transform GetBoneTransform(BoneId boneId) => _customBones_V2[(int)boneId];
-
-#if UNITY_EDITOR
-	private bool _shouldSetDirty;
-
-	private void OnValidate()
-	{
-		if (!_shouldSetDirty) return;
-
-		UnityEditor.PrefabUtility.RecordPrefabInstancePropertyModifications(this);
-		UnityEditor.EditorUtility.SetDirty(this);
-		_shouldSetDirty = false;
-	}
-#endif
-
-	void ISerializationCallbackReceiver.OnBeforeSerialize() { }
-
-	void ISerializationCallbackReceiver.OnAfterDeserialize()
-	{
-		AllocateBones();
-	}
-
-	private void AllocateBones()
-	{
-		if (_customBones_V2.Count == (int) BoneId.Max) return;
-
-		// Make sure we have the right number of bones
-		while (_customBones_V2.Count < (int) BoneId.Max)
-		{
-			_customBones_V2.Add(null);
-		}
+    protected override Transform GetBoneTransform(BoneId boneId) => _customBones_V2[(int)boneId];
 
 #if UNITY_EDITOR
-		_shouldSetDirty = true;
-#endif
-	}
+    private bool _shouldSetDirty;
 
-	internal void SetSkeletonType(SkeletonType skeletonType)
-	{
-		_skeletonType = skeletonType;
-		_customBones_V2 ??= new List<Transform>();
-		
-		AllocateBones();
-	}
+    private void OnValidate()
+    {
+        if (!_shouldSetDirty) return;
+
+        UnityEditor.PrefabUtility.RecordPrefabInstancePropertyModifications(this);
+        UnityEditor.EditorUtility.SetDirty(this);
+        _shouldSetDirty = false;
+    }
+#endif
+
+    void ISerializationCallbackReceiver.OnBeforeSerialize()
+    {
+    }
+
+    void ISerializationCallbackReceiver.OnAfterDeserialize()
+    {
+        AllocateBones();
+    }
+
+    private void AllocateBones()
+    {
+        if (_customBones_V2.Count == (int)BoneId.Max) return;
+
+        // Make sure we have the right number of bones
+        while (_customBones_V2.Count < (int)BoneId.Max)
+        {
+            _customBones_V2.Add(null);
+        }
+
+#if UNITY_EDITOR
+        _shouldSetDirty = true;
+#endif
+    }
+
+    internal override void SetSkeletonType(SkeletonType skeletonType)
+    {
+        base.SetSkeletonType(skeletonType);
+        _customBones_V2 ??= new List<Transform>();
+
+        AllocateBones();
+    }
 }

@@ -18,7 +18,7 @@ namespace Meta.Conduit
         /// <summary>
         /// The value of the parameter.
         /// </summary>
-        public object Value;
+        public readonly object Value;
 
         /// <summary>
         /// The type of the parameter. If a type was not resolved to an existing type, this will be string by default.

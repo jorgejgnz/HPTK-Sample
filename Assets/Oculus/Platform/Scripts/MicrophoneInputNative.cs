@@ -1,5 +1,5 @@
 //This file is deprecated.  Use the high level voip system instead:
-// https://developer.oculus.com/documentation/unity/ps-voip/ 
+// https://developer.oculus.com/documentation/unity/ps-voip/
 
 #if OVR_PLATFORM_USE_MICROPHONE
 using UnityEngine;

@@ -9,6 +9,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using Meta.WitAi;
 
@@ -34,15 +35,15 @@ namespace Meta.Conduit
         /// Resolves instances (objects) based on their type.
         /// </summary>
         private readonly IInstanceResolver _instanceResolver;
-        
+
         /// <summary>
         /// Maps internal parameter names to fully qualified parameter names (roles/slots).
         /// </summary>
         private readonly Dictionary<string, string> _parameterToRoleMap = new Dictionary<string, string>();
 
-        
+
         /// <summary>
-        /// List of actions that we won't log warnings about any more to avoid spamming the logs.  
+        /// List of actions that we won't log warnings about any more to avoid spamming the logs.
         /// </summary>
         private readonly HashSet<string> _ignoredActionIds = new HashSet<string>();
 
@@ -64,11 +65,12 @@ namespace Meta.Conduit
             }
 
             Manifest = _manifestLoader.LoadManifest(manifestFilePath);
+
             if (Manifest == null)
             {
                 return;
             }
-            
+
             // Map fully qualified role names to internal parameters.
             foreach (var action in Manifest.Actions)
             {
@@ -93,22 +95,25 @@ namespace Meta.Conduit
         /// <param name="confidence">The confidence level (between 0-1) of the intent that's invoking the action.</param>
         /// <param name="partial">Whether partial responses should be accepted or not</param>
         /// <returns>True if all invocations succeeded. False if at least one failed or no callbacks were found.</returns>
-        public bool InvokeAction(IParameterProvider parameterProvider, string actionId, bool relaxed, float confidence = 1f, bool partial = false)
+        public bool InvokeAction(IParameterProvider parameterProvider, string actionId, bool relaxed,
+            float confidence = 1f, bool partial = false)
         {
             if (!Manifest.ContainsAction(actionId))
             {
-                if (!_ignoredActionIds.Contains(actionId))
+                var hasBeenHandledWithoutConduit = Manifest.WitResponseMatcherIntents.Contains(actionId);
+                if (!_ignoredActionIds.Contains(actionId) && !hasBeenHandledWithoutConduit)
                 {
                     _ignoredActionIds.Add(actionId);
+                    InvokeError(actionId, new Exception($"Conduit did not find intent '{actionId}' in manifest."));
                     VLog.W($"Conduit did not find intent '{actionId}' in manifest.");
                 }
-                
                 return false;
             }
-            
+
             parameterProvider.PopulateRoles(_parameterToRoleMap);
 
-            var filter = new InvocationContextFilter(parameterProvider, Manifest.GetInvocationContexts(actionId), relaxed);
+            var filter =
+                new InvocationContextFilter(parameterProvider, Manifest.GetInvocationContexts(actionId), relaxed);
 
             var invocationContexts = filter.ResolveInvocationContexts(actionId, confidence, partial);
             if (invocationContexts.Count < 1)
@@ -116,7 +121,10 @@ namespace Meta.Conduit
                 // Only log if this is non-partial and inverse does not contain any matches either
                 if (!partial && filter.ResolveInvocationContexts(actionId, confidence, true).Count < 1)
                 {
-                    VLog.W($"Failed to resolve {("final")} method for {actionId} with supplied context\nParameters: {parameterProvider}");
+                   VLog.W(
+                        $"Failed to resolve {(partial ? "partial" : "final")} method for {actionId} with supplied context");
+                   InvokeError(actionId, new Exception($"Failed to resolve {(partial ? "partial" : "final")} method for {actionId} with supplied context")
+                   );
                 }
 
                 return false;
@@ -136,10 +144,26 @@ namespace Meta.Conduit
                 {
                     VLog.W($"Failed to invoke {invocationContext.MethodInfo.Name}. {e}");
                     allSucceeded = false;
+                    InvokeError( invocationContext.MethodInfo.Name, e);
                 }
             }
 
             return allSucceeded;
+        }
+
+        public bool InvokeError(string actionId, Exception exception)
+        {
+            var contexts = Manifest.GetErrorHandlerContexts();
+            foreach (var context in contexts)
+            {
+                var parameterProvider = new ParameterProvider();
+                parameterProvider.AddParameter("intent", actionId);
+                parameterProvider.AddParameter("error", exception);
+
+                InvokeMethod(context, parameterProvider, true);
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -150,7 +174,8 @@ namespace Meta.Conduit
         /// <param name="parameterProvider">The parameter provider.</param>
         /// <param name="relaxed">True if parameters should be matched by type if name matching fails.</param>
         /// <returns>True if the method was invoked successfully on all valid targets.</returns>
-        private bool InvokeMethod(InvocationContext invocationContext, IParameterProvider parameterProvider, bool relaxed)
+        private bool InvokeMethod(InvocationContext invocationContext, IParameterProvider parameterProvider,
+            bool relaxed)
         {
             var method = invocationContext.MethodInfo;
             var formalParametersInfo = method.GetParameters();
@@ -163,6 +188,10 @@ namespace Meta.Conduit
 
                 if (parameterObjects[i] == null)
                 {
+                    InvokeError( invocationContext.MethodInfo.Name, new Exception(
+                            $"Failed to find method param while invoking\nType: {invocationContext.Type.FullName}\nMethod: {invocationContext.MethodInfo.Name}\nParameter Issues\n{log}"
+                        ));
+
                     VLog.W(
                         $"Failed to find method param while invoking\nType: {invocationContext.Type.FullName}\nMethod: {invocationContext.MethodInfo.Name}\nParameter Issues\n{log}");
                     return false;
@@ -178,6 +207,7 @@ namespace Meta.Conduit
                 catch (Exception e)
                 {
                     VLog.W($"Failed to invoke static method {method.Name}. {e}");
+                    InvokeError( invocationContext.MethodInfo.Name, e);
                     return false;
                 }
 
@@ -196,6 +226,7 @@ namespace Meta.Conduit
                     {
                         VLog.W($"Failed to invoke method {method.Name}. {e} on {obj}");
                         allSucceeded = false;
+                        InvokeError( invocationContext.MethodInfo.Name,e);
                         continue;
                     }
                 }
@@ -203,7 +234,7 @@ namespace Meta.Conduit
                 return allSucceeded;
             }
         }
-        
+
         /// <summary>
         /// Filters possible invocation context for an invocation request.
         /// </summary>
@@ -213,14 +244,14 @@ namespace Meta.Conduit
             /// All possible invocation contexts for the specified action.
             /// </summary>
             private readonly List<InvocationContext> _actionContexts;
-            
+
             /// <summary>
             /// The parameter provider.
             /// </summary>
             private readonly IParameterProvider _parameterProvider;
 
             /// <summary>
-            /// When set to true, parameters with matching types but not name will be resolved when exact matches cannot be found. 
+            /// When set to true, parameters with matching types but not name will be resolved when exact matches cannot be found.
             /// </summary>
             private readonly bool _relaxed;
 
@@ -233,7 +264,8 @@ namespace Meta.Conduit
             /// This typically comes from the manifest.
             /// </param>
             /// <param name="relaxed"> When true, will allow matching by type alone when name doesn't match.</param>
-            public InvocationContextFilter(IParameterProvider parameterProvider, List<InvocationContext> actionContexts, bool relaxed = false)
+            public InvocationContextFilter(IParameterProvider parameterProvider, List<InvocationContext> actionContexts,
+                bool relaxed = false)
             {
                 _parameterProvider = parameterProvider;
                 _actionContexts = actionContexts;
@@ -245,12 +277,13 @@ namespace Meta.Conduit
             /// </summary>
             /// <param name="actionId">The action ID.</param>
             /// <param name="confidence">The confidence level between 0 and 1.</param>
+            /// <param name="partial">Whether this is a partial invocation.</param>
             /// <returns></returns>
             public List<InvocationContext> ResolveInvocationContexts(string actionId, float confidence, bool partial)
             {
                 // We may have multiple overloads, find the correct match.
-                return _actionContexts.Where(context => CompatibleInvocationContext(context, confidence, partial))
-                    .ToList();
+                return _actionContexts != null ? _actionContexts.Where(context => CompatibleInvocationContext(context, confidence, partial))
+                    .ToList() : new List<InvocationContext>();
             }
 
             /// <summary>
@@ -262,11 +295,9 @@ namespace Meta.Conduit
             /// <param name="confidence">The intent confidence level.</param>
             /// <param name="partial">Whether this is a partial invocation.</param>
             /// <returns>True if the invocation can be made with the actual parameters. False otherwise.</returns>
-            private bool CompatibleInvocationContext(InvocationContext invocationContext, float confidence,
-                bool partial)
+            private bool CompatibleInvocationContext(InvocationContext invocationContext, float confidence, bool partial)
             {
-                Dictionary<string, string> parameterMap = new Dictionary<string, string>();
-                
+                var parameterMap = new Dictionary<string, string>();
                 var parameters = invocationContext.MethodInfo.GetParameters();
                 if (invocationContext.ValidatePartial != partial)
                 {
@@ -275,6 +306,7 @@ namespace Meta.Conduit
 
                 if (invocationContext.MinConfidence > confidence || confidence > invocationContext.MaxConfidence)
                 {
+                    //todo: throw error for out of confidence
                     return false;
                 }
 
@@ -316,20 +348,23 @@ namespace Meta.Conduit
                     {
                         continue;
                     }
-                    
+
                     if (actualTypes.Contains(parameter.ParameterType))
                     {
-                        VLog.D($"Failed to resolve parameters by type. More than one value of type {parameter.ParameterType} were provided.");
+                        VLog.D(
+                            $"Failed to resolve parameters by type. More than one value of type {parameter.ParameterType} were provided.");
                         return false;
                     }
 
                     actualTypes.Add(parameter.ParameterType);
-                    
-                    var actualParameterNames = _parameterProvider.GetParameterNamesOfType(parameter.ParameterType).Where(parameterName => !exactMatches.Contains(parameterName)).ToList();
-                    
+
+                    var actualParameterNames = _parameterProvider.GetParameterNamesOfType(parameter.ParameterType)
+                        .Where(parameterName => !exactMatches.Contains(parameterName)).ToList();
+
                     if (actualParameterNames.Count != 1)
                     {
                         VLog.D($"Failed to find compatible value for {parameter.Name}");
+
                         return false;
                     }
 

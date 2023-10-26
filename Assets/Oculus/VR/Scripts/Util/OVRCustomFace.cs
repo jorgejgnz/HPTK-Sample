@@ -18,8 +18,9 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
-using UnityEditor;
+using System.ComponentModel;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -33,7 +34,8 @@ using UnityEngine.Assertions;
 /// See <see cref="OVRCustomFaceEditor"/> for more information.
 /// </remarks>
 [RequireComponent(typeof(SkinnedMeshRenderer))]
-public sealed class OVRCustomFace : OVRFace
+[HelpURL("https://developer.oculus.com/reference/unity/latest/class_o_v_r_custom_face")]
+public class OVRCustomFace : OVRFace
 {
     public OVRFaceExpressions.FaceExpression[] Mappings
     {
@@ -42,8 +44,28 @@ public sealed class OVRCustomFace : OVRFace
     }
 
     [SerializeField]
-    [Tooltip("The mapping between Face Expressions to the blendshapes available on the shared mesh of the skinned mesh renderer")]
+    [Tooltip("The mapping between Face Expressions to the blendshapes available " +
+             "on the shared mesh of the skinned mesh renderer")]
     internal OVRFaceExpressions.FaceExpression[] _mappings;
+
+    [SerializeField, HideInInspector]
+    internal RetargetingType retargetingType;
+
+    protected RetargetingType RetargetingValue
+    {
+        get => retargetingType;
+        set => retargetingType = value;
+    }
+
+    [SerializeField]
+    [Tooltip("Allow duplicates when mapping blendshapes to Face Expressions")]
+    internal bool _allowDuplicateMapping = true;
+
+    protected bool AllowDuplicateMapping
+    {
+        get => _allowDuplicateMapping;
+        set => _allowDuplicateMapping = value;
+    }
 
     /// <inheritdoc/>
     protected override void Start()
@@ -51,13 +73,34 @@ public sealed class OVRCustomFace : OVRFace
         base.Start();
 
         Assert.IsNotNull(_mappings);
-        Assert.IsTrue(_mappings.Length != GetComponent<SkinnedMeshRenderer>().sharedMesh.blendShapeCount, "Mapping out of sync with shared mesh.");
+        Assert.AreEqual(_mappings.Length, RetrieveSkinnedMeshRenderer().sharedMesh.blendShapeCount,
+            "Mapping out of sync with shared mesh.");
     }
 
     /// <inheritdoc/>
-    protected override OVRFaceExpressions.FaceExpression GetFaceExpression(int blendShapeIndex)
+    protected internal override OVRFaceExpressions.FaceExpression GetFaceExpression(int blendShapeIndex)
     {
         Assert.IsTrue(blendShapeIndex < _mappings.Length && blendShapeIndex >= 0);
         return _mappings[blendShapeIndex];
+    }
+
+    /// <summary>
+    /// Allows the user to define their own blend shape name and face expression pair mappings.
+    /// By default it will just return the Oculus version.
+    /// </summary>
+    /// <returns>Two arrays, each relating a blend shape name with a face expression pair.</returns>
+    protected internal virtual (string[], OVRFaceExpressions.FaceExpression[])
+        GetCustomBlendShapeNameAndExpressionPairs()
+    {
+        string[] oculusBlendShapeNames = Enum.GetNames(typeof(OVRFaceExpressions.FaceExpression));
+        OVRFaceExpressions.FaceExpression[] oculusFaceExpressions =
+            (OVRFaceExpressions.FaceExpression[])Enum.GetValues(typeof(OVRFaceExpressions.FaceExpression));
+        return (oculusBlendShapeNames, oculusFaceExpressions);
+    }
+
+    public enum RetargetingType
+    {
+        OculusFace = 0,
+        Custom = 1,
     }
 }

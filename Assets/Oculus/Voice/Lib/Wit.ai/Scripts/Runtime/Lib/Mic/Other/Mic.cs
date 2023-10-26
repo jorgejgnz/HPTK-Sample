@@ -35,7 +35,6 @@ using Meta.WitAi;
 
 namespace Meta.WitAi.Lib
 {
-    [RequireComponent(typeof(AudioSource))]
     public class Mic : MonoBehaviour, IAudioInputSource
     {
         // ================================================
@@ -99,6 +98,28 @@ namespace Meta.WitAi.Lib
         /// </summary>
         public AudioClip AudioClip { get; private set; }
 
+        [SerializeField] [Tooltip("Sample rate for mic audio to be captured at, it will be resampled using AudioEncoding.samplerate prior to transmission")]
+        private int _audioClipSampleRate = 16000;
+        public int AudioClipSampleRate
+        {
+            get => _audioClipSampleRate;
+            set
+            {
+                if (IsRecording)
+                {
+                    Debug.LogError($"Mic - Cannot set audio sample rate once already recording\nRecording Rate: {_audioClipSampleRate}\nDesired Rate: {value}");
+                }
+                else
+                {
+                    _audioClipSampleRate = value;
+                }
+            }
+        }
+
+        // Constants
+        private const bool MIC_CLIP_LOOP = true;
+        private const int MIC_CLIP_CHANNELS = 1;
+        private const int MS_TO_SECONDS = 1000;
 
         /// <summary>
         /// List of all the available Mic devices
@@ -186,7 +207,6 @@ namespace Meta.WitAi.Lib
                     m_Instance = new GameObject("UniMic.Mic").AddComponent<Mic>();
                     DontDestroyOnLoad(m_Instance.gameObject);
                 }
-
                 return m_Instance;
             }
         }
@@ -285,7 +305,7 @@ namespace Meta.WitAi.Lib
             }
             else
             {
-                VLog.D($"Found {_devices.Count} Mics");
+                VLog.I($"Found {_devices.Count} Mics");
             }
 
             UnityEngine.Profiling.Profiler.EndSample();
@@ -306,9 +326,12 @@ namespace Meta.WitAi.Lib
         private void StartMicrophone()
         {
 #if !UNITY_WEBGL || UNITY_EDITOR
-            VLog.D("Reserved mic " + CurrentDeviceName);
-            AudioClip = Microphone.Start(CurrentDeviceName, true, 1, AudioEncoding.samplerate);
+            VLog.I("Reserved mic " + CurrentDeviceName);
+            AudioClip = Microphone.Start(CurrentDeviceName, MIC_CLIP_LOOP, MIC_CLIP_CHANNELS, AudioClipSampleRate);
             AudioClip.name = CurrentDeviceName;
+            // Init the num of channels from AudioClip in
+            // the AudioEncoding
+            AudioEncoding.numChannels = AudioClip.channels;
 #endif
         }
 
@@ -317,24 +340,13 @@ namespace Meta.WitAi.Lib
             if (MicrophoneIsRecording(CurrentDeviceName))
             {
 #if !UNITY_WEBGL || UNITY_EDITOR
-                VLog.D("Released mic " + CurrentDeviceName);
+                VLog.I("Released mic " + CurrentDeviceName);
                 Microphone.End(CurrentDeviceName);
 #endif
             }
             if (AudioClip != null)
             {
-                #if UNITY_EDITOR
-                if (!Application.isPlaying)
-                {
-                    // Editor only
-                    DestroyImmediate(AudioClip);
-                }
-                else
-                #endif
-                {
-                    // Safe destroy
-                    Destroy(AudioClip);
-                }
+                AudioClip.DestroySafely();
                 AudioClip = null;
             }
         }
@@ -362,10 +374,10 @@ namespace Meta.WitAi.Lib
 
             SampleDurationMS = sampleLen;
 
-            Sample = new float[AudioEncoding.samplerate / 1000 * SampleDurationMS * AudioClip.channels];
-
             if (AudioClip)
             {
+                Sample = new float[AudioClipSampleRate / MS_TO_SECONDS * SampleDurationMS * AudioClip.channels];
+
                 StartCoroutine(ReadRawAudio());
 
 #if !UNITY_WEBGL || UNITY_EDITOR
@@ -457,7 +469,7 @@ namespace Meta.WitAi.Lib
 #if UNITY_WEBGL && !UNITY_EDITOR
             return false;
 #else
-            return Microphone.IsRecording(device);
+            return !string.IsNullOrEmpty(device) && Microphone.IsRecording(device);
 #endif
         }
 

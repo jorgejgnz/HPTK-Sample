@@ -43,9 +43,9 @@ public class FlashlightController : MonoBehaviour
         {
             FindHands();
             bool usingControllers =
-              (OVRInput.GetActiveController() == OVRInput.Controller.RTouch ||
-              OVRInput.GetActiveController() == OVRInput.Controller.LTouch ||
-              OVRInput.GetActiveController() == OVRInput.Controller.Touch);
+                (OVRInput.GetActiveController() == OVRInput.Controller.RTouch ||
+                 OVRInput.GetActiveController() == OVRInput.Controller.LTouch ||
+                 OVRInput.GetActiveController() == OVRInput.Controller.Touch);
 
             if (!usingControllers)
             {
@@ -53,6 +53,7 @@ public class FlashlightController : MonoBehaviour
                 {
                     AlignWithHand(hands[handIndex], skeletons[handIndex]);
                 }
+
                 if (infoText) infoText.text = "Pinch to toggle flashlight";
             }
             else
@@ -62,6 +63,7 @@ public class FlashlightController : MonoBehaviour
                 {
                     if (GetComponent<Flashlight>()) GetComponent<Flashlight>().ToggleFlashlight();
                 }
+
                 if (infoText) infoText.text = "Press A to toggle flashlight";
             }
         }
@@ -78,6 +80,7 @@ public class FlashlightController : MonoBehaviour
                 hands[0] = skeletons[0].GetComponent<OVRHand>();
                 handIndex = 0;
             }
+
             if (foundSkeletons[1])
             {
                 skeletons[1] = foundSkeletons[1];
@@ -121,8 +124,10 @@ public class FlashlightController : MonoBehaviour
                 pinching = true;
             }
         }
+
         flashlightRoot.position = skeleton.Bones[6].Transform.position;
-        flashlightRoot.rotation = Quaternion.LookRotation(skeleton.Bones[6].Transform.position - skeleton.Bones[0].Transform.position);
+        flashlightRoot.rotation =
+            Quaternion.LookRotation(skeleton.Bones[6].Transform.position - skeleton.Bones[0].Transform.position);
     }
 
     void AlignWithController(OVRInput.Controller controller)
@@ -140,6 +145,7 @@ public class FlashlightController : MonoBehaviour
         {
             GetComponent<Flashlight>().EnableFlashlight(true);
         }
+
         StopAllCoroutines();
         StartCoroutine(FadeLighting(new Color(0, 0, 0, 0.95f), 0.0f, 0.25f));
     }
@@ -150,6 +156,7 @@ public class FlashlightController : MonoBehaviour
         {
             GetComponent<Flashlight>().EnableFlashlight(false);
         }
+
         StopAllCoroutines();
         StartCoroutine(FadeLighting(Color.clear, 1.0f, 0.25f));
     }

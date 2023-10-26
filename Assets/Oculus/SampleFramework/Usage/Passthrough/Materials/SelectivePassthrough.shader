@@ -2,9 +2,9 @@
 {
     Properties
     {
-		_MainTex("Texture", 2D) = "white" {}
-		_Inflation("Inflation", float) = 0
-		_InvertedAlpha("Inverted Alpha", float) = 1
+        _MainTex("Texture", 2D) = "white" {}
+        _Inflation("Inflation", float) = 0
+        _InvertedAlpha("Inverted Alpha", float) = 1
 
         [Header(DepthTest)]
         [Enum(UnityEngine.Rendering.CompareFunction)] _ZTest("ZTest", Float) = 4 //"LessEqual"
@@ -18,9 +18,9 @@
 
         Pass
         {
-		    ZWrite Off
-			ZTest[_ZTest]
-			BlendOp[_BlendOpColor], [_BlendOpAlpha]
+            ZWrite Off
+            ZTest[_ZTest]
+            BlendOp[_BlendOpColor], [_BlendOpAlpha]
             Blend Zero One, One One
 
             CGPROGRAM
@@ -34,8 +34,8 @@
             struct appdata
             {
                 float4 vertex : POSITION;
-				float2 uv : TEXCOORD0;
-				float3 normal : NORMAL;
+                float2 uv : TEXCOORD0;
+                float3 normal : NORMAL;
             };
 
             struct v2f

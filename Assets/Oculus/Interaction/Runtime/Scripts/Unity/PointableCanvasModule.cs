@@ -66,10 +66,6 @@ namespace Oculus.Interaction
         {
             get
             {
-                if (_instance == null)
-                {
-                    _instance = FindObjectOfType<PointableCanvasModule>();
-                }
                 return _instance;
             }
         }
@@ -90,6 +86,8 @@ namespace Oculus.Interaction
         private List<Pointer> _pointersForDeletion = new List<Pointer>();
         private Dictionary<IPointableCanvas, Action<PointerEvent>> _pointerCanvasActionMap =
             new Dictionary<IPointableCanvas, Action<PointerEvent>>();
+
+        private Pointer[] _pointersToProcessScratch = Array.Empty<Pointer>();
 
         private void AddPointerCanvas(IPointableCanvas pointerCanvas)
         {
@@ -228,6 +226,23 @@ namespace Oculus.Interaction
             }
         }
 
+        protected override void Awake()
+        {
+            base.Awake();
+
+            Assert.IsNull(_instance, "There must be at most one PointableCanvasModule in the scene");
+            _instance = this;
+        }
+
+        protected override void OnDestroy()
+        {
+            // Must unset _instance prior to calling the base.OnDestroy, otherwise error is thrown:
+            //   Can't add component to object that is being destroyed.
+            //   UnityEngine.EventSystems.BaseInputModule:get_input ()
+            _instance = null;
+            base.OnDestroy();
+        }
+
         protected bool _started = false;
 
         protected override void Start()
@@ -257,6 +272,7 @@ namespace Oculus.Interaction
                 Destroy(_pointerEventCamera);
                 _pointerEventCamera = null;
             }
+
             base.OnDisable();
         }
 
@@ -282,14 +298,19 @@ namespace Oculus.Interaction
         private void UpdateRaycasts(Pointer pointer, out bool pressed, out bool released)
         {
             PointerEventData pointerEventData = pointer.PointerEventData;
-
             Vector2 prevPosition = pointerEventData.position;
-            Canvas canvas = pointer.Canvas;
-            canvas.worldCamera = _pointerEventCamera;
-
             pointerEventData.Reset();
 
             pointer.ReadAndResetPressedReleased(out pressed, out released);
+
+            if (pointer.MarkedForDeletion)
+            {
+                pointerEventData.pointerCurrentRaycast = new RaycastResult();
+                return;
+            }
+
+            Canvas canvas = pointer.Canvas;
+            canvas.worldCamera = _pointerEventCamera;
 
             Vector3 position = Vector3.zero;
             var plane = new Plane(-1f * canvas.transform.forward, canvas.transform.position);
@@ -339,15 +360,36 @@ namespace Oculus.Interaction
 
         public override void Process()
         {
-            foreach (Pointer pointer in _pointersForDeletion)
-            {
-                ProcessPointer(pointer, true);
-            }
-            _pointersForDeletion.Clear();
+            ProcessPointers(_pointersForDeletion, true);
+            ProcessPointers(_pointerMap.Values, false);
+        }
 
-            foreach (Pointer pointer in _pointerMap.Values)
+        private void ProcessPointers(ICollection<Pointer> pointers, bool clearAndReleasePointers)
+        {
+            // Before processing pointers, take a copy of the array since _pointersForDeletion or
+            // _pointerMap may be modified if a pointer event handler adds or removes a
+            // PointableCanvas.
+
+            int pointersToProcessCount = pointers.Count;
+            if (pointersToProcessCount == 0)
             {
-                ProcessPointer(pointer);
+                return;
+            }
+
+            if (pointersToProcessCount > _pointersToProcessScratch.Length)
+            {
+                _pointersToProcessScratch = new Pointer[pointersToProcessCount];
+            }
+
+            pointers.CopyTo(_pointersToProcessScratch, 0);
+            if (clearAndReleasePointers)
+            {
+                pointers.Clear();
+            }
+
+            foreach (Pointer pointer in _pointersToProcessScratch)
+            {
+                ProcessPointer(pointer, clearAndReleasePointers);
             }
         }
 
@@ -524,7 +566,6 @@ namespace Oculus.Interaction
         protected override void ProcessDrag(PointerEventData pointerEvent)
         {
             if (!pointerEvent.IsPointerMoving() ||
-                Cursor.lockState == CursorLockMode.Locked ||
                 pointerEvent.pointerDrag == null)
                 return;
 

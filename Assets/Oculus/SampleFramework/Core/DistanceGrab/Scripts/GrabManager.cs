@@ -32,10 +32,10 @@ Hands (via the DistanceGrabber component) determine the target object in one of 
 ways, depending on bool m_useSpherecast:
 true: cast a sphere of radius m_spherecastRadius at distance m_maxGrabDistance. Select
 the first collision.
-false: from all objects within the grab volume, select the closest object that can be 
+false: from all objects within the grab volume, select the closest object that can be
 hit by a ray from the player's hand.
 
-IMPORTANT NOTE: if you change the radius of the trigger volume on the 
+IMPORTANT NOTE: if you change the radius of the trigger volume on the
 OVRPlayerController, you must ensure the spherecast or the grab volume on the grabbers
 is big enough to reach all objects within that radius! Keep in mind the hand may be a
 little behind or two the side of the player, so you need to make it somewhat larger
@@ -66,17 +66,16 @@ namespace OculusSampleFramework
         void OnTriggerEnter(Collider otherCollider)
         {
             DistanceGrabbable dg = otherCollider.GetComponentInChildren<DistanceGrabbable>();
-            if(dg)
+            if (dg)
             {
                 dg.InRange = true;
             }
-
         }
-        
+
         void OnTriggerExit(Collider otherCollider)
         {
             DistanceGrabbable dg = otherCollider.GetComponentInChildren<DistanceGrabbable>();
-            if(dg)
+            if (dg)
             {
                 dg.InRange = false;
             }

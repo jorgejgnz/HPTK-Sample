@@ -1,5 +1,15 @@
 using UnityEngine;
 
+/// <summary>
+/// This class will create a mesh with vertices that have been scaled using
+/// 9-slice scaling in 3D (27-slicing) to solve issues that can arise
+/// when meshes have been stretched along 1 axis more than the others.
+/// </summary>
+/// <remarks>
+/// While this can solve issues related to geometry stretching, it does
+/// not attempt to solve texture stretching issues, and should therefore be
+/// used more as a starting point to see how to modify 3D models dynamically.
+/// </remarks>
 public class SimpleResizer
 {
     public void CreateResizedObject(Vector3 newSize, GameObject parent, SimpleResizable sourcePrefab)
@@ -8,7 +18,7 @@ public class SimpleResizer
         prefab.name = sourcePrefab.name;
 
         var resizable = prefab.GetComponent<SimpleResizable>();
-        resizable.NewSize = newSize;
+        resizable.SetNewSize(newSize);
         if (resizable == null)
         {
             Debug.LogError("Resizable component missing.");
@@ -30,12 +40,10 @@ public class SimpleResizer
         MonoBehaviour.Destroy(resizable);
     }
 
-    #region PRIVATE METHODS
-
-    private Mesh ProcessVertices(SimpleResizable resizable, Vector3 newSize)
+    internal static Mesh ProcessVertices(SimpleResizable resizable, Vector3 newSize, bool pivot = false)
     {
-        Mesh originalMesh = resizable.Mesh;
-        Vector3 originalBounds = originalMesh.bounds.size;
+        Mesh originalMesh = resizable.OriginalMesh;
+        Vector3 originalBounds = resizable.DefaultSize;
 
         // Force scaling if newSize is smaller than the original mesh
         SimpleResizable.Method methodX = (originalBounds.x < newSize.x)
@@ -50,9 +58,14 @@ public class SimpleResizer
 
         Vector3[] resizedVertices = originalMesh.vertices;
 
-        float pivotX = (1/resizable.DefaultSize.x) * resizable.PivotPosition.x;
-        float pivotY = (1/resizable.DefaultSize.y) * resizable.PivotPosition.y;
-        float pivotZ = (1/resizable.DefaultSize.z) * resizable.PivotPosition.z;
+        // Transform pivot to object local space otherwise a
+        // world-space transform can affect the resizer
+        Vector3 localSpacePivot = resizable.transform.InverseTransformPoint(
+            resizable.PivotPosition);
+
+        float pivotX = (1 / resizable.DefaultSize.x) * localSpacePivot.x;
+        float pivotY = (1 / resizable.DefaultSize.y) * localSpacePivot.y;
+        float pivotZ = (1 / resizable.DefaultSize.z) * localSpacePivot.z;
 
         for (int i = 0; i < resizedVertices.Length; i++)
         {
@@ -83,6 +96,10 @@ public class SimpleResizer
                 resizable.PaddingZ,
                 resizable.PaddingZMax,
                 pivotZ);
+
+            if (pivot)
+                vertexPosition += localSpacePivot;
+
             resizedVertices[i] = vertexPosition;
         }
 
@@ -92,7 +109,7 @@ public class SimpleResizer
         return clonedMesh;
     }
 
-    private float CalculateNewVertexPosition(
+    private static float CalculateNewVertexPosition(
         SimpleResizable.Method resizeMethod,
         float currentPosition,
         float currentSize,
@@ -132,6 +149,4 @@ public class SimpleResizer
 
         return currentPosition;
     }
-
-    #endregion
 }

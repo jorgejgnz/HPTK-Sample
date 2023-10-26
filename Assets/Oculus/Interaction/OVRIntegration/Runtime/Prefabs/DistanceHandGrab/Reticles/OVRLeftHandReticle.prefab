@@ -45,9 +45,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0c6aa09f2d128af4d93fb9fc29ecec33, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _handGrabSource: {fileID: 0}
+  _visibleDuringSelect: 0
+  _handGrabber: {fileID: 0}
   _syntheticHand: {fileID: 5712968463922221159}
-  _visualHand: {fileID: 0}
+  _handVisual: {fileID: 0}
 --- !u!114 &6106127509108096422
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -143,6 +144,11 @@ PrefabInstance:
       propertyPath: m_Materials.Array.data[0]
       value: 
       objectReference: {fileID: 2100000, guid: 697d9a99ae3c7784bbef700ed300a1ca, type: 2}
+    - target: {fileID: 8592730055715483824, guid: e7fbb376593cff24f9db4ecf8d465aaf,
+        type: 3}
+      propertyPath: _updateMode
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8592730055715483824, guid: e7fbb376593cff24f9db4ecf8d465aaf,
         type: 3}
       propertyPath: _wristPositionLockCurve._animationLength

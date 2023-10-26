@@ -27,7 +27,7 @@ namespace Oculus.Interaction
     {
         [Tooltip("ActiveState will be true while this hand is connected.")]
         [SerializeField, Interface(typeof(IHand))]
-        MonoBehaviour _hand;
+        UnityEngine.Object _hand;
         private IHand Hand;
 
         public bool Active => Hand.IsConnected;
@@ -51,7 +51,7 @@ namespace Oculus.Interaction
 
         public void InjectHand(IHand hand)
         {
-            _hand = hand as MonoBehaviour;
+            _hand = hand as UnityEngine.Object;
             Hand = hand;
         }
 

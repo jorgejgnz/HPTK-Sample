@@ -26,8 +26,14 @@ namespace Oculus.Interaction.Grab
     [Serializable]
     public struct PoseMeasureParameters
     {
+        /// <summary>
+        /// Weights the scoring of the pose based more in the amount of translation
+        /// or rotation needed to align the interactor with the desired pose.
+        /// </summary>
         [SerializeField]
         [Range(0f, 1f)]
+        [Tooltip("Weights the scoring of the pose based more in the amount of translation" +
+            "or rotation needed to align the interactor with the desired pose.")]
         private float _positionRotationWeight;
 
         public float PositionRotationWeight => _positionRotationWeight;

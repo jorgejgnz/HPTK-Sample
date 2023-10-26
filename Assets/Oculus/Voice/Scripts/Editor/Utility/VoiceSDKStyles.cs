@@ -20,6 +20,7 @@
 
 using System;
 using UnityEngine;
+using Meta.WitAi;
 
 namespace Oculus.Voice.Utility
 {
@@ -33,6 +34,7 @@ namespace Oculus.Voice.Utility
             public string SetupHeaderLabel;
             public string SetupSubheaderLabel;
             public string SetupLanguageLabel;
+            public string VoiceDocsUrl;
             [Header("About Texts")]
             public string AboutTitleLabel;
             public string AboutCloseLabel;
@@ -65,7 +67,7 @@ namespace Oculus.Voice.Utility
             TextAsset textAsset = Resources.Load<TextAsset>(textFilePath);
             if (textAsset == null)
             {
-                Debug.LogError($"VoiceSDK Texts - Add localization to Resources/{textFilePath}\nLanguage: {languageID}");
+                VLog.E($"VoiceSDK Texts - Add localization to Resources/{textFilePath}\nLanguage: {languageID}");
                 return;
             }
             Texts = JsonUtility.FromJson<VoiceSDKTexts>(textAsset.text);

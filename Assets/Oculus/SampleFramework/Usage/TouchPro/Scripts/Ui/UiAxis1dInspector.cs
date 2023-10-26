@@ -8,10 +8,12 @@ public class UiAxis1dInspector : MonoBehaviour
 {
     [Header("Settings")]
     [SerializeField] private float m_minExtent = 0;
+
     [SerializeField] private float m_maxExtent = 1;
 
     [Header("Components")]
     [SerializeField] private TextMeshProUGUI m_nameLabel = null;
+
     [SerializeField] private TextMeshProUGUI m_valueLabel = null;
     [SerializeField] private Slider m_slider = null;
 

@@ -21,6 +21,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Assertions;
 
 namespace Oculus.Interaction
 {
@@ -44,12 +45,16 @@ namespace Oculus.Interaction
             new HashSet<InteractableTriggerBroadcaster>();
 
         protected bool _started = false;
+        private bool _skippedPhysics;
+        private bool _forcedGlobalPhysicsUpdate;
 
         protected virtual void Start()
         {
             this.BeginStart(ref _started);
             _rigidbodyTriggers = new Dictionary<Rigidbody, bool>();
             _rigidbodies = new List<Rigidbody>();
+            _skippedPhysics = false;
+            _forcedGlobalPhysicsUpdate = false;
             this.EndStart(ref _started);
         }
 
@@ -87,11 +92,14 @@ namespace Oculus.Interaction
 
         protected virtual void FixedUpdate()
         {
-            if (!Physics.autoSimulation)
+            if (Physics.autoSimulation)
             {
-                return;
+                UpdateTriggers();
             }
-            UpdateTriggers();
+            else
+            {
+                _skippedPhysics = true;
+            }
         }
 
         private void UpdateTriggers()
@@ -123,6 +131,9 @@ namespace Oculus.Interaction
                 }
                 _broadcasters.Remove(this);
                 _rigidbodies.Clear();
+                Assert.IsTrue(!_skippedPhysics || _forcedGlobalPhysicsUpdate,
+                    $"If Physics.autoSimulation is false, {nameof(InteractableTriggerBroadcaster)}." +
+                    $"{nameof(ForceGlobalUpdateTriggers)} must be called manually.");
             }
         }
 
@@ -139,6 +150,7 @@ namespace Oculus.Interaction
         {
             foreach (InteractableTriggerBroadcaster broadcaster in _broadcasters)
             {
+                broadcaster._forcedGlobalPhysicsUpdate = true;
                 broadcaster.UpdateTriggers();
             }
         }

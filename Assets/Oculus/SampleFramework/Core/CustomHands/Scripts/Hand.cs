@@ -50,8 +50,10 @@ namespace OVRTouchSample
 
         [SerializeField]
         private OVRInput.Controller m_controller = OVRInput.Controller.None;
+
         [SerializeField]
         private Animator m_animator = null;
+
         [SerializeField]
         private HandPose m_defaultGrabPose = null;
 
@@ -83,7 +85,8 @@ namespace OVRTouchSample
             m_showAfterInputFocusAcquired = new List<Renderer>();
 
             // Collision starts disabled. We'll enable it for certain cases such as making a fist.
-            m_colliders = this.GetComponentsInChildren<Collider>().Where(childCollider => !childCollider.isTrigger).ToArray();
+            m_colliders = this.GetComponentsInChildren<Collider>().Where(childCollider => !childCollider.isTrigger)
+                .ToArray();
             CollisionEnable(false);
 
             // Get animator layer indices by name, for later use switching between hand visuals
@@ -95,7 +98,8 @@ namespace OVRTouchSample
             OVRManager.InputFocusAcquired += OnInputFocusAcquired;
             OVRManager.InputFocusLost += OnInputFocusLost;
 #if UNITY_EDITOR
-            OVRPlugin.SendEvent("custom_hand", (SceneManager.GetActiveScene().name == "CustomHands").ToString(), "sample_framework");
+            OVRPlugin.SendEvent("custom_hand", (SceneManager.GetActiveScene().name == "CustomHands").ToString(),
+                "sample_framework");
 #endif
         }
 
@@ -133,11 +137,13 @@ namespace OVRTouchSample
             // Hand's collision grows over a short amount of time on enable, rather than snapping to on, to help somewhat with interpenetration issues.
             if (m_collisionEnabled && m_collisionScaleCurrent + Mathf.Epsilon < COLLIDER_SCALE_MAX)
             {
-                m_collisionScaleCurrent = Mathf.Min(COLLIDER_SCALE_MAX, m_collisionScaleCurrent + Time.deltaTime * COLLIDER_SCALE_PER_SECOND);
+                m_collisionScaleCurrent = Mathf.Min(COLLIDER_SCALE_MAX,
+                    m_collisionScaleCurrent + Time.deltaTime * COLLIDER_SCALE_PER_SECOND);
                 for (int i = 0; i < m_colliders.Length; ++i)
                 {
                     Collider collider = m_colliders[i];
-                    collider.transform.localScale = new Vector3(m_collisionScaleCurrent, m_collisionScaleCurrent, m_collisionScaleCurrent);
+                    collider.transform.localScale = new Vector3(m_collisionScaleCurrent, m_collisionScaleCurrent,
+                        m_collisionScaleCurrent);
                 }
             }
         }
@@ -175,6 +181,7 @@ namespace OVRTouchSample
                         m_showAfterInputFocusAcquired[i].enabled = true;
                     }
                 }
+
                 m_showAfterInputFocusAcquired.Clear();
 
                 // Update function will update this flag appropriately. Do not set it to a potentially incorrect value here.
@@ -200,6 +207,7 @@ namespace OVRTouchSample
                 HandPose customPose = m_grabber.grabbedObject.GetComponent<HandPose>();
                 if (customPose != null) grabPose = customPose;
             }
+
             // Pose
             HandPoseId handPoseId = grabPose.PoseId;
             m_animator.SetInteger(m_animParamIndexPose, (int)handPoseId);
@@ -231,6 +239,7 @@ namespace OVRTouchSample
             {
                 return;
             }
+
             m_collisionEnabled = enabled;
 
             if (enabled)
@@ -239,7 +248,8 @@ namespace OVRTouchSample
                 for (int i = 0; i < m_colliders.Length; ++i)
                 {
                     Collider collider = m_colliders[i];
-                    collider.transform.localScale = new Vector3(COLLIDER_SCALE_MIN, COLLIDER_SCALE_MIN, COLLIDER_SCALE_MIN);
+                    collider.transform.localScale =
+                        new Vector3(COLLIDER_SCALE_MIN, COLLIDER_SCALE_MIN, COLLIDER_SCALE_MIN);
                     collider.enabled = true;
                 }
             }
@@ -250,7 +260,8 @@ namespace OVRTouchSample
                 {
                     Collider collider = m_colliders[i];
                     collider.enabled = false;
-                    collider.transform.localScale = new Vector3(COLLIDER_SCALE_MIN, COLLIDER_SCALE_MIN, COLLIDER_SCALE_MIN);
+                    collider.transform.localScale =
+                        new Vector3(COLLIDER_SCALE_MIN, COLLIDER_SCALE_MIN, COLLIDER_SCALE_MIN);
                 }
             }
         }

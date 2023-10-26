@@ -127,7 +127,7 @@ namespace Oculus.Interaction.InterfaceSupport
         {
             foreach (Type t in targets)
             {
-                if (!t.IsAssignableFrom(source))
+                if (!IsAssignableTo(source, t))
                 {
                     return false;
                 }
@@ -184,6 +184,13 @@ namespace Oculus.Interaction.InterfaceSupport
                         t = new Type[1] { referredFieldInfo.FieldType };
                         break;
                     }
+                    var referredPropertyInfo = thisType.GetProperty(att.TypeFromFieldName,
+                        BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                    if (referredPropertyInfo != null)
+                    {
+                        t = new Type[1] { referredPropertyInfo.PropertyType };
+                        break;
+                    }
 
                     thisType = thisType.BaseType;
                 }
@@ -220,6 +227,43 @@ namespace Oculus.Interaction.InterfaceSupport
             }
             string filter = filterBuilder.ToString();
             EditorGUIUtility.ShowObjectPicker<Component>(null, true, filter, _filteredObjectPickerID);
+        }
+
+        private bool IsAssignableTo(Type fromType, Type toType)
+        {
+            // is open interface
+            if (toType.IsGenericType && toType.IsGenericTypeDefinition)
+            {
+                return IsAssignableToGenericType(fromType, toType);
+            }
+
+            return toType.IsAssignableFrom(fromType);
+        }
+
+        private bool IsAssignableToGenericType(Type fromType, Type toType)
+        {
+            var interfaceTypes = fromType.GetInterfaces();
+
+            foreach (var it in interfaceTypes)
+            {
+                if (it.IsGenericType && it.GetGenericTypeDefinition() == toType)
+                {
+                    return true;
+                }
+            }
+
+            if (fromType.IsGenericType && fromType.GetGenericTypeDefinition() == toType)
+            {
+                return true;
+            }
+
+            Type baseType = fromType.BaseType;
+            if (baseType == null)
+            {
+                return false;
+            }
+
+            return IsAssignableToGenericType(baseType, toType);
         }
     }
 }

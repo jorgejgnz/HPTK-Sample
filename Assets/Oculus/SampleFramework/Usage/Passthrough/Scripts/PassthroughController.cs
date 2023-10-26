@@ -33,6 +33,8 @@ public class PassthroughController : MonoBehaviour
         passthroughLayer.SetColorMapControls(contrastRange);
 
         transform.position = Camera.main.transform.position;
-        transform.rotation = Quaternion.LookRotation(new Vector3(Camera.main.transform.forward.x, 0.0f, Camera.main.transform.forward.z).normalized);
+        transform.rotation =
+            Quaternion.LookRotation(new Vector3(Camera.main.transform.forward.x, 0.0f, Camera.main.transform.forward.z)
+                .normalized);
     }
 }

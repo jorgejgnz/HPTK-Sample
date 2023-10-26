@@ -11,7 +11,7 @@ using Meta.WitAi.Data.Info;
 
 namespace Meta.WitAi.Windows
 {
-    [CustomPropertyDrawer(typeof(WitTraitInfo))]
+    [CustomPropertyDrawer(typeof(WitTraitValueInfo))]
     public class WitTraitValuePropertyDrawer : WitSimplePropertyDrawer
     {
         // Key = value

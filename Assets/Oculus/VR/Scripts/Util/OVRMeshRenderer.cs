@@ -24,180 +24,190 @@ using UnityEngine;
 
 public class OVRMeshRenderer : MonoBehaviour
 {
-	public interface IOVRMeshRendererDataProvider
-	{
-		MeshRendererData GetMeshRendererData();
-	}
+    public interface IOVRMeshRendererDataProvider
+    {
+        MeshRendererData GetMeshRendererData();
+    }
 
-	public struct MeshRendererData
-	{
-		public bool IsDataValid { get; set; }
-		public bool IsDataHighConfidence { get; set; }
-		public bool ShouldUseSystemGestureMaterial { get; set; }
-	}
+    public struct MeshRendererData
+    {
+        public bool IsDataValid { get; set; }
+        public bool IsDataHighConfidence { get; set; }
+        public bool ShouldUseSystemGestureMaterial { get; set; }
+    }
 
-	public enum ConfidenceBehavior
-	{
-		None,
-		ToggleRenderer,
-	}
+    public enum ConfidenceBehavior
+    {
+        None,
+        ToggleRenderer,
+    }
 
-	public enum SystemGestureBehavior
-	{
-		None,
-		SwapMaterial,
-	}
+    public enum SystemGestureBehavior
+    {
+        None,
+        SwapMaterial,
+    }
 
-	[SerializeField]
-	private IOVRMeshRendererDataProvider _dataProvider;
-	[SerializeField]
-	private OVRMesh _ovrMesh;
-	[SerializeField]
-	private OVRSkeleton _ovrSkeleton;
-	[SerializeField]
-	private ConfidenceBehavior _confidenceBehavior = ConfidenceBehavior.ToggleRenderer;
-	[SerializeField]
-	private SystemGestureBehavior _systemGestureBehavior = SystemGestureBehavior.SwapMaterial;
-	[SerializeField]
-	private Material _systemGestureMaterial = null;
-	private Material _originalMaterial = null;
+    [SerializeField]
+    private IOVRMeshRendererDataProvider _dataProvider;
 
-	private SkinnedMeshRenderer _skinnedMeshRenderer;
+    [SerializeField]
+    private OVRMesh _ovrMesh;
 
-	public bool IsInitialized { get; private set; }
-	public bool IsDataValid { get; private set; }
-	public bool IsDataHighConfidence { get; private set; }
-	public bool ShouldUseSystemGestureMaterial { get; private set; }
+    [SerializeField]
+    private OVRSkeleton _ovrSkeleton;
 
-	private void Awake()
-	{
-		if (_dataProvider == null)
-		{
-			_dataProvider = GetComponent<IOVRMeshRendererDataProvider>();
-		}
+    [SerializeField]
+    private ConfidenceBehavior _confidenceBehavior = ConfidenceBehavior.ToggleRenderer;
 
-		if (_ovrMesh == null)
-		{
-			_ovrMesh = GetComponent<OVRMesh>();
-		}
+    [SerializeField]
+    private SystemGestureBehavior _systemGestureBehavior = SystemGestureBehavior.SwapMaterial;
 
-		if (_ovrSkeleton == null)
-		{
-			_ovrSkeleton = GetComponent<OVRSkeleton>();
-		}
-	}
+    [SerializeField]
+    private Material _systemGestureMaterial = null;
 
-	private void Start()
-	{
-		if (_ovrMesh == null)
-		{
-			// disable if no mesh configured
-			this.enabled = false;
-			return;
-		}
+    private Material _originalMaterial = null;
 
-		if (ShouldInitialize())
-		{
-			Initialize();
-		}
-	}
+    private SkinnedMeshRenderer _skinnedMeshRenderer;
 
-	private bool ShouldInitialize()
-	{
-		if (IsInitialized)
-		{
-			return false;
-		}
+    public bool IsInitialized { get; private set; }
+    public bool IsDataValid { get; private set; }
+    public bool IsDataHighConfidence { get; private set; }
+    public bool ShouldUseSystemGestureMaterial { get; private set; }
 
-		if ((_ovrMesh == null) || ((_ovrMesh != null) && !_ovrMesh.IsInitialized) || ((_ovrSkeleton != null) && !_ovrSkeleton.IsInitialized))
-		{
-			// do not initialize if mesh or optional skeleton are not initialized
-			return false;
-		}
+    private void Awake()
+    {
+        if (_dataProvider == null)
+        {
+            _dataProvider = GetComponent<IOVRMeshRendererDataProvider>();
+        }
 
-		return true;
-	}
+        if (_ovrMesh == null)
+        {
+            _ovrMesh = GetComponent<OVRMesh>();
+        }
 
-	private void Initialize()
-	{
-		_skinnedMeshRenderer = GetComponent<SkinnedMeshRenderer>();
-		if (!_skinnedMeshRenderer)
-		{
-			_skinnedMeshRenderer = gameObject.AddComponent<SkinnedMeshRenderer>();
-		}
+        if (_ovrSkeleton == null)
+        {
+            _ovrSkeleton = GetComponent<OVRSkeleton>();
+        }
+    }
 
-		_skinnedMeshRenderer.sharedMesh = _ovrMesh.Mesh;
-		_originalMaterial = _skinnedMeshRenderer.sharedMaterial;
+    private void Start()
+    {
+        if (_ovrMesh == null)
+        {
+            // disable if no mesh configured
+            this.enabled = false;
+            return;
+        }
 
-		if ((_ovrSkeleton != null))
-		{
-			int numSkinnableBones = _ovrSkeleton.GetCurrentNumSkinnableBones();
-			var bindPoses = new Matrix4x4[numSkinnableBones];
-			var bones = new Transform[numSkinnableBones];
-			var localToWorldMatrix = transform.localToWorldMatrix;
-			for (int i = 0; i < numSkinnableBones && i < _ovrSkeleton.Bones.Count; ++i)
-			{
-				bones[i] = _ovrSkeleton.Bones[i].Transform;
-				bindPoses[i] = _ovrSkeleton.BindPoses[i].Transform.worldToLocalMatrix * localToWorldMatrix;
-			}
-			_ovrMesh.Mesh.bindposes = bindPoses;
-			_skinnedMeshRenderer.bones = bones;
-			_skinnedMeshRenderer.updateWhenOffscreen = true;
-		}
+        if (ShouldInitialize())
+        {
+            Initialize();
+        }
+    }
 
-		IsInitialized = true;
-	}
+    private bool ShouldInitialize()
+    {
+        if (IsInitialized)
+        {
+            return false;
+        }
 
-	private void Update()
-	{
+        if ((_ovrMesh == null) || ((_ovrMesh != null) && !_ovrMesh.IsInitialized) ||
+            ((_ovrSkeleton != null) && !_ovrSkeleton.IsInitialized))
+        {
+            // do not initialize if mesh or optional skeleton are not initialized
+            return false;
+        }
+
+        return true;
+    }
+
+    private void Initialize()
+    {
+        _skinnedMeshRenderer = GetComponent<SkinnedMeshRenderer>();
+        if (!_skinnedMeshRenderer)
+        {
+            _skinnedMeshRenderer = gameObject.AddComponent<SkinnedMeshRenderer>();
+        }
+
+        _skinnedMeshRenderer.sharedMesh = _ovrMesh.Mesh;
+        _originalMaterial = _skinnedMeshRenderer.sharedMaterial;
+
+        if ((_ovrSkeleton != null))
+        {
+            int numSkinnableBones = _ovrSkeleton.GetCurrentNumSkinnableBones();
+            var bindPoses = new Matrix4x4[numSkinnableBones];
+            var bones = new Transform[numSkinnableBones];
+            var localToWorldMatrix = transform.localToWorldMatrix;
+            for (int i = 0; i < numSkinnableBones && i < _ovrSkeleton.Bones.Count; ++i)
+            {
+                bones[i] = _ovrSkeleton.Bones[i].Transform;
+                bindPoses[i] = _ovrSkeleton.BindPoses[i].Transform.worldToLocalMatrix * localToWorldMatrix;
+            }
+
+            _ovrMesh.Mesh.bindposes = bindPoses;
+            _skinnedMeshRenderer.bones = bones;
+            _skinnedMeshRenderer.updateWhenOffscreen = true;
+        }
+
+        IsInitialized = true;
+    }
+
+    private void Update()
+    {
 #if UNITY_EDITOR
-		if (ShouldInitialize())
-		{
-			Initialize();
-		}
+        if (ShouldInitialize())
+        {
+            Initialize();
+        }
 #endif
 
-		IsDataValid = false;
-		IsDataHighConfidence = false;
-		ShouldUseSystemGestureMaterial = false;
+        IsDataValid = false;
+        IsDataHighConfidence = false;
+        ShouldUseSystemGestureMaterial = false;
 
-		if (IsInitialized)
-		{
-			bool shouldRender = false;
+        if (IsInitialized)
+        {
+            bool shouldRender = false;
 
-			if (_dataProvider != null)
-			{
-				var data = _dataProvider.GetMeshRendererData();
+            if (_dataProvider != null)
+            {
+                var data = _dataProvider.GetMeshRendererData();
 
-				IsDataValid = data.IsDataValid;
-				IsDataHighConfidence = data.IsDataHighConfidence;
-				ShouldUseSystemGestureMaterial = data.ShouldUseSystemGestureMaterial;
+                IsDataValid = data.IsDataValid;
+                IsDataHighConfidence = data.IsDataHighConfidence;
+                ShouldUseSystemGestureMaterial = data.ShouldUseSystemGestureMaterial;
 
-				shouldRender = data.IsDataValid && data.IsDataHighConfidence;
-			}
+                shouldRender = data.IsDataValid && data.IsDataHighConfidence;
+            }
 
-			if (_confidenceBehavior == ConfidenceBehavior.ToggleRenderer)
-			{
-				if (_skinnedMeshRenderer != null && _skinnedMeshRenderer.enabled != shouldRender)
-				{
-					_skinnedMeshRenderer.enabled = shouldRender;
-				}
-			}
+            if (_confidenceBehavior == ConfidenceBehavior.ToggleRenderer)
+            {
+                if (_skinnedMeshRenderer != null && _skinnedMeshRenderer.enabled != shouldRender)
+                {
+                    _skinnedMeshRenderer.enabled = shouldRender;
+                }
+            }
 
-			if (_systemGestureBehavior == SystemGestureBehavior.SwapMaterial)
-			{
-				if (_skinnedMeshRenderer != null)
-				{
-					if (ShouldUseSystemGestureMaterial && _systemGestureMaterial != null && _skinnedMeshRenderer.sharedMaterial != _systemGestureMaterial)
-					{
-						_skinnedMeshRenderer.sharedMaterial = _systemGestureMaterial;
-					}
-					else if (!ShouldUseSystemGestureMaterial && _originalMaterial != null && _skinnedMeshRenderer.sharedMaterial != _originalMaterial)
-					{
-						_skinnedMeshRenderer.sharedMaterial = _originalMaterial;
-					}
-				}
-			}
-		}
-	}
+            if (_systemGestureBehavior == SystemGestureBehavior.SwapMaterial)
+            {
+                if (_skinnedMeshRenderer != null)
+                {
+                    if (ShouldUseSystemGestureMaterial && _systemGestureMaterial != null &&
+                        _skinnedMeshRenderer.sharedMaterial != _systemGestureMaterial)
+                    {
+                        _skinnedMeshRenderer.sharedMaterial = _systemGestureMaterial;
+                    }
+                    else if (!ShouldUseSystemGestureMaterial && _originalMaterial != null &&
+                             _skinnedMeshRenderer.sharedMaterial != _originalMaterial)
+                    {
+                        _skinnedMeshRenderer.sharedMaterial = _originalMaterial;
+                    }
+                }
+            }
+        }
+    }
 }

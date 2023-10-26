@@ -31,7 +31,7 @@ namespace Oculus.Interaction
         IDistanceInteractor
     {
         [SerializeField, Interface(typeof(ISelector))]
-        private MonoBehaviour _selector;
+        private UnityEngine.Object _selector;
 
         [SerializeField, Optional]
         private Transform _grabCenter;
@@ -40,7 +40,7 @@ namespace Oculus.Interaction
         private Transform _grabTarget;
 
         [SerializeField, Interface(typeof(IVelocityCalculator)), Optional]
-        private MonoBehaviour _velocityCalculator;
+        private UnityEngine.Object _velocityCalculator;
         public IVelocityCalculator VelocityCalculator { get; set; }
 
         [SerializeField]
@@ -176,7 +176,7 @@ namespace Oculus.Interaction
 
         public void InjectSelector(ISelector selector)
         {
-            _selector = selector as MonoBehaviour;
+            _selector = selector as UnityEngine.Object;
             Selector = selector;
         }
 
@@ -197,7 +197,7 @@ namespace Oculus.Interaction
 
         public void InjectOptionalVelocityCalculator(IVelocityCalculator velocityCalculator)
         {
-            _velocityCalculator = velocityCalculator as MonoBehaviour;
+            _velocityCalculator = velocityCalculator as UnityEngine.Object;
             VelocityCalculator = velocityCalculator;
         }
 

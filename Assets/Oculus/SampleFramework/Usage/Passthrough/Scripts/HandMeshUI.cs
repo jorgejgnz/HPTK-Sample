@@ -108,6 +108,7 @@ public class HandMeshUI : MonoBehaviour
                 displayString = "{0, 0:0.00}";
                 break;
         }
+
         float absoluteValue = isNormalized ? value * (sliderEnd - sliderStart) + sliderStart : value;
         float normalizedValue = isNormalized ? value : (value - sliderStart) / (sliderEnd - sliderStart);
         knobs[sliderID].transform.localPosition = Vector3.right * normalizedValue * sliderScale;
@@ -142,9 +143,9 @@ public class HandMeshUI : MonoBehaviour
     void CheckForHands()
     {
         bool handsActive = (
-          OVRInput.GetActiveController() == OVRInput.Controller.Hands ||
-          OVRInput.GetActiveController() == OVRInput.Controller.LHand ||
-          OVRInput.GetActiveController() == OVRInput.Controller.RHand);
+            OVRInput.GetActiveController() == OVRInput.Controller.Hands ||
+            OVRInput.GetActiveController() == OVRInput.Controller.LHand ||
+            OVRInput.GetActiveController() == OVRInput.Controller.RHand);
 
         if (transform.GetChild(0).gameObject.activeSelf)
         {
@@ -160,9 +161,11 @@ public class HandMeshUI : MonoBehaviour
             if (handsActive)
             {
                 transform.GetChild(0).gameObject.SetActive(true);
-                transform.position = (rightHand.Bones[20].Transform.position + rightHand.Bones[20].Transform.position) * 0.5f;
+                transform.position = (rightHand.Bones[20].Transform.position + rightHand.Bones[20].Transform.position) *
+                                     0.5f;
                 transform.position += (transform.position - Camera.main.transform.position).normalized * 0.1f;
-                transform.rotation = Quaternion.LookRotation(new Vector3(Camera.main.transform.forward.x, 0, Camera.main.transform.forward.z));
+                transform.rotation = Quaternion.LookRotation(new Vector3(Camera.main.transform.forward.x, 0,
+                    Camera.main.transform.forward.z));
             }
         }
     }

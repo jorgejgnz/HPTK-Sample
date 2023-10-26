@@ -24,37 +24,37 @@ namespace Oculus.Interaction.Grab
 {
     public static class GrabPoseHelper
     {
-        public delegate Pose PoseCalculator(in Pose desiredPose, in Pose referencePose);
+        public delegate Pose PoseCalculator(in Pose desiredPose, Transform relativeTo);
 
         /// <summary>
         /// Finds the best pose comparing the one that requires the minimum rotation
         /// and minimum translation.
         /// </summary>
         /// <param name="desiredPose">Pose to measure from.</param>
-        /// <param name="referencePose">Reference pose of the surface.</param>
-        /// <param name="bestPose">Nearest pose to the desired one at the surface.</param>
+        /// <param name="bestPose">Nearest pose to the desired one at the hand grab pose.</param>
         /// <param name="scoringModifier">Modifiers for the score based in rotation and distance.</param>
-        /// <param name="minimalTranslationPoseCalculator">Delegate to calculate the nearest, by position, pose at a surface.</param>
-        /// <param name="minimalRotationPoseCalculator">Delegate to calculate the nearest, by rotation, pose at a surface.</param>
+        /// <param name="relativeTo">The reference transform to apply the calculators to</param>
+        /// <param name="minimalTranslationPoseCalculator">Delegate to calculate the nearest, by position, pose at a hand grab pose.</param>
+        /// <param name="minimalRotationPoseCalculator">Delegate to calculate the nearest, by rotation, pose at a hand grab pose.</param>
         /// <returns>The score, normalized, of the best pose.</returns>
-        public static GrabPoseScore CalculateBestPoseAtSurface(in Pose desiredPose, in Pose referencePose, out Pose bestPose,
-            in PoseMeasureParameters scoringModifier,
+        public static GrabPoseScore CalculateBestPoseAtSurface(in Pose desiredPose, out Pose bestPose,
+            in PoseMeasureParameters scoringModifier, Transform relativeTo,
             PoseCalculator minimalTranslationPoseCalculator, PoseCalculator minimalRotationPoseCalculator)
         {
             if (scoringModifier.PositionRotationWeight == 1f)
             {
-                bestPose = minimalRotationPoseCalculator(desiredPose, referencePose);
-                return new GrabPoseScore(desiredPose, referencePose, 1f);
+                bestPose = minimalRotationPoseCalculator(desiredPose, relativeTo);
+                return new GrabPoseScore(desiredPose, bestPose, 1f);
             }
 
             if (scoringModifier.PositionRotationWeight == 0f)
             {
-                bestPose = minimalTranslationPoseCalculator(desiredPose, referencePose);
-                return new GrabPoseScore(desiredPose, referencePose, 0f);
+                bestPose = minimalTranslationPoseCalculator(desiredPose, relativeTo);
+                return new GrabPoseScore(desiredPose, bestPose, 0f);
             }
 
-            Pose minimalTranslationPose = minimalTranslationPoseCalculator(desiredPose, referencePose);
-            Pose minimalRotationPose = minimalRotationPoseCalculator(desiredPose, referencePose);
+            Pose minimalTranslationPose = minimalTranslationPoseCalculator(desiredPose, relativeTo);
+            Pose minimalRotationPose = minimalRotationPoseCalculator(desiredPose, relativeTo);
             bestPose = SelectBestPose(minimalRotationPose, minimalTranslationPose,
                 desiredPose, scoringModifier, out GrabPoseScore bestScore);
             return bestScore;
@@ -70,8 +70,8 @@ namespace Oculus.Interaction.Grab
         /// <param name="scoringModifier">Modifiers for the score based in rotation and distance.</param>
         /// <param name="bestScore">Out value with the score of the best pose.</param>
         /// <returns>The most similar pose to reference out of the poses</returns>
-        public static Pose SelectBestPose(in Pose poseA, in Pose poseB, in Pose reference, PoseMeasureParameters scoringModifier,
-            out GrabPoseScore bestScore)
+        public static Pose SelectBestPose(in Pose poseA, in Pose poseB, in Pose reference,
+            PoseMeasureParameters scoringModifier, out GrabPoseScore bestScore)
         {
             GrabPoseScore poseAScore = new GrabPoseScore(reference, poseA,
                 scoringModifier.PositionRotationWeight);
@@ -90,6 +90,16 @@ namespace Oculus.Interaction.Grab
             }
         }
 
+        /// <summary>
+        /// Calculates the score from a point to a set of colliders.
+        /// When the point is outside the colliders the further from their surface means the
+        /// lower the score.
+        /// When the point is inside any of the colliders the score is always higher.
+        /// </summary>
+        /// <param name="position">Position to measure against the colliders</param>
+        /// <param name="colliders">Group of colliders to measure the score</param>
+        /// <param name="hitPoint">Output point in the surface or inside the colliders that is near the position</param>
+        /// <returns>A GrabPoseScore value containing the score of the position in reference to the colliders</returns>
         public static GrabPoseScore CollidersScore(Vector3 position, Collider[] colliders,
             out Vector3 hitPoint)
         {
@@ -99,7 +109,8 @@ namespace Oculus.Interaction.Grab
             foreach (Collider collider in colliders)
             {
                 bool isPointInsideCollider = Collisions.IsPointWithinCollider(position, collider);
-                Vector3 measuringPoint = isPointInsideCollider ? collider.bounds.center : collider.ClosestPoint(position);
+                Vector3 measuringPoint = isPointInsideCollider ? collider.bounds.center
+                    : collider.ClosestPoint(position);
 
                 score = new GrabPoseScore(position, measuringPoint,
                     isPointInsideCollider);

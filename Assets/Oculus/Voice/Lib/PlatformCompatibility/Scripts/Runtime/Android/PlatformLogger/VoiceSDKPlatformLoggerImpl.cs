@@ -40,6 +40,8 @@ namespace Oculus.Voice.Core.Bindings.Android.PlatformLogger
         {
         }
 
+        private bool loggedFirstTranscriptionTime = false;
+
         public override void Connect(string version)
         {
             base.Connect(version);
@@ -56,6 +58,7 @@ namespace Oculus.Voice.Core.Bindings.Android.PlatformLogger
 
         public void LogInteractionStart(string requestId, string witApi)
         {
+            loggedFirstTranscriptionTime = false;
             consoleLoggerImpl.LogInteractionStart(requestId, witApi);
             service.LogInteractionStart(requestId, DateTimeUtility.ElapsedMilliseconds.ToString());
             LogAnnotation("isUsingPlatform", IsUsingPlatformIntegration.ToString());
@@ -86,6 +89,15 @@ namespace Oculus.Voice.Core.Bindings.Android.PlatformLogger
         {
             consoleLoggerImpl.LogAnnotation(annotationKey, annotationValue);
             service.LogAnnotation(annotationKey, annotationValue);
+        }
+
+        public void LogFirstTranscriptionTime()
+        {
+            if (!loggedFirstTranscriptionTime)
+            {
+                loggedFirstTranscriptionTime = true;
+                LogInteractionPoint("firstPartialTranscriptionTime");
+            }
         }
     }
 }

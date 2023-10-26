@@ -20,10 +20,19 @@ namespace Meta.WitAi.TTS.Events
         [Tooltip("Called when a audio clip has been removed from the runtime cache")]
         public TTSClipEvent OnClipUnloaded  = new TTSClipEvent();
 
-        // Streaming events
+        /// <summary>
+        /// All events related to web requests
+        /// </summary>
+        public TTSWebRequestEvents WebRequest = new TTSWebRequestEvents();
+
+        /// <summary>
+        /// All events related to streaming from web or disk
+        /// </summary>
         public TTSStreamEvents Stream = new TTSStreamEvents();
 
-        // Download events
+        /// <summary>
+        /// All events related to downloading from the web
+        /// </summary>
         public TTSDownloadEvents Download = new TTSDownloadEvents();
     }
 }

@@ -11,7 +11,7 @@ ModelImporter:
     second: CrossOffClip
   externalObjects: {}
   materials:
-    materialImportMode: 2
+    materialImportMode: 0
     materialName: 1
     materialSearch: 2
     materialLocation: 0

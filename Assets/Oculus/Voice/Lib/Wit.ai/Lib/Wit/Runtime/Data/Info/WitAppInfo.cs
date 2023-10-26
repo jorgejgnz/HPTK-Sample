@@ -82,6 +82,13 @@ namespace Meta.WitAi.Data.Info
         [NonReorderable]
         #endif
         public WitTraitInfo[] traits;
+        /// <summary>
+        /// All tag groups for an app. Within a group, all tags point to the same app state (as a result of moving tags).
+        /// </summary>
+        #if UNITY_2021_3_2 || UNITY_2021_3_3 || UNITY_2021_3_4 || UNITY_2021_3_5
+        [NonReorderable]
+        #endif
+        public WitVersionTagInfo[] versionTags;
 
         [Header("TTS Info")]
         /// <summary>
@@ -90,6 +97,7 @@ namespace Meta.WitAi.Data.Info
         #if UNITY_2021_3_2 || UNITY_2021_3_3 || UNITY_2021_3_4 || UNITY_2021_3_5
         [NonReorderable]
         #endif
+
         public WitVoiceInfo[] voices;
     }
 }

@@ -18,6 +18,8 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
+using Oculus.Interaction.PoseDetection.Debug;
 using UnityEngine;
 
 namespace Oculus.Interaction.PoseDetection
@@ -49,6 +51,19 @@ namespace Oculus.Interaction.PoseDetection
             {
                 return (_activateIfStepsStarted && _sequence.CurrentActivationStep > 0 && !_sequence.Active) ||
                        (_activateIfStepsComplete && _sequence.Active);
+            }
+        }
+
+        static SequenceActiveState()
+        {
+            ActiveStateDebugTree.RegisterModel<SequenceActiveState>(new DebugModel());
+        }
+
+        private class DebugModel : ActiveStateModel<SequenceActiveState>
+        {
+            protected override IEnumerable<IActiveState> GetChildren(SequenceActiveState activeState)
+            {
+                return new[] { activeState._sequence };
             }
         }
 

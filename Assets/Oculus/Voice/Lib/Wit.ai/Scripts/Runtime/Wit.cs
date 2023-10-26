@@ -7,7 +7,9 @@
  */
 
 using Meta.WitAi.Configuration;
+using Meta.WitAi.Data;
 using Meta.WitAi.Interfaces;
+using Meta.WitAi.Requests;
 using UnityEngine;
 
 namespace Meta.WitAi
@@ -25,8 +27,8 @@ namespace Meta.WitAi
         private WitService witService;
 
         #region Voice Service Properties
-        public override bool Active => null != witService && witService.Active;
-        public override bool IsRequestActive => null != witService && witService.IsRequestActive;
+        public override bool Active => base.Active || (null != witService && witService.Active);
+        public override bool IsRequestActive => base.IsRequestActive || (null != witService && witService.IsRequestActive);
         public override ITranscriptionProvider TranscriptionProvider
         {
             get => witService.TranscriptionProvider;
@@ -39,19 +41,47 @@ namespace Meta.WitAi
 
         #region Voice Service Methods
 
-        public override void Activate(string text, WitRequestOptions requestOptions)
+        protected override string GetSendError()
         {
-            witService.Activate(text, requestOptions);
+            if (!RuntimeConfiguration?.witConfiguration)
+            {
+                return $"Your {GetType().Name} \"{gameObject.name}\" does not have a wit configuration assigned.   Voice interactions are not possible without the configuration.";
+            }
+            if (string.IsNullOrEmpty(RuntimeConfiguration.witConfiguration.GetClientAccessToken()))
+            {
+                return $"The configuration \"{RuntimeConfiguration.witConfiguration.name}\" is not setup with a valid client access token.   Voice interactions are not possible without the token.";
+            }
+            return base.GetSendError();
         }
 
-        public override void Activate(WitRequestOptions options)
+        protected override string GetActivateAudioError()
         {
-            witService.Activate(options);
+            if (!AudioBuffer.Instance.IsInputAvailable)
+            {
+                return "No Microphone(s)/recording devices found.  You will be unable to capture audio on this device.";
+            }
+            return string.Empty;
         }
 
-        public override void ActivateImmediately(WitRequestOptions options)
+        public override VoiceServiceRequest Activate(string text, WitRequestOptions requestOptions, VoiceServiceRequestEvents requestEvents)
         {
-            witService.ActivateImmediately(options);
+            VoiceServiceRequest request = witService.Activate(text, requestOptions, requestEvents);
+            OnTextRequestCreated(request);
+            return request;
+        }
+
+        public override VoiceServiceRequest Activate(WitRequestOptions requestOptions, VoiceServiceRequestEvents requestEvents)
+        {
+            VoiceServiceRequest request = witService.Activate(requestOptions, requestEvents);
+            OnAudioRequestCreated(request);
+            return request;
+        }
+
+        public override VoiceServiceRequest ActivateImmediately(WitRequestOptions requestOptions, VoiceServiceRequestEvents requestEvents)
+        {
+            VoiceServiceRequest request = witService.ActivateImmediately(requestOptions, requestEvents);
+            OnAudioRequestCreated(request);
+            return request;
         }
 
         public override void Deactivate()
@@ -75,6 +105,7 @@ namespace Meta.WitAi
             // that this component has its own dedicated WitService
             witService = gameObject.AddComponent<WitService>();
             witService.VoiceEventProvider = this;
+            witService.TelemetryEventsProvider = this;
             witService.ConfigurationProvider = this;
         }
     }

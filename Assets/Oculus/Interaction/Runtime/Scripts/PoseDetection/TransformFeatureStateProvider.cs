@@ -174,15 +174,15 @@ namespace Oculus.Interaction.PoseDetection
     public class TransformFeatureStateProvider : MonoBehaviour, ITransformFeatureStateProvider
     {
         [SerializeField, Interface(typeof(IHand))]
-        private MonoBehaviour _hand;
+        private UnityEngine.Object _hand;
         public IHand Hand { get; private set; }
 
         [SerializeField, Interface(typeof(IHmd))]
-        private MonoBehaviour _hmd;
+        private UnityEngine.Object _hmd;
         public IHmd Hmd { get; private set; }
 
         [SerializeField, Interface(typeof(ITrackingToWorldTransformer))]
-        private MonoBehaviour _trackingToWorldTransformer;
+        private UnityEngine.Object _trackingToWorldTransformer;
 
         public ITrackingToWorldTransformer TrackingToWorldTransformer { get; private set; }
 
@@ -361,13 +361,13 @@ namespace Oculus.Interaction.PoseDetection
 
         public void InjectHand(IHand hand)
         {
-            _hand = hand as MonoBehaviour;
+            _hand = hand as UnityEngine.Object;
             Hand = hand;
         }
 
         public void InjectHmd(IHmd hand)
         {
-            _hmd = hand as MonoBehaviour;
+            _hmd = hand as UnityEngine.Object;
             Hmd = hand;
         }
 

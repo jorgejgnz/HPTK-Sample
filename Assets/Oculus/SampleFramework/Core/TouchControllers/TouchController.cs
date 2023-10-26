@@ -28,6 +28,7 @@ namespace OVRTouchSample
     {
         [SerializeField]
         private OVRInput.Controller m_controller = OVRInput.Controller.None;
+
         [SerializeField]
         private Animator m_animator = null;
 
@@ -63,6 +64,5 @@ namespace OVRTouchSample
                 m_restoreOnInputAcquired = false;
             }
         }
-
     }
 }

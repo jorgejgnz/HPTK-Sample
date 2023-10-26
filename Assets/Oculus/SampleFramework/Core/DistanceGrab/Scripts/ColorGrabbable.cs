@@ -23,7 +23,7 @@ using UnityEngine;
 
 namespace OculusSampleFramework
 {
-	// Simple component that changes color based on grab state.
+    // Simple component that changes color based on grab state.
     public class ColorGrabbable : OVRGrabbable
     {
         public static readonly Color COLOR_GRAB = new Color(1.0f, 0.5f, 0.0f, 1.0f);
@@ -48,7 +48,6 @@ namespace OculusSampleFramework
             if (isGrabbed) SetColor(COLOR_GRAB);
             else if (Highlight) SetColor(COLOR_HIGHLIGHT);
             else SetColor(m_color);
-
         }
 
         override public void GrabBegin(OVRGrabber hand, Collider grabPoint)
@@ -71,7 +70,8 @@ namespace OculusSampleFramework
                 Collider collider = this.GetComponent<Collider>();
                 if (collider == null)
                 {
-				    throw new System.ArgumentException("Grabbables cannot have zero grab points and no collider -- please add a grab point or collider.");
+                    throw new System.ArgumentException(
+                        "Grabbables cannot have zero grab points and no collider -- please add a grab point or collider.");
                 }
 
                 // Create a default grab point
@@ -86,6 +86,7 @@ namespace OculusSampleFramework
             {
                 m_meshRenderers = this.GetComponentsInChildren<MeshRenderer>();
             }
+
             m_color = new Color(
                 Random.Range(0.1f, 0.95f),
                 Random.Range(0.1f, 0.95f),

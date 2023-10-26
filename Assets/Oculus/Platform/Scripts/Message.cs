@@ -74,168 +74,122 @@ namespace Oculus.Platform
     { //TODO - rename this to type; it's already in Message class
       Unknown,
 
-      AbuseReport_ReportRequestHandled                    = 0x4B8EFC86,
-      Achievements_AddCount                               = 0x03E76231,
-      Achievements_AddFields                              = 0x14AA2129,
-      Achievements_GetAllDefinitions                      = 0x03D3458D,
-      Achievements_GetAllProgress                         = 0x4F9FDE1D,
-      Achievements_GetDefinitionsByName                   = 0x629101BC,
-      Achievements_GetNextAchievementDefinitionArrayPage  = 0x2A7DD255,
-      Achievements_GetNextAchievementProgressArrayPage    = 0x2F42E727,
-      Achievements_GetProgressByName                      = 0x152663B1,
-      Achievements_Unlock                                 = 0x593CCBDD,
-      ApplicationLifecycle_GetRegisteredPIDs              = 0x04E5CF62,
-      ApplicationLifecycle_GetSessionKey                  = 0x3AAF591D,
-      ApplicationLifecycle_RegisterSessionKey             = 0x4DB6AFF8,
-      Application_GetVersion                              = 0x68670A0E,
-      Application_LaunchOtherApp                          = 0x54E2D1F8,
-      AssetFile_Delete                                    = 0x6D5D7886,
-      AssetFile_DeleteById                                = 0x5AE8CD52,
-      AssetFile_DeleteByName                              = 0x420AC1CF,
-      AssetFile_Download                                  = 0x11449FC5,
-      AssetFile_DownloadById                              = 0x2D008992,
-      AssetFile_DownloadByName                            = 0x6336CEFA,
-      AssetFile_DownloadCancel                            = 0x080AD3C7,
-      AssetFile_DownloadCancelById                        = 0x51659514,
-      AssetFile_DownloadCancelByName                      = 0x446AECFA,
-      AssetFile_GetList                                   = 0x4AFC6F74,
-      AssetFile_Status                                    = 0x02D32F60,
-      AssetFile_StatusById                                = 0x5D955D38,
-      AssetFile_StatusByName                              = 0x41CFDA50,
-      Avatar_LaunchAvatarEditor                           = 0x05F1E153,
-      Challenges_Create                                   = 0x6859D641,
-      Challenges_DeclineInvite                            = 0x568E76C0,
-      Challenges_Delete                                   = 0x264885CA,
-      Challenges_Get                                      = 0x77584EF3,
-      Challenges_GetEntries                               = 0x121AB45F,
-      Challenges_GetEntriesAfterRank                      = 0x08891A7F,
-      Challenges_GetEntriesByIds                          = 0x316509DC,
-      Challenges_GetList                                  = 0x43264356,
-      Challenges_GetNextChallenges                        = 0x5B7CA1B6,
-      Challenges_GetNextEntries                           = 0x7F4CA0C6,
-      Challenges_GetPreviousChallenges                    = 0x0EB4040D,
-      Challenges_GetPreviousEntries                       = 0x78C90470,
-      Challenges_Join                                     = 0x21248069,
-      Challenges_Leave                                    = 0x296116E5,
-      Challenges_UpdateInfo                               = 0x1175BE60,
-      CloudStorage2_GetUserDirectoryPath                  = 0x76A42EEE,
-      CloudStorage_Delete                                 = 0x28DA456D,
-      CloudStorage_GetNextCloudStorageMetadataArrayPage   = 0x5C07A2EF,
-      CloudStorage_Load                                   = 0x40846B41,
-      CloudStorage_LoadBucketMetadata                     = 0x7327A50D,
-      CloudStorage_LoadConflictMetadata                   = 0x445A52F2,
-      CloudStorage_LoadHandle                             = 0x326ADA36,
-      CloudStorage_LoadMetadata                           = 0x03E6A292,
-      CloudStorage_ResolveKeepLocal                       = 0x30588D05,
-      CloudStorage_ResolveKeepRemote                      = 0x7525A306,
-      CloudStorage_Save                                   = 0x4BBB5C2E,
-      Entitlement_GetIsViewerEntitled                     = 0x186B58B1,
-      GroupPresence_Clear                                 = 0x6DAA9CC3,
-      GroupPresence_GetInvitableUsers                     = 0x234BC3F1,
-      GroupPresence_GetNextApplicationInviteArrayPage     = 0x04F8C0F2,
-      GroupPresence_GetSentInvites                        = 0x08260AB1,
-      GroupPresence_LaunchInvitePanel                     = 0x0F9ECF9F,
-      GroupPresence_LaunchMultiplayerErrorDialog          = 0x2955AF24,
-      GroupPresence_LaunchRejoinDialog                    = 0x1577036F,
-      GroupPresence_LaunchRosterPanel                     = 0x35728882,
-      GroupPresence_SendInvites                           = 0x0DCBD364,
-      GroupPresence_Set                                   = 0x675F5C24,
-      GroupPresence_SetDeeplinkMessageOverride            = 0x521ADF0D,
-      GroupPresence_SetDestination                        = 0x4C5B268A,
-      GroupPresence_SetIsJoinable                         = 0x2A8F1055,
-      GroupPresence_SetLobbySession                       = 0x48FF55BE,
-      GroupPresence_SetMatchSession                       = 0x314C84B8,
-      IAP_ConsumePurchase                                 = 0x1FBB72D9,
-      IAP_GetNextProductArrayPage                         = 0x1BD94AAF,
-      IAP_GetNextPurchaseArrayPage                        = 0x47570A95,
-      IAP_GetProductsBySKU                                = 0x7E9ACAF5,
-      IAP_GetViewerPurchases                              = 0x3A0F8419,
-      IAP_GetViewerPurchasesDurableCache                  = 0x63599E2B,
-      IAP_LaunchCheckoutFlow                              = 0x3F9B0D0D,
-      LanguagePack_GetCurrent                             = 0x1F90F0D5,
-      LanguagePack_SetCurrent                             = 0x5B4FBBE0,
-      Leaderboard_Get                                     = 0x6AD44EF8,
-      Leaderboard_GetEntries                              = 0x5DB3474C,
-      Leaderboard_GetEntriesAfterRank                     = 0x18378BEF,
-      Leaderboard_GetEntriesByIds                         = 0x39607BFC,
-      Leaderboard_GetNextEntries                          = 0x4E207CD9,
-      Leaderboard_GetNextLeaderboardArrayPage             = 0x35F6769B,
-      Leaderboard_GetPreviousEntries                      = 0x4901DAC0,
-      Leaderboard_WriteEntry                              = 0x117FC8FE,
-      Leaderboard_WriteEntryWithSupplementaryMetric       = 0x72C692FA,
-      Matchmaking_Browse                                  = 0x1E6532C8,
-      Matchmaking_Browse2                                 = 0x66429E5B,
-      Matchmaking_Cancel                                  = 0x206849AF,
-      Matchmaking_Cancel2                                 = 0x10FE8DD4,
-      Matchmaking_CreateAndEnqueueRoom                    = 0x604C5DC8,
-      Matchmaking_CreateAndEnqueueRoom2                   = 0x295BEADB,
-      Matchmaking_CreateRoom                              = 0x033B132A,
-      Matchmaking_CreateRoom2                             = 0x496DA384,
-      Matchmaking_Enqueue                                 = 0x40C16C71,
-      Matchmaking_Enqueue2                                = 0x121212B5,
-      Matchmaking_EnqueueRoom                             = 0x708A4064,
-      Matchmaking_EnqueueRoom2                            = 0x5528DBA4,
-      Matchmaking_GetAdminSnapshot                        = 0x3C215F94,
-      Matchmaking_GetStats                                = 0x42FC9438,
-      Matchmaking_JoinRoom                                = 0x4D32D7FD,
-      Matchmaking_ReportResultInsecure                    = 0x1A36D18D,
-      Matchmaking_StartMatch                              = 0x44D40945,
-      Media_ShareToFacebook                               = 0x00E38AEF,
-      Notification_GetNextRoomInviteNotificationArrayPage = 0x0621FB77,
-      Notification_GetRoomInvites                         = 0x6F916B92,
-      Notification_MarkAsRead                             = 0x717259E3,
-      Party_GetCurrent                                    = 0x47933760,
-      RichPresence_Clear                                  = 0x57B752B3,
-      RichPresence_GetDestinations                        = 0x586F2D14,
-      RichPresence_GetNextDestinationArrayPage            = 0x67367F45,
-      RichPresence_Set                                    = 0x3C147509,
-      Room_CreateAndJoinPrivate                           = 0x75D6E377,
-      Room_CreateAndJoinPrivate2                          = 0x5A3A6243,
-      Room_Get                                            = 0x659A8FB8,
-      Room_GetCurrent                                     = 0x09A6A504,
-      Room_GetCurrentForUser                              = 0x0E0017E5,
-      Room_GetInvitableUsers                              = 0x1E325792,
-      Room_GetInvitableUsers2                             = 0x4F53E8B0,
-      Room_GetModeratedRooms                              = 0x0983FD77,
-      Room_GetNextRoomArrayPage                           = 0x4E8379C6,
-      Room_InviteUser                                     = 0x4129EC13,
-      Room_Join                                           = 0x16CA8F09,
-      Room_Join2                                          = 0x4DAB1C42,
-      Room_KickUser                                       = 0x49835736,
-      Room_LaunchInvitableUserFlow                        = 0x323FE273,
-      Room_Leave                                          = 0x72382475,
-      Room_SetDescription                                 = 0x3044852F,
-      Room_UpdateDataStore                                = 0x026E4028,
-      Room_UpdateMembershipLockStatus                     = 0x370BB7AC,
-      Room_UpdateOwner                                    = 0x32B63D1D,
-      Room_UpdatePrivateRoomJoinPolicy                    = 0x1141029B,
-      UserDataStore_PrivateDeleteEntryByKey               = 0x5C896F3E,
-      UserDataStore_PrivateGetEntries                     = 0x6C8A8228,
-      UserDataStore_PrivateGetEntryByKey                  = 0x1C068319,
-      UserDataStore_PrivateWriteEntry                     = 0x41D2828B,
-      UserDataStore_PublicDeleteEntryByKey                = 0x1DD5E5FB,
-      UserDataStore_PublicGetEntries                      = 0x167D4BC2,
-      UserDataStore_PublicGetEntryByKey                   = 0x195C66C6,
-      UserDataStore_PublicWriteEntry                      = 0x34364A0A,
-      User_Get                                            = 0x6BCF9E47,
-      User_GetAccessToken                                 = 0x06A85ABE,
-      User_GetBlockedUsers                                = 0x7D201556,
-      User_GetLoggedInUser                                = 0x436F345D,
-      User_GetLoggedInUserFriends                         = 0x587C2A8D,
-      User_GetLoggedInUserFriendsAndRooms                 = 0x5E870B87,
-      User_GetLoggedInUserRecentlyMetUsersAndRooms        = 0x295FBA30,
-      User_GetNextBlockedUserArrayPage                    = 0x7C2AFDCB,
-      User_GetNextUserAndRoomArrayPage                    = 0x7FBDD2DF,
-      User_GetNextUserArrayPage                           = 0x267CF743,
-      User_GetNextUserCapabilityArrayPage                 = 0x2309F399,
-      User_GetOrgScopedID                                 = 0x18F0B01B,
-      User_GetSdkAccounts                                 = 0x67526A83,
-      User_GetUserProof                                   = 0x22810483,
-      User_LaunchBlockFlow                                = 0x6FD62528,
-      User_LaunchFriendRequestFlow                        = 0x0904B598,
-      User_LaunchUnblockFlow                              = 0x14A22A97,
-      Voip_GetMicrophoneAvailability                      = 0x744CE345,
-      Voip_SetSystemVoipSuppressed                        = 0x453FC9AA,
+      AbuseReport_ReportRequestHandled                   = 0x4B8EFC86,
+      Achievements_AddCount                              = 0x03E76231,
+      Achievements_AddFields                             = 0x14AA2129,
+      Achievements_GetAllDefinitions                     = 0x03D3458D,
+      Achievements_GetAllProgress                        = 0x4F9FDE1D,
+      Achievements_GetDefinitionsByName                  = 0x629101BC,
+      Achievements_GetNextAchievementDefinitionArrayPage = 0x2A7DD255,
+      Achievements_GetNextAchievementProgressArrayPage   = 0x2F42E727,
+      Achievements_GetProgressByName                     = 0x152663B1,
+      Achievements_Unlock                                = 0x593CCBDD,
+      ApplicationLifecycle_GetRegisteredPIDs             = 0x04E5CF62,
+      ApplicationLifecycle_GetSessionKey                 = 0x3AAF591D,
+      ApplicationLifecycle_RegisterSessionKey            = 0x4DB6AFF8,
+      Application_CancelAppDownload                      = 0x7C2060DE,
+      Application_CheckAppDownloadProgress               = 0x5534A924,
+      Application_GetVersion                             = 0x68670A0E,
+      Application_InstallAppUpdateAndRelaunch            = 0x14806B85,
+      Application_LaunchOtherApp                         = 0x54E2D1F8,
+      Application_StartAppDownload                       = 0x44FC006E,
+      AssetFile_Delete                                   = 0x6D5D7886,
+      AssetFile_DeleteById                               = 0x5AE8CD52,
+      AssetFile_DeleteByName                             = 0x420AC1CF,
+      AssetFile_Download                                 = 0x11449FC5,
+      AssetFile_DownloadById                             = 0x2D008992,
+      AssetFile_DownloadByName                           = 0x6336CEFA,
+      AssetFile_DownloadCancel                           = 0x080AD3C7,
+      AssetFile_DownloadCancelById                       = 0x51659514,
+      AssetFile_DownloadCancelByName                     = 0x446AECFA,
+      AssetFile_GetList                                  = 0x4AFC6F74,
+      AssetFile_Status                                   = 0x02D32F60,
+      AssetFile_StatusById                               = 0x5D955D38,
+      AssetFile_StatusByName                             = 0x41CFDA50,
+      Avatar_LaunchAvatarEditor                          = 0x05F1E153,
+      Challenges_Create                                  = 0x6859D641,
+      Challenges_DeclineInvite                           = 0x568E76C0,
+      Challenges_Delete                                  = 0x264885CA,
+      Challenges_Get                                     = 0x77584EF3,
+      Challenges_GetEntries                              = 0x121AB45F,
+      Challenges_GetEntriesAfterRank                     = 0x08891A7F,
+      Challenges_GetEntriesByIds                         = 0x316509DC,
+      Challenges_GetList                                 = 0x43264356,
+      Challenges_GetNextChallenges                       = 0x5B7CA1B6,
+      Challenges_GetNextEntries                          = 0x7F4CA0C6,
+      Challenges_GetPreviousChallenges                   = 0x0EB4040D,
+      Challenges_GetPreviousEntries                      = 0x78C90470,
+      Challenges_Join                                    = 0x21248069,
+      Challenges_Leave                                   = 0x296116E5,
+      Challenges_UpdateInfo                              = 0x1175BE60,
+      DeviceApplicationIntegrity_GetIntegrityToken       = 0x3271ABDA,
+      Entitlement_GetIsViewerEntitled                    = 0x186B58B1,
+      GroupPresence_Clear                                = 0x6DAA9CC3,
+      GroupPresence_GetInvitableUsers                    = 0x234BC3F1,
+      GroupPresence_GetNextApplicationInviteArrayPage    = 0x04F8C0F2,
+      GroupPresence_GetSentInvites                       = 0x08260AB1,
+      GroupPresence_LaunchInvitePanel                    = 0x0F9ECF9F,
+      GroupPresence_LaunchMultiplayerErrorDialog         = 0x2955AF24,
+      GroupPresence_LaunchRejoinDialog                   = 0x1577036F,
+      GroupPresence_LaunchRosterPanel                    = 0x35728882,
+      GroupPresence_SendInvites                          = 0x0DCBD364,
+      GroupPresence_Set                                  = 0x675F5C24,
+      GroupPresence_SetDeeplinkMessageOverride           = 0x521ADF0D,
+      GroupPresence_SetDestination                       = 0x4C5B268A,
+      GroupPresence_SetIsJoinable                        = 0x2A8F1055,
+      GroupPresence_SetLobbySession                      = 0x48FF55BE,
+      GroupPresence_SetMatchSession                      = 0x314C84B8,
+      IAP_ConsumePurchase                                = 0x1FBB72D9,
+      IAP_GetNextProductArrayPage                        = 0x1BD94AAF,
+      IAP_GetNextPurchaseArrayPage                       = 0x47570A95,
+      IAP_GetProductsBySKU                               = 0x7E9ACAF5,
+      IAP_GetViewerPurchases                             = 0x3A0F8419,
+      IAP_GetViewerPurchasesDurableCache                 = 0x63599E2B,
+      IAP_LaunchCheckoutFlow                             = 0x3F9B0D0D,
+      LanguagePack_GetCurrent                            = 0x1F90F0D5,
+      LanguagePack_SetCurrent                            = 0x5B4FBBE0,
+      Leaderboard_Get                                    = 0x6AD44EF8,
+      Leaderboard_GetEntries                             = 0x5DB3474C,
+      Leaderboard_GetEntriesAfterRank                    = 0x18378BEF,
+      Leaderboard_GetEntriesByIds                        = 0x39607BFC,
+      Leaderboard_GetNextEntries                         = 0x4E207CD9,
+      Leaderboard_GetNextLeaderboardArrayPage            = 0x35F6769B,
+      Leaderboard_GetPreviousEntries                     = 0x4901DAC0,
+      Leaderboard_WriteEntry                             = 0x117FC8FE,
+      Leaderboard_WriteEntryWithSupplementaryMetric      = 0x72C692FA,
+      Media_ShareToFacebook                              = 0x00E38AEF,
+      Notification_MarkAsRead                            = 0x717259E3,
+      Party_GetCurrent                                   = 0x47933760,
+      RichPresence_Clear                                 = 0x57B752B3,
+      RichPresence_GetDestinations                       = 0x586F2D14,
+      RichPresence_GetNextDestinationArrayPage           = 0x67367F45,
+      RichPresence_Set                                   = 0x3C147509,
+      UserAgeCategory_Get                                = 0x21CBE0C0,
+      UserAgeCategory_Report                             = 0x2E4DD8D6,
+      UserDataStore_PrivateDeleteEntryByKey              = 0x5C896F3E,
+      UserDataStore_PrivateGetEntries                    = 0x6C8A8228,
+      UserDataStore_PrivateGetEntryByKey                 = 0x1C068319,
+      UserDataStore_PrivateWriteEntry                    = 0x41D2828B,
+      UserDataStore_PublicDeleteEntryByKey               = 0x1DD5E5FB,
+      UserDataStore_PublicGetEntries                     = 0x167D4BC2,
+      UserDataStore_PublicGetEntryByKey                  = 0x195C66C6,
+      UserDataStore_PublicWriteEntry                     = 0x34364A0A,
+      User_Get                                           = 0x6BCF9E47,
+      User_GetAccessToken                                = 0x06A85ABE,
+      User_GetBlockedUsers                               = 0x7D201556,
+      User_GetLoggedInUser                               = 0x436F345D,
+      User_GetLoggedInUserFriends                        = 0x587C2A8D,
+      User_GetNextBlockedUserArrayPage                   = 0x7C2AFDCB,
+      User_GetNextUserArrayPage                          = 0x267CF743,
+      User_GetNextUserCapabilityArrayPage                = 0x2309F399,
+      User_GetOrgScopedID                                = 0x18F0B01B,
+      User_GetSdkAccounts                                = 0x67526A83,
+      User_GetUserProof                                  = 0x22810483,
+      User_LaunchBlockFlow                               = 0x6FD62528,
+      User_LaunchFriendRequestFlow                       = 0x0904B598,
+      User_LaunchUnblockFlow                             = 0x14A22A97,
+      Voip_GetMicrophoneAvailability                     = 0x744CE345,
+      Voip_SetSystemVoipSuppressed                       = 0x453FC9AA,
 
       /// The user has tapped the report button in the panel that appears after
       /// pressing the Oculus button.
@@ -248,16 +202,6 @@ namespace Oculus.Platform
 
       /// Sent to indicate download progress for asset files.
       Notification_AssetFile_DownloadUpdate = 0x2FDD0CCD,
-
-      /// DEPRECATED. Will be removed from headers at version v51.
-      ///
-      /// Result of a leader picking an application for CAL launch.
-      Notification_Cal_FinalizeApplication = 0x750C5099,
-
-      /// DEPRECATED. Will be removed from headers at version v51.
-      ///
-      /// Application that the group leader has proposed for a CAL launch.
-      Notification_Cal_ProposeApplication = 0x2E7451F5,
 
       /// Sent when the user is finished using the invite panel to send out
       /// invitations. Contains a list of invitees.
@@ -286,13 +230,6 @@ namespace Oculus.Platform
       /// livestreaming status.
       Notification_Livestreaming_StatusChange = 0x2247596E,
 
-      /// DEPRECATED. Will be removed from headers at version v51.
-      ///
-      /// Indicates that a match has been found, for example after calling
-      /// Matchmaking.Enqueue(). Use Message.GetRoom() to extract the matchmaking
-      /// room.
-      Notification_Matchmaking_MatchFound = 0x0BC3FCD7,
-
       /// Sent when the status of a connection has changed.
       Notification_NetSync_ConnectionStatusChanged = 0x073484CA,
 
@@ -300,71 +237,13 @@ namespace Oculus.Platform
       /// new list of sessions.
       Notification_NetSync_SessionsChanged = 0x387E7F36,
 
-      /// DEPRECATED. Will be removed from headers at version v51.
-      ///
-      /// Indicates that a connection has been established or there's been an error.
-      /// Use NetworkingPeer.GetState() to get the result; as above,
-      /// NetworkingPeer.GetID() returns the ID of the peer this message is for.
-      Notification_Networking_ConnectionStateChange = 0x5E02D49A,
-
-      /// DEPRECATED. Will be removed from headers at version v51.
-      ///
-      /// Indicates that another user is attempting to establish a P2P connection
-      /// with us. Use NetworkingPeer.GetID() to extract the ID of the peer.
-      Notification_Networking_PeerConnectRequest = 0x4D31E2CF,
-
-      /// DEPRECATED. Will be removed from headers at version v51.
-      ///
-      /// Generated in response to Net.Ping(). Either contains ping time in
-      /// microseconds or indicates that there was a timeout.
-      Notification_Networking_PingResult = 0x51153012,
-
       /// Indicates that party has been updated
       Notification_Party_PartyUpdate = 0x1D118AB2,
-
-      /// DEPRECATED. Will be removed from headers at version v51.
-      ///
-      /// Indicates that the user has accepted an invitation, for example in Oculus
-      /// Home. Use Message.GetString() to extract the ID of the room that the user
-      /// has been inivted to as a string. Then call ovrID_FromString() to parse it
-      /// into an ovrID.
-      ///
-      /// Note that you must call Rooms.Join() if you want to actually join the room.
-      Notification_Room_InviteAccepted = 0x6D1071B1,
-
-      /// DEPRECATED. Will be removed from headers at version v51.
-      ///
-      /// Handle this to notify the user when they've received an invitation to join
-      /// a room in your game. You can use this in lieu of, or in addition to,
-      /// polling for room invitations via
-      /// Notifications.GetRoomInviteNotifications().
-      Notification_Room_InviteReceived = 0x6A499D54,
-
-      /// DEPRECATED. Will be removed from headers at version v51.
-      ///
-      /// Indicates that the current room has been updated. Use Message.GetRoom() to
-      /// extract the updated room.
-      Notification_Room_RoomUpdate = 0x60EC3C2F,
-
-      /// DEPRECATED. Do not use or expose further. Use
-      /// MessageType.Notification_GroupPresence_InvitationsSent instead. Will be
-      /// removed from headers at version v51.
-      Notification_Session_InvitationsSent = 0x07F9C880,
-
-      /// Sent when another user is attempting to establish a VoIP connection. Use
-      /// Message.GetNetworkingPeer() to extract information about the user, and
-      /// Voip.Accept() to accept the connection.
-      Notification_Voip_ConnectRequest = 0x36243816,
 
       /// Indicates that the current microphone availability state has been updated.
       /// Use Voip.GetMicrophoneAvailability() to extract the microphone availability
       /// state.
       Notification_Voip_MicrophoneAvailabilityStateUpdate = 0x3E20CB57,
-
-      /// Sent to indicate that the state of the VoIP connection changed. Use
-      /// Message.GetNetworkingPeer() and NetworkingPeer.GetState() to extract the
-      /// current state.
-      Notification_Voip_StateChange = 0x34EFA660,
 
       /// Sent to indicate that some part of the overall state of SystemVoip has
       /// changed. Use Message.GetSystemVoipState() and the properties of
@@ -397,8 +276,6 @@ namespace Oculus.Platform
     private Error error;
 
     public virtual Error GetError() { return error; }
-    public virtual PingResult GetPingResult() { return null; }
-    public virtual NetworkingPeer GetNetworkingPeer() { return null; }
     public virtual HttpTransferUpdate GetHttpTransferUpdate() { return null; }
 
     public virtual PlatformInitialize GetPlatformInitialize() { return null; }
@@ -407,6 +284,8 @@ namespace Oculus.Platform
     public virtual AchievementDefinitionList GetAchievementDefinitions() { return null; }
     public virtual AchievementProgressList GetAchievementProgressList() { return null; }
     public virtual AchievementUpdate GetAchievementUpdate() { return null; }
+    public virtual AppDownloadProgressResult GetAppDownloadProgressResult() { return null; }
+    public virtual AppDownloadResult GetAppDownloadResult() { return null; }
     public virtual ApplicationInviteList GetApplicationInviteList() { return null; }
     public virtual ApplicationVersion GetApplicationVersion() { return null; }
     public virtual AssetDetails GetAssetDetails() { return null; }
@@ -417,17 +296,9 @@ namespace Oculus.Platform
     public virtual AssetFileDownloadUpdate GetAssetFileDownloadUpdate() { return null; }
     public virtual AvatarEditorResult GetAvatarEditorResult() { return null; }
     public virtual BlockedUserList GetBlockedUserList() { return null; }
-    public virtual CalApplicationFinalized GetCalApplicationFinalized() { return null; }
-    public virtual CalApplicationProposed GetCalApplicationProposed() { return null; }
-    public virtual CalApplicationSuggestionList GetCalApplicationSuggestionList() { return null; }
     public virtual Challenge GetChallenge() { return null; }
     public virtual ChallengeEntryList GetChallengeEntryList() { return null; }
     public virtual ChallengeList GetChallengeList() { return null; }
-    public virtual CloudStorageConflictMetadata GetCloudStorageConflictMetadata() { return null; }
-    public virtual CloudStorageData GetCloudStorageData() { return null; }
-    public virtual CloudStorageMetadata GetCloudStorageMetadata() { return null; }
-    public virtual CloudStorageMetadataList GetCloudStorageMetadataList() { return null; }
-    public virtual CloudStorageUpdateResponse GetCloudStorageUpdateResponse() { return null; }
     public virtual Dictionary<string, string> GetDataStore() { return null; }
     public virtual DestinationList GetDestinationList() { return null; }
     public virtual GroupPresenceJoinIntent GetGroupPresenceJoinIntent() { return null; }
@@ -447,11 +318,6 @@ namespace Oculus.Platform
     public virtual LivestreamingStartResult GetLivestreamingStartResult() { return null; }
     public virtual LivestreamingStatus GetLivestreamingStatus() { return null; }
     public virtual LivestreamingVideoStats GetLivestreamingVideoStats() { return null; }
-    public virtual MatchmakingAdminSnapshot GetMatchmakingAdminSnapshot() { return null; }
-    public virtual MatchmakingBrowseResult GetMatchmakingBrowseResult() { return null; }
-    public virtual MatchmakingEnqueueResult GetMatchmakingEnqueueResult() { return null; }
-    public virtual MatchmakingEnqueueResultAndRoom GetMatchmakingEnqueueResultAndRoom() { return null; }
-    public virtual MatchmakingStats GetMatchmakingStats() { return null; }
     public virtual MicrophoneAvailabilityState GetMicrophoneAvailabilityState() { return null; }
     public virtual NetSyncConnection GetNetSyncConnection() { return null; }
     public virtual NetSyncSessionList GetNetSyncSessionList() { return null; }
@@ -467,17 +333,13 @@ namespace Oculus.Platform
     public virtual Purchase GetPurchase() { return null; }
     public virtual PurchaseList GetPurchaseList() { return null; }
     public virtual RejoinDialogResult GetRejoinDialogResult() { return null; }
-    public virtual Room GetRoom() { return null; }
-    public virtual RoomInviteNotification GetRoomInviteNotification() { return null; }
-    public virtual RoomInviteNotificationList GetRoomInviteNotificationList() { return null; }
-    public virtual RoomList GetRoomList() { return null; }
     public virtual SdkAccountList GetSdkAccountList() { return null; }
     public virtual SendInvitesResult GetSendInvitesResult() { return null; }
     public virtual ShareMediaResult GetShareMediaResult() { return null; }
     public virtual string GetString() { return null; }
     public virtual SystemVoipState GetSystemVoipState() { return null; }
     public virtual User GetUser() { return null; }
-    public virtual UserAndRoomList GetUserAndRoomList() { return null; }
+    public virtual UserAccountAgeCategory GetUserAccountAgeCategory() { return null; }
     public virtual UserCapabilityList GetUserCapabilityList() { return null; }
     public virtual UserDataStoreUpdateResponse GetUserDataStoreUpdateResponse() { return null; }
     public virtual UserList GetUserList() { return null; }
@@ -512,6 +374,16 @@ namespace Oculus.Platform
         case Message.MessageType.Achievements_AddFields:
         case Message.MessageType.Achievements_Unlock:
           message = new MessageWithAchievementUpdate(messageHandle);
+          break;
+
+        case Message.MessageType.Application_CheckAppDownloadProgress:
+          message = new MessageWithAppDownloadProgressResult(messageHandle);
+          break;
+
+        case Message.MessageType.Application_CancelAppDownload:
+        case Message.MessageType.Application_InstallAppUpdateAndRelaunch:
+        case Message.MessageType.Application_StartAppDownload:
+          message = new MessageWithAppDownloadResult(messageHandle);
           break;
 
         case Message.MessageType.GroupPresence_GetNextApplicationInviteArrayPage:
@@ -566,14 +438,6 @@ namespace Oculus.Platform
           message = new MessageWithBlockedUserList(messageHandle);
           break;
 
-        case Message.MessageType.Notification_Cal_FinalizeApplication:
-          message = new MessageWithCalApplicationFinalized(messageHandle);
-          break;
-
-        case Message.MessageType.Notification_Cal_ProposeApplication:
-          message = new MessageWithCalApplicationProposed(messageHandle);
-          break;
-
         case Message.MessageType.Challenges_Create:
         case Message.MessageType.Challenges_DeclineInvite:
         case Message.MessageType.Challenges_Get:
@@ -595,31 +459,6 @@ namespace Oculus.Platform
         case Message.MessageType.Challenges_GetNextEntries:
         case Message.MessageType.Challenges_GetPreviousEntries:
           message = new MessageWithChallengeEntryList(messageHandle);
-          break;
-
-        case Message.MessageType.CloudStorage_LoadConflictMetadata:
-          message = new MessageWithCloudStorageConflictMetadata(messageHandle);
-          break;
-
-        case Message.MessageType.CloudStorage_Load:
-        case Message.MessageType.CloudStorage_LoadHandle:
-          message = new MessageWithCloudStorageData(messageHandle);
-          break;
-
-        case Message.MessageType.CloudStorage_LoadMetadata:
-          message = new MessageWithCloudStorageMetadataUnderLocal(messageHandle);
-          break;
-
-        case Message.MessageType.CloudStorage_GetNextCloudStorageMetadataArrayPage:
-        case Message.MessageType.CloudStorage_LoadBucketMetadata:
-          message = new MessageWithCloudStorageMetadataList(messageHandle);
-          break;
-
-        case Message.MessageType.CloudStorage_Delete:
-        case Message.MessageType.CloudStorage_ResolveKeepLocal:
-        case Message.MessageType.CloudStorage_ResolveKeepRemote:
-        case Message.MessageType.CloudStorage_Save:
-          message = new MessageWithCloudStorageUpdateResponse(messageHandle);
           break;
 
         case Message.MessageType.UserDataStore_PrivateGetEntries:
@@ -651,15 +490,10 @@ namespace Oculus.Platform
         case Message.MessageType.GroupPresence_SetLobbySession:
         case Message.MessageType.GroupPresence_SetMatchSession:
         case Message.MessageType.IAP_ConsumePurchase:
-        case Message.MessageType.Matchmaking_Cancel:
-        case Message.MessageType.Matchmaking_Cancel2:
-        case Message.MessageType.Matchmaking_ReportResultInsecure:
-        case Message.MessageType.Matchmaking_StartMatch:
         case Message.MessageType.Notification_MarkAsRead:
         case Message.MessageType.RichPresence_Clear:
         case Message.MessageType.RichPresence_Set:
-        case Message.MessageType.Room_LaunchInvitableUserFlow:
-        case Message.MessageType.Room_UpdateOwner:
+        case Message.MessageType.UserAgeCategory_Report:
           message = new Message(messageHandle);
           break;
 
@@ -684,7 +518,6 @@ namespace Oculus.Platform
           break;
 
         case Message.MessageType.Notification_GroupPresence_InvitationsSent:
-        case Message.MessageType.Notification_Session_InvitationsSent:
           message = new MessageWithLaunchInvitePanelFlowResult(messageHandle);
           break;
 
@@ -712,31 +545,6 @@ namespace Oculus.Platform
 
         case Message.MessageType.Notification_Livestreaming_StatusChange:
           message = new MessageWithLivestreamingStatus(messageHandle);
-          break;
-
-        case Message.MessageType.Matchmaking_GetAdminSnapshot:
-          message = new MessageWithMatchmakingAdminSnapshot(messageHandle);
-          break;
-
-        case Message.MessageType.Matchmaking_Browse:
-        case Message.MessageType.Matchmaking_Browse2:
-          message = new MessageWithMatchmakingBrowseResult(messageHandle);
-          break;
-
-        case Message.MessageType.Matchmaking_Enqueue:
-        case Message.MessageType.Matchmaking_Enqueue2:
-        case Message.MessageType.Matchmaking_EnqueueRoom:
-        case Message.MessageType.Matchmaking_EnqueueRoom2:
-          message = new MessageWithMatchmakingEnqueueResult(messageHandle);
-          break;
-
-        case Message.MessageType.Matchmaking_CreateAndEnqueueRoom:
-        case Message.MessageType.Matchmaking_CreateAndEnqueueRoom2:
-          message = new MessageWithMatchmakingEnqueueResultAndRoom(messageHandle);
-          break;
-
-        case Message.MessageType.Matchmaking_GetStats:
-          message = new MessageWithMatchmakingStatsUnderMatchmakingStats(messageHandle);
           break;
 
         case Message.MessageType.Voip_GetMicrophoneAvailability:
@@ -786,47 +594,6 @@ namespace Oculus.Platform
           message = new MessageWithRejoinDialogResult(messageHandle);
           break;
 
-        case Message.MessageType.Room_Get:
-          message = new MessageWithRoom(messageHandle);
-          break;
-
-        case Message.MessageType.Room_GetCurrent:
-        case Message.MessageType.Room_GetCurrentForUser:
-          message = new MessageWithRoomUnderCurrentRoom(messageHandle);
-          break;
-
-        case Message.MessageType.Matchmaking_CreateRoom:
-        case Message.MessageType.Matchmaking_CreateRoom2:
-        case Message.MessageType.Matchmaking_JoinRoom:
-        case Message.MessageType.Notification_Room_RoomUpdate:
-        case Message.MessageType.Room_CreateAndJoinPrivate:
-        case Message.MessageType.Room_CreateAndJoinPrivate2:
-        case Message.MessageType.Room_InviteUser:
-        case Message.MessageType.Room_Join:
-        case Message.MessageType.Room_Join2:
-        case Message.MessageType.Room_KickUser:
-        case Message.MessageType.Room_Leave:
-        case Message.MessageType.Room_SetDescription:
-        case Message.MessageType.Room_UpdateDataStore:
-        case Message.MessageType.Room_UpdateMembershipLockStatus:
-        case Message.MessageType.Room_UpdatePrivateRoomJoinPolicy:
-          message = new MessageWithRoomUnderViewerRoom(messageHandle);
-          break;
-
-        case Message.MessageType.Room_GetModeratedRooms:
-        case Message.MessageType.Room_GetNextRoomArrayPage:
-          message = new MessageWithRoomList(messageHandle);
-          break;
-
-        case Message.MessageType.Notification_Room_InviteReceived:
-          message = new MessageWithRoomInviteNotification(messageHandle);
-          break;
-
-        case Message.MessageType.Notification_GetNextRoomInviteNotificationArrayPage:
-        case Message.MessageType.Notification_GetRoomInvites:
-          message = new MessageWithRoomInviteNotificationList(messageHandle);
-          break;
-
         case Message.MessageType.User_GetSdkAccounts:
           message = new MessageWithSdkAccountList(messageHandle);
           break;
@@ -841,10 +608,9 @@ namespace Oculus.Platform
 
         case Message.MessageType.ApplicationLifecycle_GetSessionKey:
         case Message.MessageType.Application_LaunchOtherApp:
-        case Message.MessageType.CloudStorage2_GetUserDirectoryPath:
+        case Message.MessageType.DeviceApplicationIntegrity_GetIntegrityToken:
         case Message.MessageType.Notification_AbuseReport_ReportButtonPressed:
         case Message.MessageType.Notification_ApplicationLifecycle_LaunchIntentChanged:
-        case Message.MessageType.Notification_Room_InviteAccepted:
         case Message.MessageType.Notification_Voip_MicrophoneAvailabilityStateUpdate:
         case Message.MessageType.Notification_Vrcamera_GetDataChannelMessageUpdate:
         case Message.MessageType.Notification_Vrcamera_GetSurfaceUpdate:
@@ -861,15 +627,11 @@ namespace Oculus.Platform
           message = new MessageWithUser(messageHandle);
           break;
 
-        case Message.MessageType.User_GetLoggedInUserFriendsAndRooms:
-        case Message.MessageType.User_GetLoggedInUserRecentlyMetUsersAndRooms:
-        case Message.MessageType.User_GetNextUserAndRoomArrayPage:
-          message = new MessageWithUserAndRoomList(messageHandle);
+        case Message.MessageType.UserAgeCategory_Get:
+          message = new MessageWithUserAccountAgeCategory(messageHandle);
           break;
 
         case Message.MessageType.GroupPresence_GetInvitableUsers:
-        case Message.MessageType.Room_GetInvitableUsers:
-        case Message.MessageType.Room_GetInvitableUsers2:
         case Message.MessageType.User_GetLoggedInUserFriends:
         case Message.MessageType.User_GetNextUserArrayPage:
           message = new MessageWithUserList(messageHandle);
@@ -888,24 +650,6 @@ namespace Oculus.Platform
 
         case Message.MessageType.User_GetUserProof:
           message = new MessageWithUserProof(messageHandle);
-          break;
-
-        case Message.MessageType.Notification_Networking_ConnectionStateChange:
-        case Message.MessageType.Notification_Networking_PeerConnectRequest:
-          message = new MessageWithNetworkingPeer(messageHandle);
-          break;
-
-        case Message.MessageType.Notification_Networking_PingResult:
-          message = new MessageWithPingResult(messageHandle);
-          break;
-
-        case Message.MessageType.Notification_Matchmaking_MatchFound:
-          message = new MessageWithMatchmakingNotification(messageHandle);
-          break;
-
-        case Message.MessageType.Notification_Voip_ConnectRequest:
-        case Message.MessageType.Notification_Voip_StateChange:
-          message = new MessageWithNetworkingPeer(messageHandle);
           break;
 
         case Message.MessageType.Notification_Voip_SystemVoipState:
@@ -1001,6 +745,30 @@ namespace Oculus.Platform
       var msg = CAPI.ovr_Message_GetNativeMessage(c_message);
       var obj = CAPI.ovr_Message_GetAchievementUpdate(msg);
       return new AchievementUpdate(obj);
+    }
+
+  }
+  public class MessageWithAppDownloadProgressResult : Message<AppDownloadProgressResult>
+  {
+    public MessageWithAppDownloadProgressResult(IntPtr c_message) : base(c_message) { }
+    public override AppDownloadProgressResult GetAppDownloadProgressResult() { return Data; }
+    protected override AppDownloadProgressResult GetDataFromMessage(IntPtr c_message)
+    {
+      var msg = CAPI.ovr_Message_GetNativeMessage(c_message);
+      var obj = CAPI.ovr_Message_GetAppDownloadProgressResult(msg);
+      return new AppDownloadProgressResult(obj);
+    }
+
+  }
+  public class MessageWithAppDownloadResult : Message<AppDownloadResult>
+  {
+    public MessageWithAppDownloadResult(IntPtr c_message) : base(c_message) { }
+    public override AppDownloadResult GetAppDownloadResult() { return Data; }
+    protected override AppDownloadResult GetDataFromMessage(IntPtr c_message)
+    {
+      var msg = CAPI.ovr_Message_GetNativeMessage(c_message);
+      var obj = CAPI.ovr_Message_GetAppDownloadResult(msg);
+      return new AppDownloadResult(obj);
     }
 
   }
@@ -1124,42 +892,6 @@ namespace Oculus.Platform
     }
 
   }
-  public class MessageWithCalApplicationFinalized : Message<CalApplicationFinalized>
-  {
-    public MessageWithCalApplicationFinalized(IntPtr c_message) : base(c_message) { }
-    public override CalApplicationFinalized GetCalApplicationFinalized() { return Data; }
-    protected override CalApplicationFinalized GetDataFromMessage(IntPtr c_message)
-    {
-      var msg = CAPI.ovr_Message_GetNativeMessage(c_message);
-      var obj = CAPI.ovr_Message_GetCalApplicationFinalized(msg);
-      return new CalApplicationFinalized(obj);
-    }
-
-  }
-  public class MessageWithCalApplicationProposed : Message<CalApplicationProposed>
-  {
-    public MessageWithCalApplicationProposed(IntPtr c_message) : base(c_message) { }
-    public override CalApplicationProposed GetCalApplicationProposed() { return Data; }
-    protected override CalApplicationProposed GetDataFromMessage(IntPtr c_message)
-    {
-      var msg = CAPI.ovr_Message_GetNativeMessage(c_message);
-      var obj = CAPI.ovr_Message_GetCalApplicationProposed(msg);
-      return new CalApplicationProposed(obj);
-    }
-
-  }
-  public class MessageWithCalApplicationSuggestionList : Message<CalApplicationSuggestionList>
-  {
-    public MessageWithCalApplicationSuggestionList(IntPtr c_message) : base(c_message) { }
-    public override CalApplicationSuggestionList GetCalApplicationSuggestionList() { return Data; }
-    protected override CalApplicationSuggestionList GetDataFromMessage(IntPtr c_message)
-    {
-      var msg = CAPI.ovr_Message_GetNativeMessage(c_message);
-      var obj = CAPI.ovr_Message_GetCalApplicationSuggestionArray(msg);
-      return new CalApplicationSuggestionList(obj);
-    }
-
-  }
   public class MessageWithChallenge : Message<Challenge>
   {
     public MessageWithChallenge(IntPtr c_message) : base(c_message) { }
@@ -1193,66 +925,6 @@ namespace Oculus.Platform
       var msg = CAPI.ovr_Message_GetNativeMessage(c_message);
       var obj = CAPI.ovr_Message_GetChallengeEntryArray(msg);
       return new ChallengeEntryList(obj);
-    }
-
-  }
-  public class MessageWithCloudStorageConflictMetadata : Message<CloudStorageConflictMetadata>
-  {
-    public MessageWithCloudStorageConflictMetadata(IntPtr c_message) : base(c_message) { }
-    public override CloudStorageConflictMetadata GetCloudStorageConflictMetadata() { return Data; }
-    protected override CloudStorageConflictMetadata GetDataFromMessage(IntPtr c_message)
-    {
-      var msg = CAPI.ovr_Message_GetNativeMessage(c_message);
-      var obj = CAPI.ovr_Message_GetCloudStorageConflictMetadata(msg);
-      return new CloudStorageConflictMetadata(obj);
-    }
-
-  }
-  public class MessageWithCloudStorageData : Message<CloudStorageData>
-  {
-    public MessageWithCloudStorageData(IntPtr c_message) : base(c_message) { }
-    public override CloudStorageData GetCloudStorageData() { return Data; }
-    protected override CloudStorageData GetDataFromMessage(IntPtr c_message)
-    {
-      var msg = CAPI.ovr_Message_GetNativeMessage(c_message);
-      var obj = CAPI.ovr_Message_GetCloudStorageData(msg);
-      return new CloudStorageData(obj);
-    }
-
-  }
-  public class MessageWithCloudStorageMetadataUnderLocal : Message<CloudStorageMetadata>
-  {
-    public MessageWithCloudStorageMetadataUnderLocal(IntPtr c_message) : base(c_message) { }
-    public override CloudStorageMetadata GetCloudStorageMetadata() { return Data; }
-    protected override CloudStorageMetadata GetDataFromMessage(IntPtr c_message)
-    {
-      var msg = CAPI.ovr_Message_GetNativeMessage(c_message);
-      var obj = CAPI.ovr_Message_GetCloudStorageMetadata(msg);
-      return new CloudStorageMetadata(obj);
-    }
-
-  }
-  public class MessageWithCloudStorageMetadataList : Message<CloudStorageMetadataList>
-  {
-    public MessageWithCloudStorageMetadataList(IntPtr c_message) : base(c_message) { }
-    public override CloudStorageMetadataList GetCloudStorageMetadataList() { return Data; }
-    protected override CloudStorageMetadataList GetDataFromMessage(IntPtr c_message)
-    {
-      var msg = CAPI.ovr_Message_GetNativeMessage(c_message);
-      var obj = CAPI.ovr_Message_GetCloudStorageMetadataArray(msg);
-      return new CloudStorageMetadataList(obj);
-    }
-
-  }
-  public class MessageWithCloudStorageUpdateResponse : Message<CloudStorageUpdateResponse>
-  {
-    public MessageWithCloudStorageUpdateResponse(IntPtr c_message) : base(c_message) { }
-    public override CloudStorageUpdateResponse GetCloudStorageUpdateResponse() { return Data; }
-    protected override CloudStorageUpdateResponse GetDataFromMessage(IntPtr c_message)
-    {
-      var msg = CAPI.ovr_Message_GetNativeMessage(c_message);
-      var obj = CAPI.ovr_Message_GetCloudStorageUpdateResponse(msg);
-      return new CloudStorageUpdateResponse(obj);
     }
 
   }
@@ -1484,54 +1156,6 @@ namespace Oculus.Platform
     }
 
   }
-  public class MessageWithMatchmakingAdminSnapshot : Message<MatchmakingAdminSnapshot>
-  {
-    public MessageWithMatchmakingAdminSnapshot(IntPtr c_message) : base(c_message) { }
-    public override MatchmakingAdminSnapshot GetMatchmakingAdminSnapshot() { return Data; }
-    protected override MatchmakingAdminSnapshot GetDataFromMessage(IntPtr c_message)
-    {
-      var msg = CAPI.ovr_Message_GetNativeMessage(c_message);
-      var obj = CAPI.ovr_Message_GetMatchmakingAdminSnapshot(msg);
-      return new MatchmakingAdminSnapshot(obj);
-    }
-
-  }
-  public class MessageWithMatchmakingEnqueueResult : Message<MatchmakingEnqueueResult>
-  {
-    public MessageWithMatchmakingEnqueueResult(IntPtr c_message) : base(c_message) { }
-    public override MatchmakingEnqueueResult GetMatchmakingEnqueueResult() { return Data; }
-    protected override MatchmakingEnqueueResult GetDataFromMessage(IntPtr c_message)
-    {
-      var msg = CAPI.ovr_Message_GetNativeMessage(c_message);
-      var obj = CAPI.ovr_Message_GetMatchmakingEnqueueResult(msg);
-      return new MatchmakingEnqueueResult(obj);
-    }
-
-  }
-  public class MessageWithMatchmakingEnqueueResultAndRoom : Message<MatchmakingEnqueueResultAndRoom>
-  {
-    public MessageWithMatchmakingEnqueueResultAndRoom(IntPtr c_message) : base(c_message) { }
-    public override MatchmakingEnqueueResultAndRoom GetMatchmakingEnqueueResultAndRoom() { return Data; }
-    protected override MatchmakingEnqueueResultAndRoom GetDataFromMessage(IntPtr c_message)
-    {
-      var msg = CAPI.ovr_Message_GetNativeMessage(c_message);
-      var obj = CAPI.ovr_Message_GetMatchmakingEnqueueResultAndRoom(msg);
-      return new MatchmakingEnqueueResultAndRoom(obj);
-    }
-
-  }
-  public class MessageWithMatchmakingStatsUnderMatchmakingStats : Message<MatchmakingStats>
-  {
-    public MessageWithMatchmakingStatsUnderMatchmakingStats(IntPtr c_message) : base(c_message) { }
-    public override MatchmakingStats GetMatchmakingStats() { return Data; }
-    protected override MatchmakingStats GetDataFromMessage(IntPtr c_message)
-    {
-      var msg = CAPI.ovr_Message_GetNativeMessage(c_message);
-      var obj = CAPI.ovr_Message_GetMatchmakingStats(msg);
-      return new MatchmakingStats(obj);
-    }
-
-  }
   public class MessageWithMicrophoneAvailabilityState : Message<MicrophoneAvailabilityState>
   {
     public MessageWithMicrophoneAvailabilityState(IntPtr c_message) : base(c_message) { }
@@ -1724,78 +1348,6 @@ namespace Oculus.Platform
     }
 
   }
-  public class MessageWithRoom : Message<Room>
-  {
-    public MessageWithRoom(IntPtr c_message) : base(c_message) { }
-    public override Room GetRoom() { return Data; }
-    protected override Room GetDataFromMessage(IntPtr c_message)
-    {
-      var msg = CAPI.ovr_Message_GetNativeMessage(c_message);
-      var obj = CAPI.ovr_Message_GetRoom(msg);
-      return new Room(obj);
-    }
-
-  }
-  public class MessageWithRoomUnderCurrentRoom : Message<Room>
-  {
-    public MessageWithRoomUnderCurrentRoom(IntPtr c_message) : base(c_message) { }
-    public override Room GetRoom() { return Data; }
-    protected override Room GetDataFromMessage(IntPtr c_message)
-    {
-      var msg = CAPI.ovr_Message_GetNativeMessage(c_message);
-      var obj = CAPI.ovr_Message_GetRoom(msg);
-      return new Room(obj);
-    }
-
-  }
-  public class MessageWithRoomUnderViewerRoom : Message<Room>
-  {
-    public MessageWithRoomUnderViewerRoom(IntPtr c_message) : base(c_message) { }
-    public override Room GetRoom() { return Data; }
-    protected override Room GetDataFromMessage(IntPtr c_message)
-    {
-      var msg = CAPI.ovr_Message_GetNativeMessage(c_message);
-      var obj = CAPI.ovr_Message_GetRoom(msg);
-      return new Room(obj);
-    }
-
-  }
-  public class MessageWithRoomList : Message<RoomList>
-  {
-    public MessageWithRoomList(IntPtr c_message) : base(c_message) { }
-    public override RoomList GetRoomList() { return Data; }
-    protected override RoomList GetDataFromMessage(IntPtr c_message)
-    {
-      var msg = CAPI.ovr_Message_GetNativeMessage(c_message);
-      var obj = CAPI.ovr_Message_GetRoomArray(msg);
-      return new RoomList(obj);
-    }
-
-  }
-  public class MessageWithRoomInviteNotification : Message<RoomInviteNotification>
-  {
-    public MessageWithRoomInviteNotification(IntPtr c_message) : base(c_message) { }
-    public override RoomInviteNotification GetRoomInviteNotification() { return Data; }
-    protected override RoomInviteNotification GetDataFromMessage(IntPtr c_message)
-    {
-      var msg = CAPI.ovr_Message_GetNativeMessage(c_message);
-      var obj = CAPI.ovr_Message_GetRoomInviteNotification(msg);
-      return new RoomInviteNotification(obj);
-    }
-
-  }
-  public class MessageWithRoomInviteNotificationList : Message<RoomInviteNotificationList>
-  {
-    public MessageWithRoomInviteNotificationList(IntPtr c_message) : base(c_message) { }
-    public override RoomInviteNotificationList GetRoomInviteNotificationList() { return Data; }
-    protected override RoomInviteNotificationList GetDataFromMessage(IntPtr c_message)
-    {
-      var msg = CAPI.ovr_Message_GetNativeMessage(c_message);
-      var obj = CAPI.ovr_Message_GetRoomInviteNotificationArray(msg);
-      return new RoomInviteNotificationList(obj);
-    }
-
-  }
   public class MessageWithSdkAccountList : Message<SdkAccountList>
   {
     public MessageWithSdkAccountList(IntPtr c_message) : base(c_message) { }
@@ -1865,15 +1417,15 @@ namespace Oculus.Platform
     }
 
   }
-  public class MessageWithUserAndRoomList : Message<UserAndRoomList>
+  public class MessageWithUserAccountAgeCategory : Message<UserAccountAgeCategory>
   {
-    public MessageWithUserAndRoomList(IntPtr c_message) : base(c_message) { }
-    public override UserAndRoomList GetUserAndRoomList() { return Data; }
-    protected override UserAndRoomList GetDataFromMessage(IntPtr c_message)
+    public MessageWithUserAccountAgeCategory(IntPtr c_message) : base(c_message) { }
+    public override UserAccountAgeCategory GetUserAccountAgeCategory() { return Data; }
+    protected override UserAccountAgeCategory GetDataFromMessage(IntPtr c_message)
     {
       var msg = CAPI.ovr_Message_GetNativeMessage(c_message);
-      var obj = CAPI.ovr_Message_GetUserAndRoomArray(msg);
-      return new UserAndRoomList(obj);
+      var obj = CAPI.ovr_Message_GetUserAccountAgeCategory(msg);
+      return new UserAccountAgeCategory(obj);
     }
 
   }
@@ -1938,35 +1490,6 @@ namespace Oculus.Platform
 
   }
 
-  public class MessageWithNetworkingPeer : Message<NetworkingPeer>
-  {
-    public MessageWithNetworkingPeer(IntPtr c_message) : base(c_message) { }
-    public override NetworkingPeer GetNetworkingPeer() { return Data; }
-    protected override NetworkingPeer GetDataFromMessage(IntPtr c_message)
-    {
-      var peer = CAPI.ovr_Message_GetNetworkingPeer(c_message);
-      return new NetworkingPeer(
-        CAPI.ovr_NetworkingPeer_GetID(peer),
-        CAPI.ovr_NetworkingPeer_GetState(peer)
-      );
-    }
-  }
-
-  public class MessageWithPingResult : Message<PingResult>
-  {
-    public MessageWithPingResult(IntPtr c_message) : base(c_message) { }
-    public override PingResult GetPingResult() { return Data; }
-    protected override PingResult GetDataFromMessage(IntPtr c_message)
-    {
-      var ping = CAPI.ovr_Message_GetPingResult(c_message);
-      bool is_timeout = CAPI.ovr_PingResult_IsTimeout(ping);
-      return new PingResult(
-        CAPI.ovr_PingResult_GetID(ping),
-        is_timeout ? (UInt64?)null : CAPI.ovr_PingResult_GetPingTimeUsec(ping)
-      );
-    }
-  }
-
   public class MessageWithLeaderboardDidUpdate : Message<bool>
   {
     public MessageWithLeaderboardDidUpdate(IntPtr c_message) : base(c_message) { }
@@ -1976,33 +1499,6 @@ namespace Oculus.Platform
       var msg = CAPI.ovr_Message_GetNativeMessage(c_message);
       var obj = CAPI.ovr_Message_GetLeaderboardUpdateStatus(msg);
       return CAPI.ovr_LeaderboardUpdateStatus_GetDidUpdate(obj);
-    }
-  }
-
-  public class MessageWithMatchmakingNotification : Message<Room>
-  {
-    public MessageWithMatchmakingNotification(IntPtr c_message) : base(c_message) {}
-    public override Room GetRoom() { return Data; }
-    protected override Room GetDataFromMessage(IntPtr c_message)
-    {
-      var msg = CAPI.ovr_Message_GetNativeMessage(c_message);
-      var obj = CAPI.ovr_Message_GetRoom(msg);
-      return new Room(obj);
-    }
-  }
-
-  public class MessageWithMatchmakingBrowseResult : Message<MatchmakingBrowseResult>
-  {
-    public MessageWithMatchmakingBrowseResult(IntPtr c_message) : base(c_message) {}
-
-    public override MatchmakingEnqueueResult GetMatchmakingEnqueueResult() { return Data.EnqueueResult; }
-    public override RoomList GetRoomList() { return Data.Rooms; }
-
-    protected override MatchmakingBrowseResult GetDataFromMessage(IntPtr c_message)
-    {
-      var msg = CAPI.ovr_Message_GetNativeMessage(c_message);
-      var obj = CAPI.ovr_Message_GetMatchmakingBrowseResult(msg);
-      return new MatchmakingBrowseResult(obj);
     }
   }
 

@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 // Create menu of all scenes included in the build.
 public class StartMenu : MonoBehaviour
-{   
+{
     public OVROverlay overlay;
     public OVROverlay text;
     public OVRCameraRig vrRig;
@@ -14,7 +14,7 @@ public class StartMenu : MonoBehaviour
     void Start()
     {
         DebugUIBuilder.instance.AddLabel("Select Sample Scene");
-        
+
         int n = UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings;
         for (int i = 0; i < n; ++i)
         {
@@ -22,7 +22,7 @@ public class StartMenu : MonoBehaviour
             var sceneIndex = i;
             DebugUIBuilder.instance.AddButton(Path.GetFileNameWithoutExtension(path), () => LoadScene(sceneIndex));
         }
-        
+
         DebugUIBuilder.instance.Show();
     }
 

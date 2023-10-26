@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
  *
@@ -30,49 +30,50 @@ using Object = UnityEngine.Object;
 
 internal class OVRConfigurationTaskSourceCode
 {
-	private static Func<Object, int, bool> OpenAssetDelegate = AssetDatabase.OpenAsset;
+    private static Func<Object, int, bool> OpenAssetDelegate = AssetDatabase.OpenAsset;
 
-	public static void Mock()
-	{
-		OpenAssetDelegate = null;
-	}
+    public static void Mock()
+    {
+        OpenAssetDelegate = null;
+    }
 
-	public static void Unmock()
-	{
-		OpenAssetDelegate = AssetDatabase.OpenAsset;
-	}
+    public static void Unmock()
+    {
+        OpenAssetDelegate = AssetDatabase.OpenAsset;
+    }
 
-	private static IEnumerable<MethodInfo> _expectedMethods;
+    private static IEnumerable<MethodInfo> _expectedMethods;
 
-	private static IEnumerable<MethodInfo> ExpectedMethods
-	{
-		get
-		{
-			if (_expectedMethods == null)
-			{
-				_expectedMethods = typeof(OVRProjectSetup).GetMethods(BindingFlags.Public | BindingFlags.Static).Where(method => method.Name == "AddTask");
-			}
+    private static IEnumerable<MethodInfo> ExpectedMethods
+    {
+        get
+        {
+            if (_expectedMethods == null)
+            {
+                _expectedMethods = typeof(OVRProjectSetup).GetMethods(BindingFlags.Public | BindingFlags.Static)
+                    .Where(method => method.Name == "AddTask");
+            }
 
-			return _expectedMethods;
-		}
-	}
+            return _expectedMethods;
+        }
+    }
 
-	private OVRConfigurationTask _task;
-	private readonly StackTrace _stackTrace;
+    private OVRConfigurationTask _task;
+    private readonly StackTrace _stackTrace;
     private Object _object;
     private bool _processed;
 
     public bool Valid
     {
-	    get
-	    {
-		    if (!_processed)
-		    {
-			    ProcessStackTrace();
-		    }
+        get
+        {
+            if (!_processed)
+            {
+                ProcessStackTrace();
+            }
 
-		    return _object != null;
-	    }
+            return _object != null;
+        }
     }
 
     public int Line { get; private set; }
@@ -80,62 +81,70 @@ internal class OVRConfigurationTaskSourceCode
 
     public OVRConfigurationTaskSourceCode(OVRConfigurationTask task)
     {
-	    _task = task;
-	    _stackTrace = new StackTrace(true);
+        _task = task;
+        _stackTrace = new StackTrace(true);
     }
 
     public void ProcessStackTrace()
     {
-		if (FindPathAndLine(out var path, out var line))
+        if (FindPathAndLine(out var path, out var line))
         {
             path = path.Replace("\\", "/");
 
             if (path.StartsWith(Application.dataPath))
             {
-	            FilePath = Path.Combine("Assets/", path.Substring(Application.dataPath.Length + 1));
-	            Line = line;
-	            _object = AssetDatabase.LoadAssetAtPath(FilePath, typeof(Object));
+                FilePath = Path.Combine("Assets/", path.Substring(Application.dataPath.Length + 1));
+                Line = line;
+                _object = AssetDatabase.LoadAssetAtPath(FilePath, typeof(Object));
             }
         }
-		_processed = true;
+
+        _processed = true;
     }
 
     public bool Open()
     {
-	    if (Valid)
-	    {
-		    OpenAssetDelegate?.Invoke(_object, Line);
-	    }
+        if (Valid)
+        {
+            OpenAssetDelegate?.Invoke(_object, Line);
+        }
 
-	
-	    return Valid;
+        OVRTelemetry.Start(OVRProjectSetupTelemetryEvent.EventTypes.GoToSource)
+            .AddAnnotation(OVRProjectSetupTelemetryEvent.AnnotationTypes.Uid, _task.Uid.ToString())
+            .AddAnnotation(OVRProjectSetupTelemetryEvent.AnnotationTypes.BuildTargetGroup,
+                BuildTargetGroup.Unknown.ToString())
+            .AddAnnotation(OVRProjectSetupTelemetryEvent.AnnotationTypes.Value, Valid ? "true" : "false")
+            .Send();
+
+        return Valid;
     }
 
     private StackFrame FindStackFrame()
     {
-	    // Depth 2, Just before the constructor
-	    StackFrame frame = _stackTrace.GetFrame(2);
-	    var method = frame.GetMethod();
-	    if (ExpectedMethods.Contains(method))
-	    {
-		    // Depth 3, Just before OVRProjectSetup AddTask
-		    frame = _stackTrace.GetFrame(3);
-	    }
-	    return frame;
+        // Depth 2, Just before the constructor
+        StackFrame frame = _stackTrace.GetFrame(2);
+        var method = frame.GetMethod();
+        if (ExpectedMethods.Contains(method))
+        {
+            // Depth 3, Just before OVRProjectSetup AddTask
+            frame = _stackTrace.GetFrame(3);
+        }
+
+        return frame;
     }
 
     private bool FindPathAndLine(out string path, out int line)
     {
-	    var frame = FindStackFrame();
-	    if (frame == null)
-	    {
-		    path = null;
-		    line = -1;
-		    return false;
-	    }
+        var frame = FindStackFrame();
+        if (frame == null)
+        {
+            path = null;
+            line = -1;
+            return false;
+        }
 
-	    path = frame.GetFileName();
-	    line = frame.GetFileLineNumber();
-	    return true;
+        path = frame.GetFileName();
+        line = frame.GetFileLineNumber();
+        return true;
     }
 }

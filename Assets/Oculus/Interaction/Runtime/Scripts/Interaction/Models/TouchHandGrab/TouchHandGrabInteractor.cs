@@ -37,15 +37,15 @@ namespace Oculus.Interaction
         TouchHandGrabInteractor : PointerInteractor<TouchHandGrabInteractor, TouchHandGrabInteractable>
     {
         [SerializeField, Interface(typeof(IHand))]
-        private MonoBehaviour _hand;
+        private UnityEngine.Object _hand;
         private IHand Hand { get; set; }
 
         [SerializeField, Interface(typeof(IHand))]
-        private MonoBehaviour _openHand;
+        private UnityEngine.Object _openHand;
         private IHand OpenHand { get; set; }
 
         [SerializeField, Interface(typeof(IHandSphereMap))]
-        private MonoBehaviour _handSphereMap;
+        private UnityEngine.Object _handSphereMap;
         protected IHandSphereMap HandSphereMap;
 
         [SerializeField]
@@ -67,7 +67,7 @@ namespace Oculus.Interaction
         private int _iterations = 10;
 
         [SerializeField, Interface(typeof(IActiveState)), Optional]
-        private MonoBehaviour _grabPrerequisite;
+        private UnityEngine.Object _grabPrerequisite;
 
         public event Action WhenFingerLocked = delegate () { };
 
@@ -538,19 +538,19 @@ namespace Oculus.Interaction
         public void InjectHand(IHand hand)
         {
             Hand = hand;
-            _hand = hand as MonoBehaviour;
+            _hand = hand as UnityEngine.Object;
         }
 
         public void InjectOpenHand(IHand openHand)
         {
             OpenHand = openHand;
-            _openHand = openHand as MonoBehaviour;
+            _openHand = openHand as UnityEngine.Object;
         }
 
         public void InjectHandSphereMap(IHandSphereMap handSphereMap)
         {
             HandSphereMap = handSphereMap;
-            _handSphereMap = handSphereMap as MonoBehaviour;
+            _handSphereMap = handSphereMap as UnityEngine.Object;
         }
 
         public void InjectHoverLocation(Transform hoverLocation)
@@ -566,7 +566,7 @@ namespace Oculus.Interaction
         public void InjectOptionalGrabPrerequisite(IActiveState grabPrerequisite)
         {
             GrabPrerequisite = grabPrerequisite;
-            _grabPrerequisite = grabPrerequisite as MonoBehaviour;
+            _grabPrerequisite = grabPrerequisite as UnityEngine.Object;
         }
 
         public void InjectOptionalMinHoverDistance(float minHoverDistance)

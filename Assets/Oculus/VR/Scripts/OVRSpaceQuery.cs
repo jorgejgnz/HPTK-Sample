@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
  *
@@ -26,58 +26,6 @@ using System.Collections.Generic;
 /// </summary>
 internal static class OVRSpaceQuery
 {
-    /// <summary>
-    /// Components that can be enabled on an <see cref="OVRSpace"/>.
-    /// </summary>
-    [Flags]
-    public enum ComponentType : uint
-    {
-        /// <summary>
-        /// No components.
-        /// </summary>
-        None = 0,
-
-        /// <summary>
-        /// The space is locatable.
-        /// </summary>
-        Locatable = 1 << OVRPlugin.SpaceComponentType.Locatable,
-
-        /// <summary>
-        /// The space is storable.
-        /// </summary>
-        Storable = 1 << OVRPlugin.SpaceComponentType.Storable,
-
-        /// <summary>
-        /// The space is sharable.
-        /// </summary>
-        Sharable = 1 << OVRPlugin.SpaceComponentType.Sharable,
-
-        /// <summary>
-        /// The space represents a 2D plane.
-        /// </summary>
-        Bounded2D = 1 << OVRPlugin.SpaceComponentType.Bounded2D,
-
-        /// <summary>
-        /// The space represents a 3D volume.
-        /// </summary>
-        Bounded3D = 1 << OVRPlugin.SpaceComponentType.Bounded3D,
-
-        /// <summary>
-        /// The space has semantic labels associated with it.
-        /// </summary>
-        SemanticLabels = 1 << OVRPlugin.SpaceComponentType.SemanticLabels,
-
-        /// <summary>
-        /// The space represents a room layout.
-        /// </summary>
-        RoomLayout = 1 << OVRPlugin.SpaceComponentType.RoomLayout,
-
-        /// <summary>
-        /// The space is a container for other spaces.
-        /// </summary>
-        SpaceContainer = 1 << OVRPlugin.SpaceComponentType.SpaceContainer,
-    }
-
     /// <summary>
     /// Represents options used to generate an <see cref="OVRSpaceQuery"/>.
     /// </summary>
@@ -121,9 +69,10 @@ internal static class OVRSpaceQuery
         /// </summary>
         public OVRPlugin.SpaceQueryActionType ActionType { get; set; }
 
-        private ComponentType _componentFilter;
+        private OVRPlugin.SpaceComponentType _componentType;
 
         private IEnumerable<Guid> _uuidFilter;
+
 
         /// <summary>
         /// The components which must be present on the space in order to match the query.
@@ -135,28 +84,14 @@ internal static class OVRSpaceQuery
         /// Currently, only one component is allowed at a time.
         /// </remarks>
         /// <exception cref="InvalidOperationException">Thrown if <see cref="UuidFilter"/> is not `null`.</exception>
-        /// <exception cref="NotSupportedException">Thrown if more than one <see cref="ComponentType"/> is set.</exception>
-        public ComponentType ComponentFilter
+        public OVRPlugin.SpaceComponentType ComponentFilter
         {
-            get => _componentFilter;
+            get => _componentType;
             set
             {
-                if (value != 0 && _uuidFilter != null)
-                    throw new InvalidOperationException($"Cannot have both a component and uuid filter.");
+                ValidateSingleFilter(_uuidFilter, value);
 
-                // Count the number of set bits
-                var v = (uint)value;
-                var numBitsSet = 0;
-                while (v != 0)
-                {
-                    v &= v - 1;
-                    numBitsSet++;
-                }
-
-                if (numBitsSet > 1)
-                    throw new NotSupportedException($"Only one component is supported, but {numBitsSet} are set.");
-
-                _componentFilter = value;
+                _componentType = value;
             }
         }
 
@@ -168,8 +103,7 @@ internal static class OVRSpaceQuery
         /// You may filter by component type (see <see cref="ComponentFilter"/>) or UUIDs, but not both at the same
         /// time.
         /// </remarks>
-        /// <exception cref="InvalidOperationException">Thrown if <see cref="ComponentFilter"/> is not
-        /// <see cref="ComponentType.None"/>.</exception>
+        /// <exception cref="InvalidOperationException">Thrown if <see cref="ComponentFilter"/> is not 0.</exception>
         /// <exception cref="ArgumentException">Thrown if <see cref="UuidFilter"/> is set to a value that contains more
         /// than <seealso cref="MaxUuidCount"/> UUIDs.</exception>
         public IEnumerable<Guid> UuidFilter
@@ -177,15 +111,17 @@ internal static class OVRSpaceQuery
             get => _uuidFilter;
             set
             {
-                if (value != null && _componentFilter != 0)
-                    throw new InvalidOperationException($"{nameof(ComponentFilter)} must be {nameof(ComponentType.None)} to query by UUID.");
+                ValidateSingleFilter(value, _componentType);
 
                 if (value is IReadOnlyCollection<Guid> collection && collection.Count > MaxUuidCount)
-                    throw new ArgumentException($"There must not be more than {MaxUuidCount} UUIDs specified by the {nameof(UuidFilter)} (new value contains {collection.Count} UUIDs).", nameof(value));
+                    throw new ArgumentException(
+                        $"There must not be more than {MaxUuidCount} UUIDs specified by the {nameof(UuidFilter)} (new value contains {collection.Count} UUIDs).",
+                        nameof(value));
 
                 _uuidFilter = value;
             }
         }
+
 
         /// <summary>
         /// Creates a copy of <paramref name="other"/>.
@@ -198,17 +134,15 @@ internal static class OVRSpaceQuery
             Timeout = other.Timeout;
             Location = other.Location;
             ActionType = other.ActionType;
-            _componentFilter = other._componentFilter;
+            _componentType = other._componentType;
             _uuidFilter = other._uuidFilter;
         }
 
         /// <summary>
-        /// Initiates a space query.
+        /// Creates a new <see cref="OVRPlugin.SpaceQueryInfo"/> from this.
         /// </summary>
-        /// <param name="requestId">When this method returns, <paramref name="requestId"/> will represent a valid
-        /// request if successful, or an invalid request if not. This parameter is passed initialized.</param>
-        /// <returns>`true` if the query was successfully started; otherwise, `false`.</returns>
-        public bool TryQuerySpaces(out ulong requestId)
+        /// <returns>The newly created info.</returns>
+        public OVRPlugin.SpaceQueryInfo ToQueryInfo()
         {
             var filterType = OVRPlugin.SpaceQueryFilterType.None;
             var numIds = 0;
@@ -216,52 +150,22 @@ internal static class OVRSpaceQuery
             if (_uuidFilter != null)
             {
                 filterType = OVRPlugin.SpaceQueryFilterType.Ids;
-                if (_uuidFilter is IReadOnlyList<Guid> list)
+                foreach (var id in _uuidFilter.ToNonAlloc())
                 {
-                    if (list.Count > MaxUuidCount)
+                    if (numIds >= MaxUuidCount)
                         throw new InvalidOperationException(
                             $"{nameof(UuidFilter)} must not contain more than {MaxUuidCount} UUIDs.");
 
-                    numIds = list.Count;
-                    for (var i = 0; i < numIds; i++)
-                    {
-                        Ids[i] = list[i];
-                    }
-                }
-                else
-                {
-                    foreach (var id in _uuidFilter)
-                    {
-                        if (numIds >= MaxUuidCount)
-                            throw new InvalidOperationException(
-                                $"{nameof(UuidFilter)} must not contain more than {MaxUuidCount} UUIDs.");
-
-                        Ids[numIds++] = id;
-                    }
+                    Ids[numIds++] = id;
                 }
             }
-            else if (_componentFilter != 0)
+            else
             {
                 filterType = OVRPlugin.SpaceQueryFilterType.Components;
-                if ((_componentFilter & ComponentType.Locatable) != 0)
-                    ComponentTypes[numComponents++] = OVRPlugin.SpaceComponentType.Locatable;
-                if ((_componentFilter & ComponentType.Storable) != 0)
-                    ComponentTypes[numComponents++] = OVRPlugin.SpaceComponentType.Storable;
-                if ((_componentFilter & ComponentType.Sharable) != 0)
-                    ComponentTypes[numComponents++] = OVRPlugin.SpaceComponentType.Sharable;
-                if ((_componentFilter & ComponentType.Bounded2D) != 0)
-                    ComponentTypes[numComponents++] = OVRPlugin.SpaceComponentType.Bounded2D;
-                if ((_componentFilter & ComponentType.Bounded3D) != 0)
-                    ComponentTypes[numComponents++] = OVRPlugin.SpaceComponentType.Bounded3D;
-                if ((_componentFilter & ComponentType.SemanticLabels) != 0)
-                    ComponentTypes[numComponents++] = OVRPlugin.SpaceComponentType.SemanticLabels;
-                if ((_componentFilter & ComponentType.RoomLayout) != 0)
-                    ComponentTypes[numComponents++] = OVRPlugin.SpaceComponentType.RoomLayout;
-                if ((_componentFilter & ComponentType.SpaceContainer) != 0)
-                    ComponentTypes[numComponents++] = OVRPlugin.SpaceComponentType.SpaceContainer;
+                ComponentTypes[numComponents++] = _componentType;
             }
 
-            var queryInfo = new OVRPlugin.SpaceQueryInfo
+            return new OVRPlugin.SpaceQueryInfo
             {
                 QueryType = QueryType,
                 MaxQuerySpaces = MaxResults,
@@ -280,8 +184,35 @@ internal static class OVRSpaceQuery
                     NumComponents = numComponents,
                 }
             };
+        }
 
-            return OVRPlugin.QuerySpaces(queryInfo, out requestId);
+
+        /// <summary>
+        /// Initiates a space query.
+        /// </summary>
+        /// <param name="requestId">When this method returns, <paramref name="requestId"/> will represent a valid
+        /// request if successful, or an invalid request if not. This parameter is passed initialized.</param>
+        /// <returns>`true` if the query was successfully started; otherwise, `false`.</returns>
+        public bool TryQuerySpaces(out ulong requestId)
+        {
+            var querySpaces = OVRPlugin.QuerySpaces(ToQueryInfo(), out requestId);
+
+            OVRTelemetry.Client.MarkerStart(OVRTelemetryConstants.Scene.MarkerId.SpatialAnchorQuery,
+                requestId.GetHashCode());
+
+            if (!querySpaces)
+            {
+                OVRTelemetry.Client.MarkerEnd(OVRTelemetryConstants.Scene.MarkerId.SpatialAnchorQuery,
+                    OVRPlugin.Qpl.ResultType.Fail, requestId.GetHashCode());
+            }
+
+            return querySpaces;
+        }
+
+        private static void ValidateSingleFilter(IEnumerable<Guid> uuidFilter, OVRPlugin.SpaceComponentType componentFilter)
+        {
+            if (uuidFilter != null && componentFilter != 0)
+                throw new InvalidOperationException($"You may only query by UUID or by component type.");
         }
     }
 }

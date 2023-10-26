@@ -19,16 +19,18 @@ namespace Meta.WitAi.Data
     {
         #region Singleton
         private static AudioBuffer _instance;
-        private static bool _instanceInit = false;
         public static AudioBuffer Instance
         {
             get
             {
-                if (!_instance) _instance = FindObjectOfType<AudioBuffer>();
-                if (!_instance && !_instanceInit)
+                if (!_instance && Application.isPlaying)
                 {
-                    var audioBufferObject = new GameObject("AudioBuffer");
-                    _instance = audioBufferObject.AddComponent<AudioBuffer>();
+                    _instance = FindObjectOfType<AudioBuffer>();
+                    if (!_instance)
+                    {
+                        var audioBufferObject = new GameObject("AudioBuffer");
+                        _instance = audioBufferObject.AddComponent<AudioBuffer>();
+                    }
                 }
                 return _instance;
             }
@@ -41,56 +43,59 @@ namespace Meta.WitAi.Data
 
         public AudioBufferEvents Events => events;
 
+        public IAudioInputSource MicInput
+        {
+            get
+            {
+                if (_micInput == null && Application.isPlaying)
+                {
+                    // Check this gameobject & it's children for audio input
+                    _micInput = gameObject.GetComponentInChildren<IAudioInputSource>();
+                    // Check all roots for Mic Input JIC
+                    if (_micInput == null)
+                    {
+                        foreach (var root in gameObject.scene.GetRootGameObjects())
+                        {
+                            _micInput = root.GetComponentInChildren<IAudioInputSource>();
+                            if (_micInput != null)
+                            {
+                                break;
+                            }
+                        }
+                    }
+                    // Use default mic script
+                    if (_micInput == null)
+                    {
+                        _micInput = gameObject.AddComponent<Mic>();
+                    }
+                }
+
+                return _micInput;
+            }
+        }
         private IAudioInputSource _micInput;
         private RingBuffer<byte> _micDataBuffer;
 
         private byte[] _byteDataBuffer;
 
+        private HashSet<Component> _waitingRecorders = new HashSet<Component>();
         private HashSet<Component> _activeRecorders = new HashSet<Component>();
 
-        public bool IsRecording(Component component) => _activeRecorders.Contains(component);
-        public bool IsInputAvailable => _micInput.IsInputAvailable;
-        public void CheckForInput() => _micInput.CheckForInput();
-        public AudioEncoding AudioEncoding => _micInput.AudioEncoding;
+        public bool IsRecording(Component component) => _waitingRecorders.Contains(component) || _activeRecorders.Contains(component);
+        public bool IsInputAvailable => MicInput != null && MicInput.IsInputAvailable;
+        public void CheckForInput() => MicInput.CheckForInput();
+        public AudioEncoding AudioEncoding => MicInput.AudioEncoding;
 
         private void Awake()
         {
             _instance = this;
-            _instanceInit = true;
-            // Check this gameobject & it's children for audio input
-            _micInput = gameObject.GetComponentInChildren<IAudioInputSource>();
-            // Check all roots for Mic Input JIC
-            if (_micInput == null)
-            {
-                foreach (var root in gameObject.scene.GetRootGameObjects())
-                {
-                    _micInput = root.GetComponentInChildren<IAudioInputSource>();
-                    if (_micInput != null)
-                    {
-                        break;
-                    }
-                }
-            }
-            // Use default mic script
-            if (_micInput == null)
-            {
-                _micInput = gameObject.AddComponent<Mic>();
-            }
 
             InitializeMicDataBuffer();
         }
 
         private void OnEnable()
         {
-#if UNITY_EDITOR
-            // Make sure we have a mic input after a script recompile
-            if (null == _micInput)
-            {
-                _micInput = GetComponent<IAudioInputSource>();
-            }
-#endif
-
-            _micInput.OnSampleReady += OnMicSampleReady;
+            MicInput.OnSampleReady += OnMicSampleReady;
 
             if (alwaysRecording) StartRecording(this);
         }
@@ -98,11 +103,9 @@ namespace Meta.WitAi.Data
         // Remove mic delegates
         private void OnDisable()
         {
-            _micInput.OnSampleReady -= OnMicSampleReady;
+            MicInput.OnSampleReady -= OnMicSampleReady;
 
             if (alwaysRecording) StopRecording(this);
-
-            _instanceInit = false;
         }
 
         // Callback for mic sample ready
@@ -173,15 +176,23 @@ namespace Meta.WitAi.Data
 
         private IEnumerator WaitForMicToStart(Component component)
         {
-            yield return new WaitUntil(() => null != _micInput);
-            yield return new WaitUntil(() => _micInput.IsInputAvailable);
-
-            _activeRecorders.Add(component);
-            if (!_micInput.IsRecording)
+            // Wait for mic
+            _waitingRecorders.Add(component);
+            yield return new WaitUntil(() => null != MicInput && MicInput.IsInputAvailable);
+            if (!_waitingRecorders.Contains(component))
             {
-                _micInput.StartRecording(audioBufferConfiguration.sampleLengthInMs);
+                yield break;
             }
+            _waitingRecorders.Remove(component);
 
+            // Add component
+            _activeRecorders.Add(component);
+            // Start mic
+            if (!MicInput.IsRecording)
+            {
+                MicInput.StartRecording(audioBufferConfiguration.sampleLengthInMs);
+            }
+            // On Start Listening
             if (component is IVoiceEventProvider v)
             {
                 v.VoiceEvents.OnStartListening?.Invoke();
@@ -190,12 +201,26 @@ namespace Meta.WitAi.Data
 
         public void StopRecording(Component component)
         {
-            _activeRecorders.Remove(component);
-            if (_activeRecorders.Count == 0)
+            // Remove waiting recorder
+            if (_waitingRecorders.Contains(component))
             {
-                _micInput.StopRecording();
+                _waitingRecorders.Remove(component);
+                return;
+            }
+            // Ignore unless active
+            if (!_activeRecorders.Contains(component))
+            {
+                return;
             }
 
+            // Remove active recorder
+            _activeRecorders.Remove(component);
+            // Stop recording if last active recorder
+            if (_activeRecorders.Count == 0)
+            {
+                MicInput.StopRecording();
+            }
+            // On Stop Listening
             if (component is IVoiceEventProvider v)
             {
                 v.VoiceEvents.OnStoppedListening?.Invoke();

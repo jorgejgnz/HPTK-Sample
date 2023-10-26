@@ -31,7 +31,7 @@ namespace Oculus.Interaction
     public class JointDeltaProviderRef : MonoBehaviour, IJointDeltaProvider
     {
         [SerializeField, Interface(typeof(IJointDeltaProvider))]
-        private MonoBehaviour _jointDeltaProvider;
+        private UnityEngine.Object _jointDeltaProvider;
 
         public IJointDeltaProvider JointDeltaProvider { get; private set; }
 
@@ -73,7 +73,7 @@ namespace Oculus.Interaction
 
         public void InjectJointDeltaProvider(IJointDeltaProvider jointDeltaProvider)
         {
-            _jointDeltaProvider = jointDeltaProvider as MonoBehaviour;
+            _jointDeltaProvider = jointDeltaProvider as UnityEngine.Object;
             JointDeltaProvider = jointDeltaProvider;
         }
         #endregion

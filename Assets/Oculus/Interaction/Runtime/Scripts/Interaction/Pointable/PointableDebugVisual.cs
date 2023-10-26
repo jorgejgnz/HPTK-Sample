@@ -27,7 +27,7 @@ namespace Oculus.Interaction
     public class PointableDebugVisual : MonoBehaviour
     {
         [SerializeField, Interface(typeof(IPointable))]
-        private MonoBehaviour _pointable;
+        private UnityEngine.Object _pointable;
 
         [SerializeField]
         private Renderer _renderer;
@@ -162,7 +162,7 @@ namespace Oculus.Interaction
 
         public void InjectPointable(IPointable pointable)
         {
-            _pointable = pointable as MonoBehaviour;
+            _pointable = pointable as UnityEngine.Object;
             Pointable = pointable;
         }
 

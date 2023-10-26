@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a430ea2bca400b540a4897c70ffeb696, type: 3}
+  m_Name: Ray Interactor
+  m_EditorClassIdentifier: 
+  id: bc3f7b21-a55c-4cf7-b9c6-78d4341573a4
+  version: 1
+  blockName: Hand Ray Interactor
+  description: Add ray to your hands
+  sdk: 0
+  thumbnail: {fileID: 0}
+  displayOnContentTab: 0
+  experimental: 1
+  order: 0
+  prefab: {fileID: 8030197382645210609, guid: ab143fb33d1c042989fb5b744cd67a2e, type: 3}
+  dependencies:
+  - 0393ca30-f2a9-4865-a40f-f9a68d01c3a9
+  isSingleton: 1
+  _handsBlockId: 0393ca30-f2a9-4865-a40f-f9a68d01c3a9
+  _interactorName: Ray

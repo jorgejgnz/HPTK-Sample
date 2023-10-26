@@ -26,7 +26,6 @@ using UnityEngine.SceneManagement;
 #endif
 
 
-
 namespace OculusSampleFramework
 {
     /// <summary>
@@ -46,10 +45,11 @@ namespace OculusSampleFramework
 
         [SerializeField]
         bool m_useSpherecast;
+
         public bool UseSpherecast
         {
             get { return m_useSpherecast; }
-            set 
+            set
             {
                 m_useSpherecast = value;
                 GrabVolumeEnable(!m_useSpherecast);
@@ -62,6 +62,7 @@ namespace OculusSampleFramework
 
         [SerializeField]
         float m_objectPullVelocity = 10.0f;
+
         float m_objectPullMaxRotationRate = 360.0f; // max rotation rate in degrees per second
 
         bool m_movingObjectToHand = false;
@@ -71,15 +72,17 @@ namespace OculusSampleFramework
         float m_maxGrabDistance;
 
         // Only allow grabbing objects in this layer.
-		// NOTE: you can use the value -1 to attempt to grab everything.
+        // NOTE: you can use the value -1 to attempt to grab everything.
         [SerializeField]
         int m_grabObjectsInLayer = 0;
+
         [SerializeField]
         int m_obstructionLayer = 0;
 
         DistanceGrabber m_otherHand;
 
         protected DistanceGrabbable m_target;
+
         // Tracked separately from m_target, because we support child colliders of a DistanceGrabbable.
         protected Collider m_targetCollider;
 
@@ -91,7 +94,7 @@ namespace OculusSampleFramework
             // Note that there's no major downside to making this value too high, as objects
             // outside the player's grabbable trigger volume will not be eligible targets regardless.
             Collider sc = m_player.GetComponentInChildren<Collider>();
-            if(sc != null)
+            if (sc != null)
             {
                 m_maxGrabDistance = sc.bounds.size.z * 0.5f + 3.0f;
             }
@@ -100,7 +103,7 @@ namespace OculusSampleFramework
                 m_maxGrabDistance = 12.0f;
             }
 
-            if(m_parentHeldObject == true)
+            if (m_parentHeldObject == true)
             {
                 Debug.LogError("m_parentHeldObject incompatible with DistanceGrabber. Setting to false.");
                 m_parentHeldObject = false;
@@ -111,19 +114,21 @@ namespace OculusSampleFramework
             {
                 if (grabbers[i] != this) m_otherHand = grabbers[i];
             }
+
             Debug.Assert(m_otherHand != null);
 
 #if UNITY_EDITOR
-            OVRPlugin.SendEvent("distance_grabber", (SceneManager.GetActiveScene().name == "DistanceGrab").ToString(), "sample_framework");
+            OVRPlugin.SendEvent("distance_grabber", (SceneManager.GetActiveScene().name == "DistanceGrab").ToString(),
+                "sample_framework");
 #endif
-    }
+        }
 
-		public override void Update()
+        public override void Update()
         {
             base.Update();
 
             Debug.DrawRay(transform.position, transform.forward, Color.red, 0.1f);
-            
+
             DistanceGrabbable target;
             Collider targetColl;
             FindTarget(out target, out targetColl);
@@ -134,6 +139,7 @@ namespace OculusSampleFramework
                 {
                     m_target.Targeted = m_otherHand.m_target == m_target;
                 }
+
                 m_target = target;
                 m_targetCollider = targetColl;
                 if (m_target != null)
@@ -167,7 +173,8 @@ namespace OculusSampleFramework
 
                 // If it's within a certain distance respect the no-snap.
                 Vector3 closestPointOnBounds = closestGrabbableCollider.ClosestPointOnBounds(m_gripTransform.position);
-                if(!m_grabbedObj.snapPosition && !m_grabbedObj.snapOrientation && m_noSnapThreshhold > 0.0f && (closestPointOnBounds - m_gripTransform.position).magnitude < m_noSnapThreshhold)
+                if (!m_grabbedObj.snapPosition && !m_grabbedObj.snapOrientation && m_noSnapThreshhold > 0.0f &&
+                    (closestPointOnBounds - m_gripTransform.position).magnitude < m_noSnapThreshhold)
                 {
                     Vector3 relPos = m_grabbedObj.transform.position - transform.position;
                     m_movingObjectToHand = false;
@@ -193,7 +200,6 @@ namespace OculusSampleFramework
                         m_grabbedObjectRotOff = m_grabbedObj.snapOffset.rotation * m_grabbedObjectRotOff;
                     }
                 }
-
             }
         }
 
@@ -212,7 +218,7 @@ namespace OculusSampleFramework
             {
                 float travel = m_objectPullVelocity * Time.deltaTime;
                 Vector3 dir = grabbablePosition - m_grabbedObj.transform.position;
-                if(travel * travel * 1.1f > dir.sqrMagnitude)
+                if (travel * travel * 1.1f > dir.sqrMagnitude)
                 {
                     m_movingObjectToHand = false;
                 }
@@ -220,9 +226,11 @@ namespace OculusSampleFramework
                 {
                     dir.Normalize();
                     grabbablePosition = m_grabbedObj.transform.position + dir * travel;
-                    grabbableRotation = Quaternion.RotateTowards(m_grabbedObj.transform.rotation, grabbableRotation, m_objectPullMaxRotationRate * Time.deltaTime);
+                    grabbableRotation = Quaternion.RotateTowards(m_grabbedObj.transform.rotation, grabbableRotation,
+                        m_objectPullMaxRotationRate * Time.deltaTime);
                 }
             }
+
             grabbedRigidbody.MovePosition(grabbablePosition);
             grabbedRigidbody.MoveRotation(grabbableRotation);
         }
@@ -234,6 +242,7 @@ namespace OculusSampleFramework
                 GameObject go = hitInfo.collider.gameObject;
                 return go.GetComponent<DistanceGrabbable>() ?? go.GetComponentInParent<DistanceGrabbable>();
             }
+
             return null;
         }
 
@@ -244,13 +253,14 @@ namespace OculusSampleFramework
             float closestMagSq = float.MaxValue;
 
             // First test for objects within the grab volume, if we're using those.
-            // (Some usage of DistanceGrabber will not use grab volumes, and will only 
+            // (Some usage of DistanceGrabber will not use grab volumes, and will only
             // use spherecasts, and that's supported.)
             foreach (OVRGrabbable cg in m_grabCandidates.Keys)
             {
                 DistanceGrabbable grabbable = cg as DistanceGrabbable;
-				bool canGrab = grabbable != null && grabbable.InRange && !(grabbable.isGrabbed && !grabbable.allowOffhandGrab);
-				if (canGrab && m_grabObjectsInLayer >= 0) canGrab = grabbable.gameObject.layer == m_grabObjectsInLayer;
+                bool canGrab = grabbable != null && grabbable.InRange &&
+                               !(grabbable.isGrabbed && !grabbable.allowOffhandGrab);
+                if (canGrab && m_grabObjectsInLayer >= 0) canGrab = grabbable.gameObject.layer == m_grabObjectsInLayer;
                 if (!canGrab)
                 {
                     continue;
@@ -266,7 +276,7 @@ namespace OculusSampleFramework
                     if (grabbableMagSq < closestMagSq)
                     {
                         bool accept = true;
-                        if(m_preventGrabThroughWalls)
+                        if (m_preventGrabThroughWalls)
                         {
                             // NOTE: if this raycast fails, ideally we'd try other rays near the edges of the object, especially for large objects.
                             // NOTE 2: todo optimization: sort the objects before performing any raycasts.
@@ -276,16 +286,19 @@ namespace OculusSampleFramework
                             RaycastHit obstructionHitInfo;
                             Debug.DrawRay(ray.origin, ray.direction, Color.red, 0.1f);
 
-                            if (Physics.Raycast(ray, out obstructionHitInfo, m_maxGrabDistance, 1 << m_obstructionLayer, QueryTriggerInteraction.Ignore))
+                            if (Physics.Raycast(ray, out obstructionHitInfo, m_maxGrabDistance, 1 << m_obstructionLayer,
+                                    QueryTriggerInteraction.Ignore))
                             {
-                                float distToObject = (grabbableCollider.ClosestPointOnBounds(m_gripTransform.position) - m_gripTransform.position).magnitude;
-                                if(distToObject > obstructionHitInfo.distance * 1.1)
+                                float distToObject = (grabbableCollider.ClosestPointOnBounds(m_gripTransform.position) -
+                                                      m_gripTransform.position).magnitude;
+                                if (distToObject > obstructionHitInfo.distance * 1.1)
                                 {
                                     accept = false;
                                 }
                             }
                         }
-                        if(accept)
+
+                        if (accept)
                         {
                             closestMagSq = grabbableMagSq;
                             dgOut = grabbable;
@@ -299,6 +312,7 @@ namespace OculusSampleFramework
             {
                 return FindTargetWithSpherecast(out dgOut, out collOut);
             }
+
             return dgOut != null;
         }
 
@@ -309,14 +323,14 @@ namespace OculusSampleFramework
             Ray ray = new Ray(m_gripTransform.position, m_gripTransform.forward);
             RaycastHit hitInfo;
 
-			// If no objects in grab volume, raycast.
-			// Potential optimization: 
-			// In DistanceGrabbable.RefreshCrosshairs, we could move the object between collision layers.
-			// If it's in range, it would move into the layer DistanceGrabber.m_grabObjectsInLayer,
-			// and if out of range, into another layer so it's ignored by DistanceGrabber's SphereCast.
-			// However, we're limiting the SphereCast by m_maxGrabDistance, so the optimization doesn't seem
-			// essential.
-			int layer = (m_grabObjectsInLayer == -1) ? ~0 : 1 << m_grabObjectsInLayer;
+            // If no objects in grab volume, raycast.
+            // Potential optimization:
+            // In DistanceGrabbable.RefreshCrosshairs, we could move the object between collision layers.
+            // If it's in range, it would move into the layer DistanceGrabber.m_grabObjectsInLayer,
+            // and if out of range, into another layer so it's ignored by DistanceGrabber's SphereCast.
+            // However, we're limiting the SphereCast by m_maxGrabDistance, so the optimization doesn't seem
+            // essential.
+            int layer = (m_grabObjectsInLayer == -1) ? ~0 : 1 << m_grabObjectsInLayer;
             if (Physics.SphereCast(ray, m_spherecastRadius, out hitInfo, m_maxGrabDistance, layer))
             {
                 DistanceGrabbable grabbable = null;
@@ -325,7 +339,7 @@ namespace OculusSampleFramework
                 {
                     grabbable = hitInfo.collider.gameObject.GetComponentInParent<DistanceGrabbable>();
                     hitCollider = grabbable == null ? null : hitInfo.collider;
-                    if(grabbable)
+                    if (grabbable)
                     {
                         dgOut = grabbable;
                         collOut = hitCollider;
@@ -340,13 +354,16 @@ namespace OculusSampleFramework
 
                     dgOut = grabbable;
                     collOut = hitCollider;
-                    if (Physics.Raycast(ray, out obstructionHitInfo, m_maxGrabDistance, 1 << m_obstructionLayer, QueryTriggerInteraction.Ignore))
+                    if (Physics.Raycast(ray, out obstructionHitInfo, m_maxGrabDistance, 1 << m_obstructionLayer,
+                            QueryTriggerInteraction.Ignore))
                     {
                         DistanceGrabbable obstruction = null;
-                        if(hitInfo.collider != null)
+                        if (hitInfo.collider != null)
                         {
-                            obstruction = obstructionHitInfo.collider.gameObject.GetComponentInParent<DistanceGrabbable>();
+                            obstruction =
+                                obstructionHitInfo.collider.gameObject.GetComponentInParent<DistanceGrabbable>();
                         }
+
                         if (obstruction != grabbable && obstructionHitInfo.distance < hitInfo.distance)
                         {
                             dgOut = null;
@@ -355,17 +372,18 @@ namespace OculusSampleFramework
                     }
                 }
             }
+
             return dgOut != null;
         }
 
         protected override void GrabVolumeEnable(bool enabled)
         {
-            if(m_useSpherecast) enabled = false;
+            if (m_useSpherecast) enabled = false;
             base.GrabVolumeEnable(enabled);
         }
 
         // Just here to allow calling of a protected member function.
-      protected override void OffhandGrabbed(OVRGrabbable grabbable)
+        protected override void OffhandGrabbed(OVRGrabbable grabbable)
         {
             base.OffhandGrabbed(grabbable);
         }

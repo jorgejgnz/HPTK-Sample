@@ -161,7 +161,7 @@ namespace Oculus.Interaction.GrabAPI
             Debug.Assert(rv != ReturnValue.Failure, "FingerPalmGrabAPI: isdk_FingerPalmGrabAPI_UpdateHandData failed");
         }
 
-        public Vector3 GetCenterOffset()
+        public Vector3 GetWristOffsetLocal()
         {
             ReturnValue rv = isdk_FingerPalmGrabAPI_GetCenterOffset(GetHandle(), out Vector3 center);
             Debug.Assert(rv != ReturnValue.Failure, "FingerPalmGrabAPI: isdk_FingerPalmGrabAPI_GetCenterOffset failed");

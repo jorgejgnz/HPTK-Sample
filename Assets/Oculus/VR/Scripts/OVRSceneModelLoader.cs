@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
  *
@@ -18,7 +18,6 @@
  * limitations under the License.
  */
 
-
 using System.Collections;
 using UnityEngine;
 
@@ -26,9 +25,12 @@ using UnityEngine;
 /// Utility for loading a scene model. Derive from this class to customize the scene loading behavior and respond to
 /// events.
 /// </summary>
+[HelpURL("https://developer.oculus.com/reference/unity/latest/class_o_v_r_scene_model_loader")]
 [RequireComponent(typeof(OVRSceneManager))]
 public class OVRSceneModelLoader : MonoBehaviour
 {
+    private const float RetryingReminderDelay = 10;
+
     /// <summary>
     /// The <see cref="OVRSceneManager"/> component that this loader will use.
     /// </summary>
@@ -43,6 +45,7 @@ public class OVRSceneModelLoader : MonoBehaviour
         // Bind the events associated with LoadSceneModel()
         SceneManager.SceneModelLoadedSuccessfully += OnSceneModelLoadedSuccessfully;
         SceneManager.NoSceneModelToLoad += OnNoSceneModelToLoad;
+        SceneManager.NewSceneModelAvailable += OnNewSceneModelAvailable;
 
         // Bind the events associated with RequestSceneCapture()
         SceneManager.SceneCaptureReturnedWithoutError += OnSceneCaptureReturnedWithoutError;
@@ -53,12 +56,23 @@ public class OVRSceneModelLoader : MonoBehaviour
 
     private IEnumerator AttemptToLoadSceneModel()
     {
+        var timeSinceReminder = 0f;
+        OVRSceneManager.Development.LogWarning(nameof(OVRSceneModelLoader),
+            $"{nameof(OVRSceneManager.LoadSceneModel)} failed. Retrying.");
         do
         {
-            OVRSceneManager.Development.LogWarning(nameof(OVRSceneModelLoader),
-                $"{nameof(OVRSceneManager.LoadSceneModel)} failed. Will try again next frame.");
-          yield return null;
+            timeSinceReminder += Time.deltaTime;
+            if (timeSinceReminder >= RetryingReminderDelay)
+            {
+                timeSinceReminder = 0;
+                OVRSceneManager.Development.LogWarning(nameof(OVRSceneModelLoader),
+                    $"{nameof(OVRSceneManager.LoadSceneModel)} failed. Still retrying.");
+            }
+            yield return null;
         } while (!SceneManager.LoadSceneModel());
+
+        OVRSceneManager.Development.Log(nameof(OVRSceneModelLoader),
+            $"{nameof(OVRSceneManager.LoadSceneModel)} succeeded.");
     }
 
     /// <summary>
@@ -67,14 +81,26 @@ public class OVRSceneModelLoader : MonoBehaviour
     /// </summary>
     protected virtual void OnStart()
     {
-        // Load the scene
+        LoadSceneModel();
+    }
+
+    private void LoadSceneModel()
+    {
         SceneManager.Verbose?.Log(nameof(OVRSceneModelLoader),
             $"{nameof(OnStart)}() calling {nameof(OVRSceneManager)}.{nameof(OVRSceneManager.LoadSceneModel)}()");
 
         if (!SceneManager.LoadSceneModel())
         {
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || (UNITY_ANDROID && !UNITY_EDITOR)
-            StartCoroutine(AttemptToLoadSceneModel());
+            if (!OVRManager.isHmdPresent)
+            {
+                OVRSceneManager.Development.LogWarning(nameof(OVRSceneModelLoader),
+                    $"{nameof(OVRSceneManager.LoadSceneModel)} failed. No link or HMD detected.");
+            }
+            else
+            {
+                StartCoroutine(AttemptToLoadSceneModel());
+            }
 #endif
         }
     }
@@ -100,7 +126,7 @@ public class OVRSceneModelLoader : MonoBehaviour
             "There is no scene model available, and scene capture cannot be invoked over Link. " +
             "Please capture a scene with the HMD in standalone mode, then access the scene model over Link. " +
             "\n\n" +
-            "If a scene model has already been captured, make sure the HMD is connected via Link and that is is donned.",
+            "If a scene model has already been captured, make sure the HMD is connected via Link and that it is donned.",
             "Ok");
 #else
         if (_sceneCaptureRequested)
@@ -119,15 +145,24 @@ public class OVRSceneModelLoader : MonoBehaviour
     }
 
     /// <summary>
+    /// Invoked when the scene model has changed.
+    /// </summary>
+    protected virtual void OnNewSceneModelAvailable()
+    {
+        // New scene model detected, reloading the scene.
+        SceneManager.Verbose?.Log(nameof(OVRSceneModelLoader),
+            $"{nameof(OnNewSceneModelAvailable)}() calling {nameof(OVRSceneManager)}.{nameof(OVRSceneManager.LoadSceneModel)}()");
+        SceneManager.LoadSceneModel();
+    }
+
+    /// <summary>
     /// Invoked when the scene capture succeeds without error. The default behavior loads the scene model using
     /// <see cref="OVRSceneManager.LoadSceneModel"/>.
     /// </summary>
     protected virtual void OnSceneCaptureReturnedWithoutError()
     {
-        // The capture flow successfully returned, we can now load the scene model
-        SceneManager.Verbose?.Log(nameof(OVRSceneModelLoader),
-            $"{nameof(OnSceneCaptureReturnedWithoutError)}() calling {nameof(OVRSceneManager)}.{nameof(OVRSceneManager.LoadSceneModel)}()");
-        SceneManager.LoadSceneModel();
+        // The Room Setup successfully returned, we can now load the scene model
+        SceneManager.Verbose?.Log(nameof(OVRSceneModelLoader), $"Room setup returned without errors.");
     }
 
     /// <summary>
@@ -135,10 +170,9 @@ public class OVRSceneModelLoader : MonoBehaviour
     /// </summary>
     protected virtual void OnUnexpectedErrorWithSceneCapture()
     {
-        // An unexpected error was returned when invoking the capture flow. This prevents the user
+        // An unexpected error was returned when invoking the Room Setup. This prevents the user
         // from capturing their room.
         SceneManager.Verbose?.LogError(nameof(OVRSceneModelLoader),
-            "Requesting the capture flow failed. The Scene Model cannot be loaded.");
+            "Requesting the Room Setup failed. The Scene Model cannot be loaded.");
     }
 }
-

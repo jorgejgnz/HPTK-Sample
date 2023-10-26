@@ -25,7 +25,7 @@ using Oculus.Interaction.Surfaces;
 namespace Oculus.Interaction.Editor
 {
     [CustomEditor(typeof(PokeInteractable))]
-    public class PokeInteractableEditor : UnityEditor.Editor
+    public class PokeInteractableEditor : SimplifiedEditor
     {
         private PokeInteractable _interactable;
 

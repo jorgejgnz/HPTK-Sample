@@ -19,11 +19,7 @@
  */
 
 using System.Collections.Generic;
-using UnityEngine;
-using System.Reflection;
 using System.Linq;
-using UnityEngine.Assertions;
-using System;
 
 namespace Oculus.Interaction.PoseDetection.Debug
 {
@@ -33,83 +29,17 @@ namespace Oculus.Interaction.PoseDetection.Debug
     }
 
     public abstract class ActiveStateModel<TActiveState> : IActiveStateModel
-        where TActiveState : MonoBehaviour, IActiveState
+        where TActiveState : class, IActiveState
     {
-        protected Type Type => typeof(TActiveState);
-
-        public virtual IEnumerable<IActiveState> GetChildren(TActiveState activeState)
+        public IEnumerable<IActiveState> GetChildren(IActiveState activeState)
         {
+            if (activeState is TActiveState type)
+            {
+                return GetChildren(type);
+            }
             return Enumerable.Empty<IActiveState>();
         }
 
-        public IEnumerable<IActiveState> GetChildren(IActiveState activeState)
-        {
-            Assert.AreEqual(activeState.GetType(), Type,
-                $"Expected MonoBehaviour of type {Type.Name}");
-            return GetChildren(activeState as TActiveState);
-        }
-    }
-
-    public class ActiveStateGroupModel : ActiveStateModel<ActiveStateGroup>
-    {
-        public override IEnumerable<IActiveState> GetChildren(ActiveStateGroup group)
-        {
-            List<IActiveState> children =
-                Type.GetField("ActiveStates", BindingFlags.Instance | BindingFlags.NonPublic)
-                .GetValue(group) as List<IActiveState>;
-            return children;
-        }
-    }
-
-    public class SequenceModel : ActiveStateModel<Sequence>
-    {
-        private IActiveState GetActiveStateFromStep(Sequence.ActivationStep step)
-        {
-            step.Start();
-            return step.ActiveState;
-        }
-
-        public override IEnumerable<IActiveState> GetChildren(Sequence sequence)
-        {
-            Sequence.ActivationStep[] steps =
-                Type.GetField("_stepsToActivate", BindingFlags.Instance | BindingFlags.NonPublic)
-                .GetValue(sequence) as Sequence.ActivationStep[];
-            List<IActiveState> children = new List<IActiveState>(
-                steps.Select(GetActiveStateFromStep));
-
-            IActiveState remainActiveWhile =
-                Type.GetProperty("RemainActiveWhile", BindingFlags.Instance | BindingFlags.NonPublic)
-                .GetValue(sequence) as IActiveState;
-
-            if (remainActiveWhile != null)
-            {
-                children.Add(remainActiveWhile);
-            }
-            return children;
-        }
-    }
-
-    public class SequenceActiveStateModel : ActiveStateModel<SequenceActiveState>
-    {
-        public override IEnumerable<IActiveState> GetChildren(SequenceActiveState seqActiveState)
-        {
-            Sequence sequence =
-                Type.GetField("_sequence", BindingFlags.Instance | BindingFlags.NonPublic)
-                .GetValue(seqActiveState) as Sequence;
-            return new List<IActiveState>() { sequence };
-        }
-    }
-
-    public class ActiveStateNotModel : ActiveStateModel<ActiveStateNot>
-    {
-        public override IEnumerable<IActiveState> GetChildren(ActiveStateNot not)
-        {
-            List<IActiveState> children = new List<IActiveState>()
-            {
-                Type.GetField("ActiveState", BindingFlags.Instance | BindingFlags.NonPublic)
-                    .GetValue(not) as IActiveState
-            };
-            return children;
-        }
+        protected abstract IEnumerable<IActiveState> GetChildren(TActiveState activeState);
     }
 }

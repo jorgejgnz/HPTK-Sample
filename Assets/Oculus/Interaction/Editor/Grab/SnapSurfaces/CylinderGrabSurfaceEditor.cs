@@ -38,74 +38,91 @@ namespace Oculus.Interaction.Grab.GrabSurfaces.Editor
 
         private CylinderGrabSurface _surface;
         private SerializedProperty _relativeToProperty;
+        private Transform _relativeTo;
 
         private void OnEnable()
         {
             _arcStartHandle.SetColorWithRadiusHandle(EditorConstants.PRIMARY_COLOR_DISABLED, 0f);
             _arcEndHandle.SetColorWithRadiusHandle(EditorConstants.PRIMARY_COLOR, 0f);
-            _surface = (target as CylinderGrabSurface);
+            _surface = target as CylinderGrabSurface;
             _relativeToProperty = serializedObject.FindProperty("_relativeTo");
+        }
+
+        public override void OnInspectorGUI()
+        {
+            base.OnInspectorGUI();
+            _relativeTo = _relativeToProperty.objectReferenceValue as Transform;
         }
 
         public void OnSceneGUI()
         {
-            DrawEndsCaps(_surface);
+            if (_relativeTo == null)
+            {
+                return;
+            }
+            DrawEndsCaps(_surface, _relativeTo);
 
             float oldArcStart = _surface.ArcOffset;
-            float newArcStart = DrawArcEditor(_surface, _arcStartHandle,
-                oldArcStart, Quaternion.LookRotation(_surface.OriginalDir, _surface.Direction));
+            Quaternion look = Quaternion.LookRotation(_surface.GetPerpendicularDir(_relativeTo), _surface.GetDirection(_relativeTo));
+            float newArcStart = DrawArcEditor(_surface, _arcStartHandle, _relativeTo,
+                oldArcStart,_surface.GetStartPoint(_relativeTo),
+                look);
 
             _surface.ArcOffset = newArcStart;
             _surface.ArcLength -= newArcStart - oldArcStart;
-
-            _surface.ArcLength = DrawArcEditor(_surface, _arcEndHandle,
-                _surface.ArcLength, Quaternion.LookRotation(_surface.StartArcDir, _surface.Direction));
+            _surface.ArcLength = DrawArcEditor(_surface, _arcEndHandle, _relativeTo,
+                _surface.ArcLength,
+                _surface.GetStartPoint(_relativeTo),
+                Quaternion.LookRotation(_surface.GetStartArcDir(_relativeTo), _surface.GetDirection(_relativeTo)));
 
             if (Event.current.type == EventType.Repaint)
             {
-                DrawSurfaceVolume(_surface);
+                DrawSurfaceVolume(_surface, _relativeTo);
             }
         }
 
-        private void DrawEndsCaps(CylinderGrabSurface surface)
+        private void DrawEndsCaps(CylinderGrabSurface surface, Transform relativeTo)
         {
             EditorGUI.BeginChangeCheck();
-            Transform relative = _relativeToProperty.objectReferenceValue as Transform ?? surface.transform;
-            Quaternion handleRotation = relative.rotation;
+            Quaternion handleRotation = relativeTo.rotation;
 
-            Vector3 startPosition = Handles.PositionHandle(surface.StartPoint, handleRotation);
+            Vector3 startPosition = Handles.PositionHandle(surface.GetStartPoint(relativeTo), handleRotation);
             if (EditorGUI.EndChangeCheck())
             {
                 Undo.RecordObject(surface, "Change Start Cylinder Position");
-                surface.StartPoint = startPosition;
+                surface.SetStartPoint(startPosition, relativeTo);
             }
             EditorGUI.BeginChangeCheck();
-            Vector3 endPosition = Handles.PositionHandle(surface.EndPoint, handleRotation);
+            Vector3 endPosition = Handles.PositionHandle(surface.GetEndPoint(relativeTo), handleRotation);
             if (EditorGUI.EndChangeCheck())
             {
                 Undo.RecordObject(surface, "Change Start Cylinder Position");
-                surface.EndPoint = endPosition;
+                surface.SetEndPoint(endPosition, relativeTo);
             }
         }
 
-        private void DrawSurfaceVolume(CylinderGrabSurface surface)
+        private void DrawSurfaceVolume(CylinderGrabSurface surface, Transform relativeTo)
         {
-            Vector3 start = surface.StartPoint;
-            Vector3 end = surface.EndPoint;
-            float radius = surface.Radius;
+            Vector3 start = surface.GetStartPoint(relativeTo);
+            Vector3 end = surface.GetEndPoint(relativeTo);
+            Vector3 startArc = surface.GetStartArcDir(relativeTo);
+            Vector3 endArc = surface.GetEndArcDir(relativeTo);
+            Vector3 direction = surface.GetDirection(relativeTo);
+
+            float radius = surface.GetRadius(relativeTo);
 
             Handles.color = EditorConstants.PRIMARY_COLOR;
             Handles.DrawWireArc(end,
-                surface.Direction,
-                surface.StartArcDir,
+                direction,
+                startArc,
                 surface.ArcLength,
                 radius);
 
             Handles.DrawLine(start, end);
-            Handles.DrawLine(start, start + surface.StartArcDir * radius);
-            Handles.DrawLine(start, start + surface.EndArcDir * radius);
-            Handles.DrawLine(end, end + surface.StartArcDir * radius);
-            Handles.DrawLine(end, end + surface.EndArcDir * radius);
+            Handles.DrawLine(start, start + startArc * radius);
+            Handles.DrawLine(start, start + endArc * radius);
+            Handles.DrawLine(end, end + startArc * radius);
+            Handles.DrawLine(end, end + endArc * radius);
 
             int edgePoints = Mathf.CeilToInt((2 * surface.ArcLength) / DRAW_SURFACE_ANGULAR_RESOLUTION) + 3;
             if (_surfaceEdges == null
@@ -118,22 +135,23 @@ namespace Oculus.Interaction.Grab.GrabSurfaces.Editor
             int i = 0;
             for (float angle = 0f; angle < surface.ArcLength; angle += DRAW_SURFACE_ANGULAR_RESOLUTION)
             {
-                Vector3 direction = Quaternion.AngleAxis(angle, surface.Direction) * surface.StartArcDir;
-                _surfaceEdges[i++] = start + direction * radius;
-                _surfaceEdges[i++] = end + direction * radius;
+                Vector3 dir = Quaternion.AngleAxis(angle, direction) * startArc;
+                _surfaceEdges[i++] = start + dir * radius;
+                _surfaceEdges[i++] = end + dir * radius;
             }
-            _surfaceEdges[i++] = start + surface.EndArcDir * radius;
-            _surfaceEdges[i++] = end + surface.EndArcDir * radius;
+            _surfaceEdges[i++] = start + endArc * radius;
+            _surfaceEdges[i++] = end + endArc * radius;
             Handles.DrawPolyLine(_surfaceEdges);
         }
 
-        private float DrawArcEditor(CylinderGrabSurface surface, ArcHandle handle, float inputAngle, Quaternion rotation)
+        private float DrawArcEditor(CylinderGrabSurface surface, ArcHandle handle, Transform relativeTo,
+            float inputAngle, Vector3 position, Quaternion rotation)
         {
-            handle.radius = surface.Radius;
+            handle.radius = surface.GetRadius(relativeTo);
             handle.angle = inputAngle;
 
             Matrix4x4 handleMatrix = Matrix4x4.TRS(
-                surface.StartPoint,
+                position,
                 rotation,
                 Vector3.one
             );

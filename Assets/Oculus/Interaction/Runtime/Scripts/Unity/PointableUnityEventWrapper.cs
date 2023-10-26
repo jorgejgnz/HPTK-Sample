@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
  *
@@ -20,9 +20,7 @@
 
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Assertions;
 using UnityEngine.Events;
-using UnityEngine.Serialization;
 
 namespace Oculus.Interaction
 {
@@ -33,35 +31,33 @@ namespace Oculus.Interaction
     public class PointableUnityEventWrapper : MonoBehaviour
     {
         [SerializeField, Interface(typeof(IPointable))]
-        private MonoBehaviour _pointable;
+        private UnityEngine.Object _pointable;
         private IPointable Pointable;
 
         private HashSet<int> _pointers;
 
         [SerializeField]
-        private UnityEvent _whenRelease;
+        private UnityEvent<PointerEvent> _whenRelease;
+        [SerializeField]
+        private UnityEvent<PointerEvent> _whenHover;
+        [SerializeField]
+        private UnityEvent<PointerEvent> _whenUnhover;
+        [SerializeField]
+        private UnityEvent<PointerEvent> _whenSelect;
+        [SerializeField]
+        private UnityEvent<PointerEvent> _whenUnselect;
+        [SerializeField]
+        private UnityEvent<PointerEvent> _whenMove;
+        [SerializeField]
+        private UnityEvent<PointerEvent> _whenCancel;
 
-        [SerializeField]
-        private UnityEvent _whenHover;
-        [SerializeField]
-        private UnityEvent _whenUnhover;
-        [SerializeField]
-        private UnityEvent _whenSelect;
-        [SerializeField]
-        private UnityEvent _whenUnselect;
-        [SerializeField]
-        private UnityEvent _whenMove;
-        [SerializeField]
-        private UnityEvent _whenCancel;
-
-        public UnityEvent WhenRelease => _whenRelease;
-
-        public UnityEvent WhenHover => _whenHover;
-        public UnityEvent WhenUnhover => _whenUnhover;
-        public UnityEvent WhenSelect => _whenSelect;
-        public UnityEvent WhenUnselect => _whenUnselect;
-        public UnityEvent WhenMove => _whenMove;
-        public UnityEvent WhenCancel => _whenCancel;
+        public UnityEvent<PointerEvent> WhenRelease => _whenRelease;
+        public UnityEvent<PointerEvent> WhenHover => _whenHover;
+        public UnityEvent<PointerEvent> WhenUnhover => _whenUnhover;
+        public UnityEvent<PointerEvent> WhenSelect => _whenSelect;
+        public UnityEvent<PointerEvent> WhenUnselect => _whenUnselect;
+        public UnityEvent<PointerEvent> WhenMove => _whenMove;
+        public UnityEvent<PointerEvent> WhenCancel => _whenCancel;
 
         protected bool _started = false;
 
@@ -99,28 +95,28 @@ namespace Oculus.Interaction
             switch (evt.Type)
             {
                 case PointerEventType.Hover:
-                    _whenHover.Invoke();
+                    _whenHover.Invoke(evt);
                     _pointers.Add(evt.Identifier);
                     break;
                 case PointerEventType.Unhover:
-                    _whenUnhover.Invoke();
+                    _whenUnhover.Invoke(evt);
                     _pointers.Remove(evt.Identifier);
                     break;
                 case PointerEventType.Select:
-                    _whenSelect.Invoke();
+                    _whenSelect.Invoke(evt);
                     break;
                 case PointerEventType.Unselect:
                     if (_pointers.Contains(evt.Identifier))
                     {
-                        _whenRelease.Invoke();
+                        _whenRelease.Invoke(evt);
                     }
-                    _whenUnselect.Invoke();
+                    _whenUnselect.Invoke(evt);
                     break;
                 case PointerEventType.Move:
-                    _whenMove.Invoke();
+                    _whenMove.Invoke(evt);
                     break;
                 case PointerEventType.Cancel:
-                    _whenCancel.Invoke();
+                    _whenCancel.Invoke(evt);
                     _pointers.Remove(evt.Identifier);
                     break;
             }
@@ -135,7 +131,7 @@ namespace Oculus.Interaction
 
         public void InjectPointable(IPointable pointable)
         {
-            _pointable = pointable as MonoBehaviour;
+            _pointable = pointable as UnityEngine.Object;
             Pointable = pointable;
         }
 

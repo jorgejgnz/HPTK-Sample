@@ -20,5 +20,5 @@
 
 public class OVRCameraComposition
 {
-	// deprecated since SDK 1.49
+    // deprecated since SDK 1.49
 }

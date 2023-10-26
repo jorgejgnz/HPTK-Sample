@@ -25,6 +25,7 @@ using System.Collections;
 /// <summary>
 /// Visualizes progress for operations such as loading.
 /// </summary>
+[HelpURL("https://developer.oculus.com/reference/unity/latest/class_o_v_r_progress_indicator")]
 public class OVRProgressIndicator : MonoBehaviour
 {
     public MeshRenderer progressImage;
@@ -38,11 +39,9 @@ public class OVRProgressIndicator : MonoBehaviour
     }
 
 
-
     // Update is called once per frame
     void Update()
     {
-        progressImage.sharedMaterial.SetFloat("_AlphaCutoff", 1-currentProgress);
-
+        progressImage.sharedMaterial.SetFloat("_AlphaCutoff", 1 - currentProgress);
     }
 }

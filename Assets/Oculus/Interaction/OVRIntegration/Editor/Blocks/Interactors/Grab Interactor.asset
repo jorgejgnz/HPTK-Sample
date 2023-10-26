@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a430ea2bca400b540a4897c70ffeb696, type: 3}
+  m_Name: Grab Interactor
+  m_EditorClassIdentifier: 
+  id: 4187448e-9c2a-4021-ad92-fb65840f2721
+  version: 1
+  blockName: Grab Interactor
+  description: Internal grab logic for hands
+  sdk: 0
+  thumbnail: {fileID: 0}
+  displayOnContentTab: 0
+  experimental: 1
+  order: 0
+  prefab: {fileID: 1528814639904349777, guid: cd2af620b985a894881abfc004e150ec, type: 3}
+  dependencies:
+  - 0393ca30-f2a9-4865-a40f-f9a68d01c3a9
+  isSingleton: 1
+  _handsBlockId: 0393ca30-f2a9-4865-a40f-f9a68d01c3a9
+  _interactorName: Grab

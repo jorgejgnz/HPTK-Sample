@@ -70,7 +70,7 @@ namespace Oculus.Interaction.Input
 
             OVRInput.Hand ovrHandedness = (ovrController == OVRInput.Controller.LTouch) ? OVRInput.Hand.HandLeft : OVRInput.Hand.HandRight;
             OVRInput.InteractionProfile ovrProfile = OVRInput.GetCurrentInteractionProfile(ovrHandedness);
-            return ovrProfile == OVRInput.InteractionProfile.TouchPro;
+            return ovrProfile != OVRInput.InteractionProfile.Touch;
         }
     }
 }

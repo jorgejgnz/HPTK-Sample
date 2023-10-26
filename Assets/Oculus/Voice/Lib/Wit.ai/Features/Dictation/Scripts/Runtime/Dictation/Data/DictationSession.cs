@@ -25,6 +25,6 @@ namespace Meta.WitAi.Dictation.Data
         /// <summary>
         /// An identifier for the current dictation session
         /// </summary>
-        public string sessionId;
+        public string sessionId = Guid.NewGuid().ToString();
     }
 }

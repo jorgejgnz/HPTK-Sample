@@ -164,7 +164,7 @@ namespace Meta.WitAi
                 // Destroy
                 if (this != null && gameObject != null)
                 {
-                    DestroyImmediate(gameObject);
+                    gameObject.DestroySafely();
                 }
             }
             // Unload

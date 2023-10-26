@@ -11,7 +11,9 @@ public class LocalizedHaptics : MonoBehaviour
 
     private void Start()
     {
-        m_controller = m_handedness == OVRInput.Handedness.LeftHanded ? OVRInput.Controller.LTouch : OVRInput.Controller.RTouch;
+        m_controller = m_handedness == OVRInput.Handedness.LeftHanded
+            ? OVRInput.Controller.LTouch
+            : OVRInput.Controller.RTouch;
     }
 
     private void Update()

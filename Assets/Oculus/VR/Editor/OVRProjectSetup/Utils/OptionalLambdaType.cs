@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
  *
@@ -23,24 +23,24 @@ using System.Collections.Generic;
 
 internal abstract class OptionalLambdaType<TLambdaArgumentType, TValueType>
 {
-	public static OptionalLambdaType<TLambdaArgumentType, TValueType> Create(TValueType value,
-		Func<TLambdaArgumentType, TValueType> lambda, bool allowCache)
+    public static OptionalLambdaType<TLambdaArgumentType, TValueType> Create(TValueType value,
+        Func<TLambdaArgumentType, TValueType> lambda, bool allowCache)
     {
         OptionalLambdaType<TLambdaArgumentType, TValueType> optionalLambdaType = null;
         if (lambda != null)
         {
-	        if (allowCache)
-	        {
-		        optionalLambdaType = new OptionalLambdaTypeWithCachedLambda<TLambdaArgumentType, TValueType>(lambda);
-	        }
-	        else
-	        {
-		        optionalLambdaType = new OptionalLambdaTypeWithLambda<TLambdaArgumentType, TValueType>(lambda);
-	        }
+            if (allowCache)
+            {
+                optionalLambdaType = new OptionalLambdaTypeWithCachedLambda<TLambdaArgumentType, TValueType>(lambda);
+            }
+            else
+            {
+                optionalLambdaType = new OptionalLambdaTypeWithLambda<TLambdaArgumentType, TValueType>(lambda);
+            }
         }
         else
         {
-	        optionalLambdaType = new OptionalLambdaTypeWithoutLambda<TLambdaArgumentType, TValueType>(value);
+            optionalLambdaType = new OptionalLambdaTypeWithoutLambda<TLambdaArgumentType, TValueType>(value);
         }
 
         return optionalLambdaType;
@@ -52,7 +52,8 @@ internal abstract class OptionalLambdaType<TLambdaArgumentType, TValueType>
         return optionalLambdaType;
     }
 
-    public static implicit operator OptionalLambdaType<TLambdaArgumentType, TValueType>(Func<TLambdaArgumentType, TValueType> lambda)
+    public static implicit operator OptionalLambdaType<TLambdaArgumentType, TValueType>(
+        Func<TLambdaArgumentType, TValueType> lambda)
     {
         var optionalLambdaType = new OptionalLambdaTypeWithLambda<TLambdaArgumentType, TValueType>(lambda);
         return optionalLambdaType;
@@ -61,10 +62,14 @@ internal abstract class OptionalLambdaType<TLambdaArgumentType, TValueType>
     public abstract bool Valid { get; }
     public abstract TValueType GetValue(TLambdaArgumentType arg);
     public abstract TValueType Default { get; }
-    public virtual void InvalidateCache(TLambdaArgumentType arg) {}
+
+    public virtual void InvalidateCache(TLambdaArgumentType arg)
+    {
+    }
 }
 
-internal class OptionalLambdaTypeWithoutLambda<TLambdaArgumentType, TValueType> : OptionalLambdaType<TLambdaArgumentType, TValueType>
+internal class OptionalLambdaTypeWithoutLambda<TLambdaArgumentType, TValueType>
+    : OptionalLambdaType<TLambdaArgumentType, TValueType>
 {
     private readonly TValueType _value;
 
@@ -78,13 +83,14 @@ internal class OptionalLambdaTypeWithoutLambda<TLambdaArgumentType, TValueType> 
     public override bool Valid => _value != null;
 }
 
-internal class OptionalLambdaTypeWithLambda<TLambdaArgumentType, TValueType> : OptionalLambdaType<TLambdaArgumentType, TValueType>
+internal class OptionalLambdaTypeWithLambda<TLambdaArgumentType, TValueType>
+    : OptionalLambdaType<TLambdaArgumentType, TValueType>
 {
     protected readonly Func<TLambdaArgumentType, TValueType> Lambda;
 
     public OptionalLambdaTypeWithLambda(Func<TLambdaArgumentType, TValueType> lambda)
     {
-	    Lambda = lambda;
+        Lambda = lambda;
     }
 
     public override TValueType GetValue(TLambdaArgumentType arg) => Lambda.Invoke(arg);
@@ -93,29 +99,29 @@ internal class OptionalLambdaTypeWithLambda<TLambdaArgumentType, TValueType> : O
     public override bool Valid => Lambda != null && Default != null;
 }
 
-internal class OptionalLambdaTypeWithCachedLambda<TLambdaArgumentType, TValueType> :
-	OptionalLambdaTypeWithLambda<TLambdaArgumentType, TValueType>
+internal class OptionalLambdaTypeWithCachedLambda<TLambdaArgumentType, TValueType>
+    : OptionalLambdaTypeWithLambda<TLambdaArgumentType, TValueType>
 {
-	private readonly Dictionary<TLambdaArgumentType, TValueType> _cachedValues =
-		new Dictionary<TLambdaArgumentType, TValueType>();
+    private readonly Dictionary<TLambdaArgumentType, TValueType> _cachedValues =
+        new Dictionary<TLambdaArgumentType, TValueType>();
 
-	public OptionalLambdaTypeWithCachedLambda(Func<TLambdaArgumentType, TValueType> lambda) : base(lambda)
-	{
-	}
+    public OptionalLambdaTypeWithCachedLambda(Func<TLambdaArgumentType, TValueType> lambda) : base(lambda)
+    {
+    }
 
-	public override TValueType GetValue(TLambdaArgumentType arg)
-	{
-		if (!_cachedValues.TryGetValue(arg, out var value))
-		{
-			value = base.GetValue(arg);
-			_cachedValues.Add(arg, value);
-		}
+    public override TValueType GetValue(TLambdaArgumentType arg)
+    {
+        if (!_cachedValues.TryGetValue(arg, out var value))
+        {
+            value = base.GetValue(arg);
+            _cachedValues.Add(arg, value);
+        }
 
-		return value;
-	}
+        return value;
+    }
 
-	public override void InvalidateCache(TLambdaArgumentType arg)
-	{
-		_cachedValues.Remove(arg);
-	}
+    public override void InvalidateCache(TLambdaArgumentType arg)
+    {
+        _cachedValues.Remove(arg);
+    }
 }

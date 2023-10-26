@@ -1,0 +1,20 @@
+{
+    "name": "Meta.XR.BuildingBlocks.Editor",
+    "rootNamespace": "",
+    "references": [
+        "Oculus.VR",
+        "Oculus.VR.Editor",
+        "Meta.XR.BuildingBlocks"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

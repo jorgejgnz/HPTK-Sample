@@ -25,173 +25,178 @@ using UnityEngine;
 /// <summary>
 /// An infrared camera that tracks the position of a head-mounted display.
 /// </summary>
+[HelpURL("https://developer.oculus.com/reference/unity/latest/class_o_v_r_tracker")]
 public class OVRTracker
 {
-	/// <summary>
-	/// The (symmetric) visible area in front of the sensor.
-	/// </summary>
-	public struct Frustum
-	{
-		/// <summary>
-		/// The sensor's minimum supported distance to the HMD.
-		/// </summary>
-		public float nearZ;
-		/// <summary>
-		/// The sensor's maximum supported distance to the HMD.
-		/// </summary>
-		public float farZ;
-		/// <summary>
-		/// The sensor's horizontal and vertical fields of view in degrees.
-		/// </summary>
-		public Vector2 fov;
-	}
+    /// <summary>
+    /// The (symmetric) visible area in front of the sensor.
+    /// </summary>
+    public struct Frustum
+    {
+        /// <summary>
+        /// The sensor's minimum supported distance to the HMD.
+        /// </summary>
+        public float nearZ;
 
-	/// <summary>
-	/// If true, a sensor is attached to the system.
-	/// </summary>
-	public bool isPresent
-	{
-		get {
-			if (!OVRManager.isHmdPresent)
-				return false;
+        /// <summary>
+        /// The sensor's maximum supported distance to the HMD.
+        /// </summary>
+        public float farZ;
 
-			return OVRPlugin.positionSupported;
-		}
-	}
+        /// <summary>
+        /// The sensor's horizontal and vertical fields of view in degrees.
+        /// </summary>
+        public Vector2 fov;
+    }
 
-	/// <summary>
-	/// If true, the sensor is actively tracking the HMD's position. Otherwise the HMD may be temporarily occluded, the system may not support position tracking, etc.
-	/// </summary>
-	public bool isPositionTracked
-	{
-		get {
-			return OVRPlugin.positionTracked;
-		}
-	}
+    /// <summary>
+    /// If true, a sensor is attached to the system.
+    /// </summary>
+    public bool isPresent
+    {
+        get
+        {
+            if (!OVRManager.isHmdPresent)
+                return false;
 
-	/// <summary>
-	/// If this is true and a sensor is available, the system will use position tracking when isPositionTracked is also true.
-	/// </summary>
-	public bool isEnabled
-	{
-		get {
-			if (!OVRManager.isHmdPresent)
-				return false;
+            return OVRPlugin.positionSupported;
+        }
+    }
 
-			return OVRPlugin.position;
-		}
+    /// <summary>
+    /// If true, the sensor is actively tracking the HMD's position. Otherwise the HMD may be temporarily occluded, the system may not support position tracking, etc.
+    /// </summary>
+    public bool isPositionTracked
+    {
+        get { return OVRPlugin.positionTracked; }
+    }
 
-		set {
-			if (!OVRManager.isHmdPresent)
-				return;
+    /// <summary>
+    /// If this is true and a sensor is available, the system will use position tracking when isPositionTracked is also true.
+    /// </summary>
+    public bool isEnabled
+    {
+        get
+        {
+            if (!OVRManager.isHmdPresent)
+                return false;
 
-			OVRPlugin.position = value;
-		}
-	}
+            return OVRPlugin.position;
+        }
 
-	/// <summary>
-	/// Returns the number of sensors currently connected to the system.
-	/// </summary>
-	public int count
-	{
-		get {
-			int count = 0;
+        set
+        {
+            if (!OVRManager.isHmdPresent)
+                return;
 
-			for (int i = 0; i < (int)OVRPlugin.Tracker.Count; ++i)
-			{
-				if (GetPresent(i))
-					count++;
-			}
+            OVRPlugin.position = value;
+        }
+    }
 
-			return count;
-		}
-	}
+    /// <summary>
+    /// Returns the number of sensors currently connected to the system.
+    /// </summary>
+    public int count
+    {
+        get
+        {
+            int count = 0;
 
-	/// <summary>
-	/// Gets the sensor's viewing frustum.
-	/// </summary>
-	public Frustum GetFrustum(int tracker = 0)
-	{
-		if (!OVRManager.isHmdPresent)
-			return new Frustum();
+            for (int i = 0; i < (int)OVRPlugin.Tracker.Count; ++i)
+            {
+                if (GetPresent(i))
+                    count++;
+            }
 
-		return OVRPlugin.GetTrackerFrustum((OVRPlugin.Tracker)tracker).ToFrustum();
-	}
+            return count;
+        }
+    }
 
-	/// <summary>
-	/// Gets the sensor's pose, relative to the head's pose at the time of the last pose recentering.
-	/// </summary>
-	public OVRPose GetPose(int tracker = 0)
-	{
-		if (!OVRManager.isHmdPresent)
-			return OVRPose.identity;
+    /// <summary>
+    /// Gets the sensor's viewing frustum.
+    /// </summary>
+    public Frustum GetFrustum(int tracker = 0)
+    {
+        if (!OVRManager.isHmdPresent)
+            return new Frustum();
 
-		OVRPose p;
-		switch (tracker)
-		{
-			case 0:
-				p = OVRPlugin.GetNodePose(OVRPlugin.Node.TrackerZero, OVRPlugin.Step.Render).ToOVRPose();
-				break;
-			case 1:
-				p = OVRPlugin.GetNodePose(OVRPlugin.Node.TrackerOne, OVRPlugin.Step.Render).ToOVRPose();
-				break;
-			case 2:
-				p = OVRPlugin.GetNodePose(OVRPlugin.Node.TrackerTwo, OVRPlugin.Step.Render).ToOVRPose();
-				break;
-			case 3:
-				p = OVRPlugin.GetNodePose(OVRPlugin.Node.TrackerThree, OVRPlugin.Step.Render).ToOVRPose();
-				break;
-			default:
-				return OVRPose.identity;
-		}
+        return OVRPlugin.GetTrackerFrustum((OVRPlugin.Tracker)tracker).ToFrustum();
+    }
 
-		return new OVRPose()
-		{
-			position = p.position,
-			orientation = p.orientation * Quaternion.Euler(0, 180, 0)
-		};
-	}
+    /// <summary>
+    /// Gets the sensor's pose, relative to the head's pose at the time of the last pose recentering.
+    /// </summary>
+    public OVRPose GetPose(int tracker = 0)
+    {
+        if (!OVRManager.isHmdPresent)
+            return OVRPose.identity;
 
-	/// <summary>
-	/// If true, the pose of the sensor is valid and is ready to be queried.
-	/// </summary>
-	public bool GetPoseValid(int tracker = 0)
-	{
-		if (!OVRManager.isHmdPresent)
-			return false;
+        OVRPose p;
+        switch (tracker)
+        {
+            case 0:
+                p = OVRPlugin.GetNodePose(OVRPlugin.Node.TrackerZero, OVRPlugin.Step.Render).ToOVRPose();
+                break;
+            case 1:
+                p = OVRPlugin.GetNodePose(OVRPlugin.Node.TrackerOne, OVRPlugin.Step.Render).ToOVRPose();
+                break;
+            case 2:
+                p = OVRPlugin.GetNodePose(OVRPlugin.Node.TrackerTwo, OVRPlugin.Step.Render).ToOVRPose();
+                break;
+            case 3:
+                p = OVRPlugin.GetNodePose(OVRPlugin.Node.TrackerThree, OVRPlugin.Step.Render).ToOVRPose();
+                break;
+            default:
+                return OVRPose.identity;
+        }
 
-		switch (tracker)
-		{
-			case 0:
-				return OVRPlugin.GetNodePositionTracked(OVRPlugin.Node.TrackerZero);
-			case 1:
-				return OVRPlugin.GetNodePositionTracked(OVRPlugin.Node.TrackerOne);
-			case 2:
-				return OVRPlugin.GetNodePositionTracked(OVRPlugin.Node.TrackerTwo);
-			case 3:
-				return OVRPlugin.GetNodePositionTracked(OVRPlugin.Node.TrackerThree);
-			default:
-				return false;
-		}
-	}
+        return new OVRPose()
+        {
+            position = p.position,
+            orientation = p.orientation * Quaternion.Euler(0, 180, 0)
+        };
+    }
 
-	public bool GetPresent(int tracker = 0)
-	{
-		if (!OVRManager.isHmdPresent)
-			return false;
+    /// <summary>
+    /// If true, the pose of the sensor is valid and is ready to be queried.
+    /// </summary>
+    public bool GetPoseValid(int tracker = 0)
+    {
+        if (!OVRManager.isHmdPresent)
+            return false;
 
-		switch (tracker)
-		{
-			case 0:
-				return OVRPlugin.GetNodePresent(OVRPlugin.Node.TrackerZero);
-			case 1:
-				return OVRPlugin.GetNodePresent(OVRPlugin.Node.TrackerOne);
-			case 2:
-				return OVRPlugin.GetNodePresent(OVRPlugin.Node.TrackerTwo);
-			case 3:
-				return OVRPlugin.GetNodePresent(OVRPlugin.Node.TrackerThree);
-			default:
-				return false;
-		}
-	}
+        switch (tracker)
+        {
+            case 0:
+                return OVRPlugin.GetNodePositionTracked(OVRPlugin.Node.TrackerZero);
+            case 1:
+                return OVRPlugin.GetNodePositionTracked(OVRPlugin.Node.TrackerOne);
+            case 2:
+                return OVRPlugin.GetNodePositionTracked(OVRPlugin.Node.TrackerTwo);
+            case 3:
+                return OVRPlugin.GetNodePositionTracked(OVRPlugin.Node.TrackerThree);
+            default:
+                return false;
+        }
+    }
+
+    public bool GetPresent(int tracker = 0)
+    {
+        if (!OVRManager.isHmdPresent)
+            return false;
+
+        switch (tracker)
+        {
+            case 0:
+                return OVRPlugin.GetNodePresent(OVRPlugin.Node.TrackerZero);
+            case 1:
+                return OVRPlugin.GetNodePresent(OVRPlugin.Node.TrackerOne);
+            case 2:
+                return OVRPlugin.GetNodePresent(OVRPlugin.Node.TrackerTwo);
+            case 3:
+                return OVRPlugin.GetNodePresent(OVRPlugin.Node.TrackerThree);
+            default:
+                return false;
+        }
+    }
 }

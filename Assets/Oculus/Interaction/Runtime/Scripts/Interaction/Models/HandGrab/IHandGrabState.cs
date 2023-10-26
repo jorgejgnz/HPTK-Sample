@@ -47,7 +47,37 @@ namespace Oculus.Interaction.HandGrab
         float FingersStrength { get; }
         float WristStrength { get; }
         Pose WristToGrabPoseOffset { get; }
-        HandFingerFlags GrabbingFingers();
         HandGrabTarget HandGrabTarget { get; }
+
+        HandFingerFlags GrabbingFingers();
+    }
+
+    public static class HandGrabStateExtensions
+    {
+        public static Pose GetVisualWristPose(this IHandGrabState grabState)
+        {
+            if (grabState.HandGrabTarget.HandPose != null)
+            {
+                return grabState.HandGrabTarget.GetWorldPoseDisplaced(Pose.identity);
+            }
+            else
+            {
+                Pose invertOffset = Pose.identity;
+                PoseUtils.Inverse(grabState.WristToGrabPoseOffset, ref invertOffset);
+                return grabState.HandGrabTarget.GetWorldPoseDisplaced(invertOffset);
+            }
+        }
+
+        public static Pose GetTargetGrabPose(this IHandGrabState grabState)
+        {
+            if (grabState.HandGrabTarget.HandPose != null)
+            {
+                return grabState.HandGrabTarget.GetWorldPoseDisplaced(grabState.WristToGrabPoseOffset);
+            }
+            else
+            {
+                return grabState.HandGrabTarget.GetWorldPoseDisplaced(Pose.identity);
+            }
+        }
     }
 }

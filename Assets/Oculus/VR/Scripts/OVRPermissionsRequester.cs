@@ -51,12 +51,18 @@ internal static class OVRPermissionsRequester
         /// <summary>
         /// Represents the Eye Tracking capability.
         /// </summary>
-        EyeTracking
+        EyeTracking,
+
+        /// <summary>
+        /// Represents the Scene capability.
+        /// </summary>
+        Scene,
     }
 
     private const string FaceTrackingPermission = "com.oculus.permission.FACE_TRACKING";
-    private const string EyeTrackingPermission  = "com.oculus.permission.EYE_TRACKING";
+    private const string EyeTrackingPermission = "com.oculus.permission.EYE_TRACKING";
     private const string BodyTrackingPermission = "com.oculus.permission.BODY_TRACKING";
+    private const string ScenePermission = "com.oculus.permission.USE_SCENE";
 
     /// <summary>
     /// Returns the permission ID of the given <see cref="Permission"/> to be requested from the user.
@@ -71,6 +77,7 @@ internal static class OVRPermissionsRequester
             Permission.FaceTracking => FaceTrackingPermission,
             Permission.BodyTracking => BodyTrackingPermission,
             Permission.EyeTracking => EyeTrackingPermission,
+            Permission.Scene => ScenePermission,
             _ => throw new ArgumentOutOfRangeException(nameof(permission), permission, null)
         };
     }
@@ -82,13 +89,20 @@ internal static class OVRPermissionsRequester
             Permission.FaceTracking => OVRPlugin.faceTrackingSupported,
             Permission.BodyTracking => OVRPlugin.bodyTrackingSupported,
             Permission.EyeTracking => OVRPlugin.eyeTrackingSupported,
+            // Scene is a no-op on unsupported platforms, but the request can always be made
+            Permission.Scene => true,
             _ => throw new ArgumentOutOfRangeException(nameof(permission), permission, null)
         };
     }
 
+
     /// <summary>
     /// Returns whether the <see cref="permission"/> has been granted.
     /// </summary>
+    /// <remarks>
+    /// These permissions are Android-specific, therefore we always return
+    /// true if on any other platform.
+    /// </remarks>
     /// <param name="permission"><see cref="Permission"/> to be checked.</param>
     public static bool IsPermissionGranted(Permission permission)
     {
@@ -106,6 +120,12 @@ internal static class OVRPermissionsRequester
     public static void Request(IEnumerable<Permission> permissions)
     {
 #if UNITY_ANDROID && !UNITY_EDITOR
+        RequestPermissions(permissions);
+#endif // UNITY_ANDROID && !UNITY_EDITOR
+    }
+
+    private static void RequestPermissions(IEnumerable<Permission> permissions)
+    {
         var permissionIdsToRequest = new List<string>();
 
         foreach (var permission in permissions)
@@ -121,7 +141,6 @@ internal static class OVRPermissionsRequester
             UnityEngine.Android.Permission.RequestUserPermissions(permissionIdsToRequest.ToArray(),
                 BuildPermissionCallbacks());
         }
-#endif
     }
 
     private static bool ShouldRequestPermission(Permission permission)

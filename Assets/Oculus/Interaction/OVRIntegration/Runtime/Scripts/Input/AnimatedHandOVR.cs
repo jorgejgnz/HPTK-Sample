@@ -120,7 +120,7 @@ namespace Oculus.Interaction.Input
             _animator.SetFloat(_animParamIndexFlex, _animFlex);
 
             // Pinch
-            float pinchAmount = OVRControllerUtility.GetPinchAmount(_controller);
+            float pinchAmount = OVRInput.Get(OVRInput.Axis1D.PrimaryIndexTrigger, _controller);
             _animPinch = Mathf.Lerp(_animPinch, pinchAmount, _animPinchGain * Time.deltaTime);
             _animator.SetFloat(_animParamPinch, _animPinch);
 

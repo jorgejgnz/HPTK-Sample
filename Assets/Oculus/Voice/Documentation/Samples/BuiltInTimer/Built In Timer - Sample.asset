@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0e3df96a2504a0085121315689deb30, type: 3}
+  m_Name: Built In Timer - Sample
+  m_EditorClassIdentifier: 
+  title: Built-in NLP Timer Sample
+  description: This demo showcases the use of the built in NLP apps. You get these
+    when choosing a language instead of Custom App when creating your first wit config.
+    These built ins support some common voice commands like "Set a timer for 5 minutes."
+  tileImage: {fileID: 2800000, guid: 2a2ef91e171cab74e85d37b6b5487ad5, type: 3}
+  screenshot: {fileID: 0}
+  sceneReference: {fileID: 102900000, guid: 9e6f8accd4b079d40b3603449f318633, type: 3}
+  packageSampleName: Built-In Timer
+  sampleSetId: Voice SDK Samples
+  priority: 2

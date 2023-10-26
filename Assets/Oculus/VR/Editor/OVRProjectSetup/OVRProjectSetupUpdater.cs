@@ -25,10 +25,27 @@ using UnityEngine.SceneManagement;
 [InitializeOnLoad]
 internal static class OVRProjectSetupUpdater
 {
-	public static readonly OVRProjectSetupSettingBool ShowLogsOnlyOnce = new OVRProjectSetupOnlyOnceSettingBool("ShowLogsOnlyOnce");
+    private static readonly string EnabledSettingItemName = "BackgroundChecks";
+    private static readonly string EnabledSettingItemLabel = "Background Checks";
+    internal static OVRProjectSetupSettingBool Enabled;
+
+    public static readonly OVRProjectSetupSettingBool ShowLogsOnlyOnce =
+        new OVRProjectSetupOnlyOnceSettingBool("ShowLogsOnlyOnce");
 
     private static readonly double StatusUpdateWatchdogTimer = 5.0;
     private static double _lastStatusUpdate;
+
+    internal static void SetupTemporaryRegistry()
+    {
+        Enabled = new OVRProjectSetupConstSettingBool(OVRProjectSetupUpdater.EnabledSettingItemName, false,
+            OVRProjectSetupUpdater.EnabledSettingItemLabel);
+    }
+
+    internal static void RestoreRegistry()
+    {
+        Enabled = new OVRProjectSetupProjectSettingBool(OVRProjectSetupUpdater.EnabledSettingItemName, true,
+            OVRProjectSetupUpdater.EnabledSettingItemLabel);
+    }
 
     static OVRProjectSetupUpdater()
     {
@@ -52,7 +69,12 @@ internal static class OVRProjectSetupUpdater
 
     private static void Update()
     {
-	    ResetWatchdog();
+        ResetWatchdog();
+
+        if (!Enabled.Value)
+        {
+            return;
+        }
 
         if (EditorApplication.isPlayingOrWillChangePlaymode)
         {
@@ -61,26 +83,27 @@ internal static class OVRProjectSetupUpdater
 
         if (OVRProjectSetup.ProcessorQueue.Busy)
         {
-	        return;
+            return;
         }
 
         var buildTargetGroup = BuildPipeline.GetBuildTargetGroup(EditorUserBuildSettings.activeBuildTarget);
         var logOption = (OVRProjectSetup.AllowLogs.Value || ShowLogsOnlyOnce.Value)
-	        ? OVRProjectSetup.LogMessages.Summary
-	        : OVRProjectSetup.LogMessages.Disabled;
-        OVRProjectSetup.UpdateTasks(buildTargetGroup, logMessages:logOption, blocking:false, onCompleted:OnUpdateCompleted);
+            ? OVRProjectSetup.LogMessages.Summary
+            : OVRProjectSetup.LogMessages.Disabled;
+        OVRProjectSetup.UpdateTasks(buildTargetGroup, logMessages: logOption, blocking: false,
+            onCompleted: OnUpdateCompleted);
     }
 
     private static void OnUpdateCompleted(OVRConfigurationTaskProcessor processor)
     {
-	    if (processor.Type == OVRConfigurationTaskProcessor.ProcessorType.Updater)
-	    {
-		    ResetWatchdog();
-	    }
+        if (processor.Type == OVRConfigurationTaskProcessor.ProcessorType.Updater)
+        {
+            ResetWatchdog();
+        }
     }
 
     private static void ResetWatchdog()
     {
-	    _lastStatusUpdate = EditorApplication.timeSinceStartup;
+        _lastStatusUpdate = EditorApplication.timeSinceStartup;
     }
 }

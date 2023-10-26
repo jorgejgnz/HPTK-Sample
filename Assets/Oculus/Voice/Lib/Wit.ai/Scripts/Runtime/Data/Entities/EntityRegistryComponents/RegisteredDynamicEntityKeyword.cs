@@ -32,7 +32,7 @@ namespace Meta.WitAi.Data.Entities
             }
             else
             {
-                Debug.LogWarning($"Cannot register {name}: No dynamic entity registry present in the scene." +
+                VLog.W($"Cannot register {name}: No dynamic entity registry present in the scene." +
                                  $"Please add one and try again.");
             }
         }

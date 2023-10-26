@@ -24,97 +24,93 @@ using UnityEngine.Assertions;
 
 namespace OculusSampleFramework
 {
-	public class TrainTrack : MonoBehaviour
-	{
-		[SerializeField] private float _gridSize = 0.5f;
-		[SerializeField] private int _subDivCount = 20;
-		[SerializeField] private Transform _segmentParent = null;
-		[SerializeField] private Transform _trainParent = null;
-		// regeneration is optional
-		[SerializeField] private bool _regnerateTrackMeshOnAwake = false;
+    public class TrainTrack : MonoBehaviour
+    {
+        [SerializeField] private float _gridSize = 0.5f;
+        [SerializeField] private int _subDivCount = 20;
+        [SerializeField] private Transform _segmentParent = null;
 
-		private float _trainLength = -1.0f;
-		private TrackSegment[] _trackSegments = null;
+        [SerializeField] private Transform _trainParent = null;
 
-		public float TrackLength
-		{
-			get
-			{
-				return _trainLength;
-			}
-			private set
-			{
-				_trainLength = value;
-			}
-		}
+        // regeneration is optional
+        [SerializeField] private bool _regnerateTrackMeshOnAwake = false;
 
-		private void Awake()
-		{
-			Assert.IsNotNull(_segmentParent);
-			Assert.IsNotNull(_trainParent);
-			Regenerate();
-		}
+        private float _trainLength = -1.0f;
+        private TrackSegment[] _trackSegments = null;
 
-		public TrackSegment GetSegment(float distance)
-		{
-			int childCount = _segmentParent.childCount;
+        public float TrackLength
+        {
+            get { return _trainLength; }
+            private set { _trainLength = value; }
+        }
 
-			for (int i = 0; i < childCount; i++)
-			{
-				var segment = _trackSegments[i];
-				var nextSegment = _trackSegments[(i + 1) % childCount];
-				if (distance >= segment.StartDistance && (distance < nextSegment.StartDistance || i == childCount - 1))
-				{
-					return segment;
-				}
-			}
+        private void Awake()
+        {
+            Assert.IsNotNull(_segmentParent);
+            Assert.IsNotNull(_trainParent);
+            Regenerate();
+        }
 
-			return null;
-		}
+        public TrackSegment GetSegment(float distance)
+        {
+            int childCount = _segmentParent.childCount;
 
-		public void Regenerate()
-		{
-			_trackSegments = _segmentParent.GetComponentsInChildren<TrackSegment>();
-			TrackLength = 0;
-			int childCount = _segmentParent.childCount;
-			TrackSegment lastSegment = null;
+            for (int i = 0; i < childCount; i++)
+            {
+                var segment = _trackSegments[i];
+                var nextSegment = _trackSegments[(i + 1) % childCount];
+                if (distance >= segment.StartDistance && (distance < nextSegment.StartDistance || i == childCount - 1))
+                {
+                    return segment;
+                }
+            }
 
-			var ratio = 0.0f;
-			for (int i = 0; i < childCount; i++)
-			{
-				var segment = _trackSegments[i];
-				segment.SubDivCount = _subDivCount;
-				ratio = segment.setGridSize(_gridSize);
-				if (lastSegment != null)
-				{
-					var endPose = lastSegment.EndPose;
-					segment.transform.position = endPose.Position;
-					segment.transform.rotation = endPose.Rotation;
-					segment.StartDistance = TrackLength;
-				}
+            return null;
+        }
 
-				if (_regnerateTrackMeshOnAwake)
-				{
-					segment.RegenerateTrackAndMesh();
-				}
+        public void Regenerate()
+        {
+            _trackSegments = _segmentParent.GetComponentsInChildren<TrackSegment>();
+            TrackLength = 0;
+            int childCount = _segmentParent.childCount;
+            TrackSegment lastSegment = null;
 
-				TrackLength += segment.SegmentLength;
-				lastSegment = segment;
-			}
+            var ratio = 0.0f;
+            for (int i = 0; i < childCount; i++)
+            {
+                var segment = _trackSegments[i];
+                segment.SubDivCount = _subDivCount;
+                ratio = segment.setGridSize(_gridSize);
+                if (lastSegment != null)
+                {
+                    var endPose = lastSegment.EndPose;
+                    segment.transform.position = endPose.Position;
+                    segment.transform.rotation = endPose.Rotation;
+                    segment.StartDistance = TrackLength;
+                }
 
-			SetScale(ratio);
-		}
+                if (_regnerateTrackMeshOnAwake)
+                {
+                    segment.RegenerateTrackAndMesh();
+                }
 
-		private void SetScale(float ratio)
-		{
-			_trainParent.localScale = new Vector3(ratio, ratio, ratio);
-			var cars = _trainParent.GetComponentsInChildren<TrainCar>();
-			var locomotive = _trainParent.GetComponentInChildren<TrainLocomotive>();
-			locomotive.Scale = ratio;
-			foreach (var car in cars)
-			{
-				car.Scale = ratio;
-			}
-		}
-	}
+                TrackLength += segment.SegmentLength;
+                lastSegment = segment;
+            }
+
+            SetScale(ratio);
+        }
+
+        private void SetScale(float ratio)
+        {
+            _trainParent.localScale = new Vector3(ratio, ratio, ratio);
+            var cars = _trainParent.GetComponentsInChildren<TrainCar>();
+            var locomotive = _trainParent.GetComponentInChildren<TrainLocomotive>();
+            locomotive.Scale = ratio;
+            foreach (var car in cars)
+            {
+                car.Scale = ratio;
+            }
+        }
+    }
 }

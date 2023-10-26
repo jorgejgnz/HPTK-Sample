@@ -7,6 +7,7 @@ public class UiVectorInspector : MonoBehaviour
 {
     [Header("Components")]
     [SerializeField] private TextMeshProUGUI m_nameLabel = null;
+
     [SerializeField] private TextMeshProUGUI m_valueLabel = null;
 
     public void SetName(string name)

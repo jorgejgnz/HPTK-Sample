@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 35c4ad19f06c67e44a2d7ba8d05f31b7, type: 3}
+  m_Name: Throwable Item
+  m_EditorClassIdentifier: 
+  id: 803f3803-bb5e-464a-ac45-dad44c840fb6
+  version: 1
+  blockName: Throwable Item
+  description: Throw an Item with your hands, add your own rigidbody to hold to item
+    from falling off
+  sdk: 0
+  thumbnail: {fileID: 2800000, guid: 53aeaeadc605a914a90f9b107d531936, type: 3}
+  displayOnContentTab: 1
+  experimental: 1
+  order: 0
+  prefab: {fileID: 6116536632940550998, guid: a39f14d93fa584432b8f4d312acb98c4, type: 3}
+  dependencies:
+  - 5d47ae98-1ed8-4753-ac7f-c41012479e3d
+  isSingleton: 0

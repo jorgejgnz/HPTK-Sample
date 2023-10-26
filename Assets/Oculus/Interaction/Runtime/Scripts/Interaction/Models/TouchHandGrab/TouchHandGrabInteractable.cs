@@ -31,9 +31,6 @@ namespace Oculus.Interaction
     /// </summary>
     public class TouchHandGrabInteractable : PointerInteractable<TouchHandGrabInteractor, TouchHandGrabInteractable>
     {
-        [SerializeField, Interface(typeof(IPointableElement))]
-        private MonoBehaviour _pointableElement;
-
         [SerializeField]
         private Collider _boundsCollider;
 
@@ -43,29 +40,20 @@ namespace Oculus.Interaction
         private ColliderGroup _colliderGroup;
         public ColliderGroup ColliderGroup => _colliderGroup;
 
-        protected override void Awake()
-        {
-            base.Awake();
-            PointableElement = _pointableElement as IPointableElement;
-        }
-
         protected override void Start()
         {
             base.Start();
             this.AssertField(_boundsCollider, nameof(_boundsCollider));
             this.AssertCollectionField(_colliders, nameof(_colliders));
             _colliderGroup = new ColliderGroup(_colliders, _boundsCollider);
-            this.AssertField(PointableElement, nameof(PointableElement));
         }
 
         #region Inject
 
-        public void InjectAllTouchHandGrabInteractable(Collider boundsCollider, List<Collider> colliders,
-            IPointableElement pointableElement)
+        public void InjectAllTouchHandGrabInteractable(Collider boundsCollider, List<Collider> colliders)
         {
             InjectBoundsCollider(boundsCollider);
             InjectColliders(colliders);
-            InjectPointableElement(pointableElement);
         }
 
         private void InjectBoundsCollider(Collider boundsCollider)
@@ -76,12 +64,6 @@ namespace Oculus.Interaction
         public void InjectColliders(List<Collider> colliders)
         {
             _colliders = colliders;
-        }
-
-        public void InjectPointableElement(IPointableElement pointableElement)
-        {
-            PointableElement = pointableElement;
-            _pointableElement = pointableElement as MonoBehaviour;
         }
 
         #endregion

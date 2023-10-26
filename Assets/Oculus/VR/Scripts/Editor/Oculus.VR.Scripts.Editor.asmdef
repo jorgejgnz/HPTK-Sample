@@ -38,7 +38,7 @@
         {
             "name": "com.unity.xr.oculus",
             "expression": "1.7.0",
-            "define": "PRIORITIZE_OCULUS_XR_SETTINGS"
+            "define": "__OVERRIDED__PRIORITIZE_OCULUS_XR_SETTINGS"
         },
         {
             "name": "com.unity.xr.oculus",
@@ -59,6 +59,16 @@
             "name": "com.unity.xr.oculus",
             "expression": "3.2.1-pre",
             "define": "OCULUS_XR_DEPTH_SUBMISSION"
+        },
+        {
+            "name": "com.unity.xr.oculus",
+            "expression": "3.3.0",
+            "define": "OCULUS_XR_3_3_0_OR_NEWER"
+        },
+        {
+            "name": "com.meta.xr.simulator",
+            "expression": "",
+            "define": "USING_META_XR_SIMULATOR"
         }
     ],
     "noEngineReferences": false

@@ -22,5 +22,5 @@ using UnityEngine;
 
 public class OVRGearVrControllerTest : MonoBehaviour
 {
-	// Deprecated since SDK 1.51
+    // Deprecated since SDK 1.51
 }

@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6c4826b5532d66e4db4bdf87d3e73a7d, type: 3}
+  m_Name: Interaction Hand Tracking
+  m_EditorClassIdentifier: 
+  id: 0393ca30-f2a9-4865-a40f-f9a68d01c3a9
+  version: 1
+  blockName: Hand Tracking
+  description: Interaction internal hand tracking logic
+  sdk: 0
+  thumbnail: {fileID: 0}
+  displayOnContentTab: 0
+  experimental: 1
+  order: 0
+  prefab: {fileID: 6388487641241208223, guid: 44ed1c64fbd105143bff979a6c52c4d6, type: 3}
+  dependencies:
+  - 81f55626-5fad-45e9-a1df-184f330da7ba
+  - 8b26b298-7bf4-490e-b245-a039c0184303
+  isSingleton: 1
+  _interactionBlockId: 81f55626-5fad-45e9-a1df-184f330da7ba

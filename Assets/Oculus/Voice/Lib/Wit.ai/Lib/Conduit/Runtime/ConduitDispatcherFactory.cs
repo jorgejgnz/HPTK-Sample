@@ -16,21 +16,21 @@ namespace Meta.Conduit
         /// <summary>
         /// Dispatcher instance
         /// </summary>
-        private static IConduitDispatcher instance;
+        private static IConduitDispatcher Instance;
 
         /// <summary>
         /// The instance resolver used to find instance objects at runtime.
         /// </summary>
-        private readonly IInstanceResolver instanceResolver;
+        private readonly IInstanceResolver _instanceResolver;
 
         /// <summary>
         /// The parameter provider used to resolve parameters during dispatching.
         /// </summary>
-        private readonly IParameterProvider parameterProvider;
+        private readonly IParameterProvider _parameterProvider;
 
         public ConduitDispatcherFactory(IInstanceResolver instanceResolver)
         {
-            this.instanceResolver = instanceResolver;
+            this._instanceResolver = instanceResolver;
         }
         
         /// <summary>
@@ -39,8 +39,8 @@ namespace Meta.Conduit
         /// <returns>A Conduit dispatcher instance</returns>
         public IConduitDispatcher GetDispatcher()
         {
-            return instance = instance ??
-                              new ConduitDispatcher(new ManifestLoader(), this.instanceResolver);
+            return Instance = Instance ??
+                              new ConduitDispatcher(new ManifestLoader(), this._instanceResolver);
         }
     }
 }

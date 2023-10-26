@@ -5,17 +5,17 @@ Shader "MixedReality/GlowEffect"
   Properties
   {
     _GlowColor ("Glow Color", Color) = (1.0, 1.0, 1.0)
-	_Pow ("Pow", Range (0.2,10)) = 2
+    _Pow ("Pow", Range (0.2,10)) = 2
     _Intensity ("Intensity", Range (0,10)) = 1
     }
-	  SubShader {
+      SubShader {
     Tags {"Queue" = "Transparent"}
 
     Pass {
       ZWrite Off
-			BlendOp RevSub
+            BlendOp RevSub
             Blend Zero One, One OneMinusSrcAlpha
-	  Cull Front
+      Cull Front
 
       CGPROGRAM
       #pragma vertex vert
@@ -26,18 +26,18 @@ Shader "MixedReality/GlowEffect"
       struct vertexInput {
         float4 vertex : POSITION;
         float3 normal: NORMAL;
-		float4 texcoord : TEXCOORD0;
-		float4 vertCol : COLOR;
+        float4 texcoord : TEXCOORD0;
+        float4 vertCol : COLOR;
         UNITY_VERTEX_INPUT_INSTANCE_ID
       };
 
       struct v2f {
-		float2 uv : TEXCOORD0;
+        float2 uv : TEXCOORD0;
         float4 vertex : SV_POSITION;
         half3 worldNormal : TEXCOORD3;
         float3 viewDir: TEXCOORD2;
         half4 localPos : TEXCOORD4;
-		float4 color : TEXCOORD1;
+        float4 color : TEXCOORD1;
 
         float eye : EYE;
         UNITY_VERTEX_INPUT_INSTANCE_ID
@@ -45,8 +45,8 @@ Shader "MixedReality/GlowEffect"
       };
 
       float4 _GlowColor;
-	  float _Pow;
-	  float _Intensity;
+      float _Pow;
+      float _Intensity;
       float4x4 _TrackingSpaceTransform;
 
       v2f vert(vertexInput v) {
@@ -60,8 +60,8 @@ Shader "MixedReality/GlowEffect"
         o.worldNormal = UnityObjectToWorldNormal(v.normal);
         o.viewDir = WorldSpaceViewDir(v.vertex);
         o.localPos = v.vertex;
-		o.uv = v.texcoord;
-		o.color = v.vertCol;
+        o.uv = v.texcoord;
+        o.color = v.vertCol;
 
         return o;
       }
@@ -71,11 +71,11 @@ Shader "MixedReality/GlowEffect"
         UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
 
         float fresnelNdot = (dot (normalize (i.viewDir), normalize (-i.worldNormal)));
-		fresnelNdot = pow(fresnelNdot,_Pow);
-		float4 color = _GlowColor;
-		color.rgb += _GlowColor.rgb * fresnelNdot * _Intensity;
-		color.rgb = 0;
-		color.a *= fresnelNdot;
+        fresnelNdot = pow(fresnelNdot,_Pow);
+        float4 color = _GlowColor;
+        color.rgb += _GlowColor.rgb * fresnelNdot * _Intensity;
+        color.rgb = 0;
+        color.a *= fresnelNdot;
 
         return color;
       }

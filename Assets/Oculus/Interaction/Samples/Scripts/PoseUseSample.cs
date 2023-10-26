@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
  *
@@ -28,7 +28,7 @@ namespace Oculus.Interaction.Samples
     public class PoseUseSample : MonoBehaviour
     {
         [SerializeField, Interface(typeof(IHmd))]
-        private MonoBehaviour _hmd;
+        private UnityEngine.Object _hmd;
         private IHmd Hmd { get; set; }
 
         [SerializeField]

@@ -18,7 +18,7 @@ Shader "Hands Billboard Edge Fading Mask"
     _KeyboardScale("Keyboard Scale", Vector) = (1, 1, 1, 0)
     _FadingFalloff("Falloff", Range(0, .1)) = 0.05
     _ColorMultiply("Color multiply", Range(0, 3)) = 2.0
-      
+
     // Blend modes
     [Enum(UnityEngine.Rendering.BlendMode)]_SrcBlendMode("Src Blend Factor", Int) = 0 // Zero
     [Enum(UnityEngine.Rendering.BlendMode)]_DstBlendMode("Dst Blend Factor", Int) = 4 // SrcColor
@@ -30,14 +30,14 @@ Shader "Hands Billboard Edge Fading Mask"
       ZWrite Off
       Cull Off
       ZTest Always
-        
+
       Blend [_SrcBlendMode] [_DstBlendMode]
 
       Pass
       {
         CGPROGRAM
 
-        #pragma vertex vert  
+        #pragma vertex vert
         #pragma fragment frag
         #pragma multi_compile_instancing
         #include "UnityCG.cginc"
@@ -106,9 +106,9 @@ Shader "Hands Billboard Edge Fading Mask"
 
           vertexOutput output;
           output.pos = mul(UNITY_MATRIX_P,
-          mul(UNITY_MATRIX_MV, float4(0.0, 0.0, 0.0, 1.0))
-          + float4(input.vertex.x, input.vertex.y, 0.0, 0.0)
-          * float4(_Scale, _Scale, 1.0, 1.0));
+            float4(UnityObjectToViewPos((float3)0), 1.0)
+            + float4(input.vertex.x, input.vertex.y, 0.0, 0.0)
+            * float4(_Scale, _Scale, 1.0, 1.0));
 
           output.tex = input.tex;
           output.color = BoundingBox(input.vertex, _KeyboardPosition, _KeyboardRotation, _KeyboardScale);

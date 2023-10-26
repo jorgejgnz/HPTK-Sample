@@ -146,6 +146,7 @@ namespace Oculus.Interaction
 
         /// <summary>
         /// Get the position/rotation difference between two transforms.
+        /// Unaffected by scale.
         /// </summary>
         /// <param name="from">The base transform.</param>
         /// <param name="to">The target transform.</param>
@@ -157,6 +158,7 @@ namespace Oculus.Interaction
 
         /// <summary>
         /// Get the position/rotation difference between a transform and a pose.
+        /// Unaffected by scale.
         /// </summary>
         /// <param name="from">The base transform.</param>
         /// <param name="to">The target pose.</param>
@@ -166,6 +168,13 @@ namespace Oculus.Interaction
             return Delta(from.position, from.rotation, to.position, to.rotation);
         }
 
+        /// <summary>
+        /// Get the position/rotation difference between a transform and a pose.
+        /// Unaffected by scale.
+        /// </summary>
+        /// <param name="from">The base transform.</param>
+        /// <param name="to">The target pose.</param>
+        /// <param name="result">Output: The pose with the delta</param>
         public static void Delta(this Transform from, in Pose to, ref Pose result)
         {
             Delta(from.position, from.rotation, to.position, to.rotation, ref result);
@@ -173,6 +182,7 @@ namespace Oculus.Interaction
 
         /// <summary>
         /// Get the position/rotation difference between two poses.
+        /// Unaffected by scale.
         /// </summary>
         /// <param name="from">The base pose.</param>
         /// <param name="to">The target pose.</param>
@@ -205,7 +215,38 @@ namespace Oculus.Interaction
         }
 
         /// <summary>
+        /// Get the position/rotation difference between two transforms.
+        /// Affected by the scale of from.
+        /// </summary>
+        /// <param name="from">The base transform.</param>
+        /// <param name="to">The target transform.</param>
+        /// <returns>Output: The pose with the delta</returns>
+        public static Pose DeltaScaled(Transform from, Transform to)
+        {
+            Pose delta;
+            delta.position = from.InverseTransformPoint(to.position);
+            delta.rotation = Quaternion.Inverse(from.rotation) * to.rotation;
+            return delta;
+        }
+
+        /// <summary>
+        /// Get the position/rotation difference between a transform and a pose.
+        /// Affected by the scale of from.
+        /// </summary>
+        /// <param name="from">The base transform.</param>
+        /// <param name="to">The target pose.</param>
+        /// <returns>The pose with the delta</returns>
+        public static Pose DeltaScaled(Transform from, Pose to)
+        {
+            Pose delta;
+            delta.position = from.InverseTransformPoint(to.position);
+            delta.rotation = Quaternion.Inverse(from.rotation) * to.rotation;
+            return delta;
+        }
+
+        /// <summary>
         /// Get the world position/rotation of a relative position.
+        /// Unaffected by scale.
         /// </summary>
         /// <param name="reference">The transform in which the offset is local.</param>
         /// <param name="offset">The offset from the reference.</param>
@@ -215,6 +256,21 @@ namespace Oculus.Interaction
             return new Pose(
                 reference.position + reference.rotation * offset.position,
                 reference.rotation * offset.rotation);
+        }
+
+        /// <summary>
+        /// Get the world position/rotation of a relative position.
+        /// Affected by the scale of the transform.
+        /// </summary>
+        /// <param name="relativeTo">The transform in which the offset is local.</param>
+        /// <param name="offset">The offset from the reference.</param>
+        /// <returns>A Pose in world units.</returns>
+        public static Pose GlobalPoseScaled(Transform relativeTo, Pose offset)
+        {
+            Pose pose;
+            pose.position = relativeTo.TransformPoint(offset.position);
+            pose.rotation = relativeTo.rotation * offset.rotation;
+            return pose;
         }
 
         /// <summary>

@@ -32,8 +32,13 @@ namespace Oculus.Interaction.Locomotion
         [SerializeField]
         private TubeRenderer _tubeRenderer;
 
+        [SerializeField, Optional]
+        private PinchPointerVisual _pointer;
+        [SerializeField, Optional]
+        private Transform _pointerAnchor;
+
         [SerializeField, Optional, Interface(typeof(IAxis1D))]
-        private MonoBehaviour _progress;
+        private UnityEngine.Object _progress;
         private IAxis1D Progress;
 
         [SerializeField, Min(2)]
@@ -99,6 +104,10 @@ namespace Oculus.Interaction.Locomotion
             this.BeginStart(ref _started);
             this.AssertField(_interactor, nameof(_interactor));
             this.AssertField(_tubeRenderer, nameof(_tubeRenderer));
+            if (_progress != null)
+            {
+                this.AssertField(Progress, nameof(Progress));
+            }
             this.EndStart(ref _started);
         }
 
@@ -167,13 +176,26 @@ namespace Oculus.Interaction.Locomotion
 
             _tubeRenderer.Tint = tint;
             _tubeRenderer.Progress = Progress != null ? Progress.Value() : 0f;
-            _tubeRenderer.RenderTube(_arcPoints);
+            _tubeRenderer.RenderTube(_arcPoints, Space.World);
+
+            UpdatePointer(tint);
         }
 
-
-        private TubePoint[] UpdateVisualArcPoints(Pose origin, Vector3 target)
+        private void UpdatePointer(Color tint)
         {
-            float maxDistance = _interactor.TeleportArc.MaxDistance;
+            if (_pointer == null)
+            {
+                return;
+            }
+            _pointer.Tint = tint;
+            Vector3 pos = _pointerAnchor != null ? _pointerAnchor.position : _interactor.ArcOrigin.position;
+            Vector3 fadePos = _interactor.ArcEnd.Point;
+            Quaternion rot = Quaternion.LookRotation(fadePos - pos);
+            _pointer.SetPositionAndRotation(pos, rot);
+        }
+
+        private void UpdateVisualArcPoints(Pose origin, Vector3 target)
+        {
             if (_arcPoints == null
                 || _arcPoints.Length != ArcPointsCount)
             {
@@ -189,19 +211,26 @@ namespace Oculus.Interaction.Locomotion
             Vector3 inverseScale = new Vector3(1f / this.transform.lossyScale.x,
                 1f / this.transform.lossyScale.y,
                 1f / this.transform.lossyScale.z);
+
+            float totalDistance = 0f;
             for (int i = 0; i < ArcPointsCount; i++)
             {
                 float t = i / (ArcPointsCount - 1f);
                 Vector3 position = EvaluateBezierArc(origin.position, midPoint, target, t);
                 Vector3 difference = (position - prevPosition);
+                totalDistance += difference.magnitude;
+
                 _arcPoints[i].position = Vector3.Scale(position, inverseScale);
-                _arcPoints[i].direction = difference.normalized;
-                _arcPoints[i].relativeLength = i == 0 ? 0f
-                    : _arcPoints[i - 1].relativeLength + (difference.magnitude / maxDistance);
+                _arcPoints[i].rotation = Quaternion.LookRotation(difference.normalized);
+
                 prevPosition = position;
             }
 
-            return _arcPoints;
+            for (int i = 1; i < ArcPointsCount; i++)
+            {
+                float segmentLenght = (_arcPoints[i - 1].position - _arcPoints[i].position).magnitude;
+                _arcPoints[i].relativeLength = _arcPoints[i - 1].relativeLength + (segmentLenght / totalDistance);
+            }
         }
 
         private static Vector3 EvaluateBezierArc(Vector3 start, Vector3 middle, Vector3 end, float t)
@@ -258,9 +287,21 @@ namespace Oculus.Interaction.Locomotion
 
         public void InjectOptionalProgress(IAxis1D progress)
         {
-            _progress = progress as MonoBehaviour;
+            _progress = progress as UnityEngine.Object;
             Progress = progress;
         }
+
+
+        public void InjectOptionalPointer(PinchPointerVisual pointer)
+        {
+            _pointer = pointer;
+        }
+
+        public void InjectOptionalPointerAnchor(Transform pointerAnchor)
+        {
+            _pointerAnchor = pointerAnchor;
+        }
+
         #endregion
     }
 }

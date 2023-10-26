@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
  *
@@ -28,7 +28,9 @@ internal class OVRConfigurationTaskRegistry
 {
     private static readonly List<OVRConfigurationTask> EmptyTasksList = new List<OVRConfigurationTask>(0);
 
-    private readonly Dictionary<Hash128, OVRConfigurationTask> _tasksPerUid = new Dictionary<Hash128, OVRConfigurationTask>();
+    private readonly Dictionary<Hash128, OVRConfigurationTask> _tasksPerUid =
+        new Dictionary<Hash128, OVRConfigurationTask>();
+
     private readonly List<OVRConfigurationTask> _tasks = new List<OVRConfigurationTask>();
 
     private List<OVRConfigurationTask> Tasks => _tasks;
@@ -39,18 +41,51 @@ internal class OVRConfigurationTaskRegistry
         if (_tasksPerUid.ContainsKey(uid))
         {
             // This task is already registered
-            throw new ArgumentException(
-                $"[{nameof(OVRConfigurationTask)}] Task with same Uid already exists (hash collision)");
+            return;
         }
 
         _tasks.Add(task);
         _tasksPerUid.Add(uid, task);
+
+#if UNITY_XR_CORE_UTILS
+        RegisterToBuildValidator(task);
+#endif
     }
+
+#if UNITY_XR_CORE_UTILS
+    private void RegisterToBuildValidator(OVRConfigurationTask task)
+    {
+        if (task.Platform == BuildTargetGroup.Unknown)
+        {
+            var buildTargetGroups = Enum.GetValues(typeof(BuildTargetGroup));
+            foreach (var buildTargetGroup in buildTargetGroups)
+            {
+                var targetGroup = (BuildTargetGroup)buildTargetGroup;
+                RegisterToBuildValidator(targetGroup, task);
+            }
+        }
+        else
+        {
+            RegisterToBuildValidator(task.Platform, task);
+        }
+    }
+
+    private void RegisterToBuildValidator(BuildTargetGroup targetGroup, OVRConfigurationTask task)
+    {
+        if (task.Level.GetValue(targetGroup) == OVRProjectSetup.TaskLevel.Optional)
+        {
+            return;
+        }
+
+        Unity.XR.CoreUtils.Editor.BuildValidator.AddRules(targetGroup, new []{task.ToValidationRule(task.Platform)});
+    }
+#endif
 
     public void RemoveTask(Hash128 uid)
     {
         var task = GetTask(uid);
         RemoveTask(task);
+
     }
 
     public void RemoveTask(OVRConfigurationTask task)
@@ -75,16 +110,16 @@ internal class OVRConfigurationTaskRegistry
     {
         if (refresh)
         {
-	        foreach (var task in Tasks)
-	        {
-		        task.InvalidateCache(buildTargetGroup);
-	        }
+            foreach (var task in Tasks)
+            {
+                task.InvalidateCache(buildTargetGroup);
+            }
         }
 
         return Tasks.Where
         (
-			task => (task.Platform == BuildTargetGroup.Unknown || task.Platform == buildTargetGroup)
-					&& task.Valid.GetValue(buildTargetGroup)
+            task => (task.Platform == BuildTargetGroup.Unknown || task.Platform == buildTargetGroup)
+                    && task.Valid.GetValue(buildTargetGroup)
         );
     }
 }

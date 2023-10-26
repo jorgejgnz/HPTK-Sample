@@ -8,12 +8,23 @@
 
 using UnityEditor;
 using System.Reflection;
-using Meta.WitAi;
+using Meta.WitAi.Configuration;
 
 namespace Meta.WitAi.Windows
 {
+    [CustomPropertyDrawer(typeof(WitEndpointConfig))]
     public class WitEndpointConfigDrawer : WitPropertyDrawer
     {
+        // All WitEndpointConfig parameters
+        private const string FIELD_URISCHEME = "_uriScheme";
+        private const string FIELD_AUTHORITY = "_authority";
+        private const string FIELD_PORT = "_port";
+        private const string FIELD_API = "_witApiVersion";
+        private const string FIELD_SPEECH = "_speech";
+        private const string FIELD_MESSAGE = "_message";
+        private const string FIELD_DICTATION = "_dictation";
+        private const string FIELD_SYNTHESIZE = "_synthesize";
+
         // Allow edit with lock
         protected override WitPropertyEditType EditType => WitPropertyEditType.LockEdit;
         // Get default fields
@@ -22,20 +33,26 @@ namespace Meta.WitAi.Windows
             // Iterate options
             switch (subfield.Name)
             {
-                case "uriScheme":
+                case FIELD_URISCHEME:
                     return WitConstants.URI_SCHEME;
-                case "authority":
+                case FIELD_AUTHORITY:
                     return WitConstants.URI_AUTHORITY;
-                case "port":
-                    return WitConstants.URI_DEFAULT_PORT.ToString();
-                case "witApiVersion":
+                case FIELD_PORT:
+                    return "0";
+                case FIELD_API:
                     return WitConstants.API_VERSION;
-                case "speech":
+                case FIELD_SPEECH:
                     return WitConstants.ENDPOINT_SPEECH;
-                case "message":
+                case FIELD_MESSAGE:
                     return WitConstants.ENDPOINT_MESSAGE;
-                case "dictation":
+                case FIELD_DICTATION:
                     return WitConstants.ENDPOINT_DICTATION;
+                case FIELD_SYNTHESIZE:
+                    return WitConstants.ENDPOINT_TTS;
+                case "_event":
+                    return WitConstants.ENDPOINT_COMPOSER_MESSAGE;
+                case "_converse":
+                    return WitConstants.ENDPOINT_COMPOSER_SPEECH;
             }
 
             // Return base
@@ -49,20 +66,26 @@ namespace Meta.WitAi.Windows
             {
                 case LocalizedTitleKey:
                     return WitTexts.Texts.ConfigurationEndpointTitleLabel;
-                case "uriScheme":
+                case FIELD_URISCHEME:
                     return WitTexts.Texts.ConfigurationEndpointUriLabel;
-                case "authority":
+                case FIELD_AUTHORITY:
                     return WitTexts.Texts.ConfigurationEndpointAuthLabel;
-                case "port":
+                case FIELD_PORT:
                     return WitTexts.Texts.ConfigurationEndpointPortLabel;
-                case "witApiVersion":
+                case FIELD_API:
                     return WitTexts.Texts.ConfigurationEndpointApiLabel;
-                case "speech":
+                case FIELD_SPEECH:
                     return WitTexts.Texts.ConfigurationEndpointSpeechLabel;
-                case "message":
+                case FIELD_MESSAGE:
                     return WitTexts.Texts.ConfigurationEndpointMessageLabel;
-                case "dictation":
+                case FIELD_DICTATION:
                     return WitTexts.Texts.ConfigurationEndpointDictationLabel;
+                case FIELD_SYNTHESIZE:
+                    return WitTexts.Texts.ConfigurationEndpointSynthesizeLabel;
+                case "_event":
+                    return WitTexts.Texts.ConfigurationEndpointComposerEventLabel;
+                case "_converse":
+                    return WitTexts.Texts.ConfigurationEndpointComposerConverseLabel;
             }
             // Default to base
             return base.GetLocalizedText(property, key);

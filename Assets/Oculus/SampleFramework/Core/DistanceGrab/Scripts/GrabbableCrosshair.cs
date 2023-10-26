@@ -25,13 +25,19 @@ namespace OculusSampleFramework
 {
     public class GrabbableCrosshair : MonoBehaviour
     {
-        public enum CrosshairState { Disabled, Enabled, Targeted }
+        public enum CrosshairState
+        {
+            Disabled,
+            Enabled,
+            Targeted
+        }
 
         CrosshairState m_state = CrosshairState.Disabled;
         Transform m_centerEyeAnchor;
 
         [SerializeField]
         GameObject m_targetedCrosshair = null;
+
         [SerializeField]
         GameObject m_enabledCrosshair = null;
 

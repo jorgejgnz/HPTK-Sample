@@ -13,6 +13,7 @@ using Meta.WitAi.CallbackHandlers;
 using Meta.WitAi.Configuration;
 using Meta.WitAi.Data;
 using Meta.WitAi.Json;
+using Meta.WitAi.Requests;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -38,10 +39,22 @@ namespace Meta.WitAi.Windows
         private TimeSpan _requestLength;
         private string _status;
         private int _responseCode;
-        private WitRequest _request;
+        private VoiceServiceRequest _request;
         private int _savePopup;
         private GUIStyle _hamburgerButton;
 
+        private enum HamburgerMenu
+        {
+            None = -1,
+            Save =  0,
+            CopyToClipboard = 1,
+            CopyRequestID = 2
+        }
+
+        private string[] HambergerMenuStrings = new string[]
+        {
+            "Save", "Copy to Clipboard", "Copy Request ID"
+        };
 
         class Content
         {
@@ -101,17 +114,14 @@ namespace Meta.WitAi.Windows
         private void ResetStartTime()
         {
             _submitStart = System.DateTime.Now;
+            Repaint();
         }
 
-        private void OnError(string title, string message)
+        private void OnSend(VoiceServiceRequest request)
         {
-            _status = message;
-        }
-
-        private void OnRequestCreated(WitRequest request)
-        {
-            this._request = request;
+            _request = request;
             ResetStartTime();
+            Repaint();
         }
 
         private void ShowTranscription(string transcription)
@@ -139,21 +149,40 @@ namespace Meta.WitAi.Windows
                 _hamburgerButton.imagePosition = ImagePosition.ImageOnly;
             }
 
-            var value = EditorGUILayout.Popup(-1, new string[] {"Save", "Copy to Clipboard"}, _hamburgerButton, GUILayout.Width(24));
-            if (-1 != value)
+            var value = (HamburgerMenu) EditorGUILayout.Popup(-1, HambergerMenuStrings, _hamburgerButton, GUILayout.Width(24));
+            switch (value)
             {
-                if (value == 0)
+                case HamburgerMenu.Save:
                 {
                     var path = EditorUtility.SaveFilePanel("Save Response Json", Application.dataPath,
                         "result", "json");
                     if (!string.IsNullOrEmpty(path))
                     {
                         File.WriteAllText(path, _response.ToString());
+
                     }
+
+                    break;
                 }
-                else
+                case HamburgerMenu.CopyToClipboard:
                 {
-                    EditorGUIUtility.systemCopyBuffer = _response.ToString();
+                    EditorGUIUtility.systemCopyBuffer = _response?.ToString() ?? _responseText;
+                    break;
+                }
+                case HamburgerMenu.CopyRequestID:
+                {
+                    var requestId = _request?.Options?.RequestId;
+                    if (!string.IsNullOrEmpty(requestId))
+                    {
+                        EditorGUIUtility.systemCopyBuffer = requestId;
+                        _status = $"{requestId} copied to clipboard.";
+                    }
+                    else
+                    {
+                        _status = "No request id to copy!";
+                    }
+                    Repaint();
+                    break;
                 }
             }
 
@@ -274,7 +303,7 @@ namespace Meta.WitAi.Windows
                     // Activate
                     if (WitEditorUI.LayoutTextButton(WitTexts.Texts.UnderstandingViewerActivateButtonLabel))
                     {
-                        voiceService.Activate();
+                        _request = voiceService.Activate(new VoiceServiceRequestEvents());
                     }
                 }
                 else
@@ -330,7 +359,7 @@ namespace Meta.WitAi.Windows
                 {
                     _status = WitTexts.Texts.UnderstandingViewerListeningLabel;
                     _responseText = _status;
-                    service.Activate(_utterance);
+                    _request = service.Activate(_utterance, new VoiceServiceRequestEvents());
                     // Hack to watch for loading to complete. Response does not
                     // come back on the main thread so Repaint in onResponse in
                     // the editor does nothing.
@@ -342,9 +371,11 @@ namespace Meta.WitAi.Windows
                 _status = WitTexts.Texts.UnderstandingViewerLoadingLabel;
                 _responseText = _status;
                 _submitStart = System.DateTime.Now;
-                _request = witConfiguration.CreateMessageRequest(_utterance, new WitRequestOptions());
-                _request.onResponse += (r) => OnResponse(r?.ResponseData);
-                _request.Request();
+                _request = witConfiguration.CreateMessageRequest(new WitRequestOptions(), new VoiceServiceRequestEvents());
+                _request.Options.Text = _utterance;
+                _request.Events.OnSend.AddListener(OnSend);
+                _request.Events.OnComplete.AddListener(OnComplete);
+                _request.Send();
             }
         }
 
@@ -357,21 +388,22 @@ namespace Meta.WitAi.Windows
             }
         }
 
-        private void OnResponse(WitResponseNode ResponseData)
+        private void OnComplete(VoiceServiceRequest request)
         {
-            _responseCode = _request.StatusCode;
-            if (null != ResponseData)
+            _responseCode = request.StatusCode;
+            if (null != request.ResponseData)
             {
-                ShowResponse(ResponseData, false);
+                ShowResponse(request.ResponseData, false);
             }
-            else if (!string.IsNullOrEmpty(_request.StatusDescription))
+            else if (!string.IsNullOrEmpty(request.Results.Message))
             {
-                _responseText = _request.StatusDescription;
+                _responseText = request.Results.Message;
             }
             else
             {
-                _responseText = "No response. Status: " + _request.StatusCode;
+                _responseText = "No response. Status: " + request.StatusCode;
             }
+            Repaint();
         }
 
         private void ShowResponse(WitResponseNode r, bool isPartial)
@@ -608,7 +640,7 @@ namespace Meta.WitAi.Windows
         private string GetVoiceServiceName(VoiceService service)
         {
             IWitRuntimeConfigProvider configProvider = service.GetComponent<IWitRuntimeConfigProvider>();
-            if (configProvider != null)
+            if (configProvider != null && configProvider.RuntimeConfiguration != null && configProvider.RuntimeConfiguration.witConfiguration != null)
             {
                 return $"{configProvider.RuntimeConfiguration.witConfiguration.name} [{service.gameObject.name}]";
             }
@@ -647,22 +679,6 @@ namespace Meta.WitAi.Windows
             // Add listeners to current service
             AddVoiceListeners(service);
         }
-        // Remove listeners
-        private void RemoveVoiceListeners(VoiceService voiceService)
-        {
-            // Ignore
-            if (voiceService == null)
-            {
-                return;
-            }
-            // Remove delegates
-            voiceService.VoiceEvents.OnRequestCreated.RemoveListener(OnRequestCreated);
-            voiceService.VoiceEvents.OnError.RemoveListener(OnError);
-            voiceService.VoiceEvents.OnResponse.RemoveListener(OnResponse);
-            voiceService.VoiceEvents.OnFullTranscription.RemoveListener(ShowTranscription);
-            voiceService.VoiceEvents.OnPartialTranscription.RemoveListener(ShowTranscription);
-            voiceService.VoiceEvents.OnStoppedListening.RemoveListener(ResetStartTime);
-        }
         // Add listeners
         private void AddVoiceListeners(VoiceService voiceService)
         {
@@ -672,12 +688,26 @@ namespace Meta.WitAi.Windows
                 return;
             }
             // Add delegates
-            voiceService.VoiceEvents.OnRequestCreated.AddListener(OnRequestCreated);
-            voiceService.VoiceEvents.OnError.AddListener(OnError);
-            voiceService.VoiceEvents.OnResponse.AddListener(OnResponse);
+            voiceService.VoiceEvents.OnSend.AddListener(OnSend);
+            voiceService.VoiceEvents.OnComplete.AddListener(OnComplete);
             voiceService.VoiceEvents.OnPartialTranscription.AddListener(ShowTranscription);
             voiceService.VoiceEvents.OnFullTranscription.AddListener(ShowTranscription);
             voiceService.VoiceEvents.OnStoppedListening.AddListener(ResetStartTime);
+        }
+        // Remove listeners
+        private void RemoveVoiceListeners(VoiceService voiceService)
+        {
+            // Ignore
+            if (voiceService == null)
+            {
+                return;
+            }
+            // Remove delegates
+            voiceService.VoiceEvents.OnSend.RemoveListener(OnSend);
+            voiceService.VoiceEvents.OnComplete.RemoveListener(OnComplete);
+            voiceService.VoiceEvents.OnFullTranscription.RemoveListener(ShowTranscription);
+            voiceService.VoiceEvents.OnPartialTranscription.RemoveListener(ShowTranscription);
+            voiceService.VoiceEvents.OnStoppedListening.RemoveListener(ResetStartTime);
         }
         #endregion
     }

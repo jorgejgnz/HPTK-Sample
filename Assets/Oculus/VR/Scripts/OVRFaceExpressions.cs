@@ -29,12 +29,18 @@ using UnityEngine;
 /// <remarks>
 /// Refers to the <see cref="OVRFaceExpressions.FaceExpression"/> enum for the list of face expressions.
 /// </remarks>
-public class OVRFaceExpressions : MonoBehaviour, IReadOnlyCollection<float>
+[HelpURL("https://developer.oculus.com/reference/unity/latest/class_o_v_r_face_expressions")]
+public class OVRFaceExpressions : MonoBehaviour, IReadOnlyCollection<float>, OVRFaceExpressions.WeightProvider
 {
     /// <summary>
     /// True if face tracking is enabled, otherwise false.
     /// </summary>
     public bool FaceTrackingEnabled => OVRPlugin.faceTrackingEnabled;
+
+    public interface WeightProvider
+    {
+        float GetWeight(FaceExpression expression);
+    }
 
     /// <summary>
     /// True if the facial expressions are valid, otherwise false.
@@ -81,7 +87,10 @@ public class OVRFaceExpressions : MonoBehaviour, IReadOnlyCollection<float>
     public bool EyeFollowingBlendshapesValid { get; private set; }
 
     private OVRPlugin.FaceState _currentFaceState;
-    private const OVRPermissionsRequester.Permission FaceTrackingPermission = OVRPermissionsRequester.Permission.FaceTracking;
+
+    private const OVRPermissionsRequester.Permission FaceTrackingPermission =
+        OVRPermissionsRequester.Permission.FaceTracking;
+
     private Action<string> _onPermissionGranted;
     private static int _trackingInstanceCount;
 
@@ -176,6 +185,8 @@ public class OVRFaceExpressions : MonoBehaviour, IReadOnlyCollection<float>
         }
     }
 
+    public float GetWeight(FaceExpression expression) => this[expression];
+
     /// <summary>
     /// This method tries to gets the weight of the given expression if it's available.
     /// </summary>
@@ -203,10 +214,12 @@ public class OVRFaceExpressions : MonoBehaviour, IReadOnlyCollection<float>
         /// Represents the lower part of the face. It includes the mouth, chin and a portion of the nose and cheek.
         /// </summary>
         Lower = OVRPlugin.FaceRegionConfidence.Lower,
+
         /// <summary>
         /// Represents the upper part of the face. It includes the eyes, eye brows and a portion of the nose and cheek.
         /// </summary>
         Upper = OVRPlugin.FaceRegionConfidence.Upper,
+
         /// <summary>
         /// Used to determine the size of the <see cref="FaceRegionConfidence"/> enum.
         /// </summary>
@@ -231,7 +244,7 @@ public class OVRFaceExpressions : MonoBehaviour, IReadOnlyCollection<float>
         return true;
     }
 
-    private void CheckValidity()
+    internal void CheckValidity()
     {
         if (!ValidExpressions)
         {
@@ -300,6 +313,8 @@ public class OVRFaceExpressions : MonoBehaviour, IReadOnlyCollection<float>
     /// </summary>
     public enum FaceExpression
     {
+        [InspectorName("None")]
+        Invalid = OVRPlugin.FaceExpression.Invalid,
         BrowLowererL = OVRPlugin.FaceExpression.Brow_Lowerer_L,
         BrowLowererR = OVRPlugin.FaceExpression.Brow_Lowerer_R,
         CheekPuffL = OVRPlugin.FaceExpression.Cheek_Puff_L,
@@ -363,10 +378,9 @@ public class OVRFaceExpressions : MonoBehaviour, IReadOnlyCollection<float>
         UpperLidRaiserR = OVRPlugin.FaceExpression.Upper_Lid_Raiser_R,
         UpperLipRaiserL = OVRPlugin.FaceExpression.Upper_Lip_Raiser_L,
         UpperLipRaiserR = OVRPlugin.FaceExpression.Upper_Lip_Raiser_R,
-        [InspectorName("None")]
+        [InspectorName(null)]
         Max = OVRPlugin.FaceExpression.Max
     }
-
 
     #region Face expressions enumerator
 

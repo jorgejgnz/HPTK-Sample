@@ -293,10 +293,11 @@ namespace Oculus.Interaction.UnityCanvas
         #region Inject
 
         public void InjectAllCanvasCylinder(CanvasRenderTexture canvasRenderTexture,
+                                            MeshFilter meshFilter,
                                             Cylinder cylinder,
                                             CylinderOrientation orientation)
         {
-            InjectAllCanvasMesh(canvasRenderTexture);
+            InjectAllCanvasMesh(canvasRenderTexture, meshFilter);
             InjectCylinder(cylinder);
             InjectOrientation(orientation);
         }

@@ -38,24 +38,34 @@ namespace Oculus.Interaction.Surfaces
 
         [Tooltip("The clippers that will be used to clip the Plane Surface.")]
         [SerializeField, Interface(typeof(IBoundsClipper))]
-        private List<MonoBehaviour> _clippers;
+        private List<UnityEngine.Object> _clippers = new List<UnityEngine.Object>();
+        private List<IBoundsClipper> Clippers { get; set; }
 
         public ISurface BackingSurface => _planeSurface;
 
         public Transform Transform => _planeSurface.Transform;
 
-        public IEnumerable<IBoundsClipper> GetClippers()
+        public IReadOnlyList<IBoundsClipper> GetClippers()
         {
-            foreach (var clipper in _clippers)
+            if (Clippers != null)
             {
-                yield return clipper as IBoundsClipper;
+                return Clippers;
             }
+            else
+            {
+                return _clippers.ConvertAll(clipper => clipper as IBoundsClipper);
+            }
+        }
+
+        protected virtual void Awake()
+        {
+            Clippers = _clippers.ConvertAll(clipper => clipper as IBoundsClipper);
         }
 
         protected virtual void Start()
         {
             this.AssertField(_planeSurface, nameof(_planeSurface));
-            this.AssertCollectionItems(_clippers, nameof(_clippers));
+            this.AssertCollectionItems(Clippers, nameof(Clippers));
         }
 
         /// <summary>
@@ -70,9 +80,10 @@ namespace Oculus.Interaction.Surfaces
         {
             clipped = bounds;
 
-            foreach (var clipperMono in _clippers)
+            IReadOnlyList<IBoundsClipper> clippers = GetClippers();
+            for (int i = 0; i < clippers.Count; i++)
             {
-                IBoundsClipper clipper = clipperMono as IBoundsClipper;
+                IBoundsClipper clipper = clippers[i];
                 if (clipper == null ||
                     !clipper.GetLocalBounds(Transform, out Bounds clipTo))
                 {
@@ -118,6 +129,7 @@ namespace Oculus.Interaction.Surfaces
         {
             return BackingSurface.Raycast(ray, out hit, maxDistance) &&
                    ClipBounds(InfiniteBounds, out Bounds clipBounds) &&
+                   clipBounds.size != Vector3.zero &&
                    clipBounds.Contains(Transform.InverseTransformPoint(hit.Point));
         }
 
@@ -138,8 +150,9 @@ namespace Oculus.Interaction.Surfaces
 
         public void InjectClippers(IEnumerable<IBoundsClipper> clippers)
         {
-            _clippers = new List<MonoBehaviour>(
-                clippers.Select(c => c as MonoBehaviour));
+            _clippers = new List<UnityEngine.Object>(
+                clippers.Select(c => c as UnityEngine.Object));
+            Clippers = clippers.ToList();
         }
 
         #endregion

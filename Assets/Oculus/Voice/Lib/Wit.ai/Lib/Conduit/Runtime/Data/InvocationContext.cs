@@ -48,5 +48,11 @@ namespace Meta.Conduit
         /// The key is the formal parameter name and value is the actual parameter name. 
         /// </summary>
         public Dictionary<string, string> ParameterMap { get; set; } = new Dictionary<string, string>();
+
+        
+        /// <summary>
+        /// Saving the attribute type for the current context.
+        /// </summary>
+        public Type CustomAttributeType { get; set; } 
     }
 }

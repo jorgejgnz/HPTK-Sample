@@ -42,7 +42,7 @@ namespace Oculus.Interaction.HandGrab
         }
 
         [SerializeField, Interface(typeof(IPointableElement))]
-        private MonoBehaviour _pointableElement;
+        private UnityEngine.Object _pointableElement;
         public IPointableElement PointableElement { get; private set; }
 
         private bool _started;
@@ -100,7 +100,7 @@ namespace Oculus.Interaction.HandGrab
         public void InjectPointableElement(IPointableElement pointableElement)
         {
             PointableElement = pointableElement;
-            _pointableElement = pointableElement as MonoBehaviour;
+            _pointableElement = pointableElement as UnityEngine.Object;
         }
         #endregion
     }

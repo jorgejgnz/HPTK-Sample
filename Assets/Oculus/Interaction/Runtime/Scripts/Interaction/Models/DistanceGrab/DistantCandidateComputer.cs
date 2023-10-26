@@ -69,7 +69,7 @@ namespace Oculus.Interaction
         private TInteractable _stableCandidate;
         private TInteractable _pointedCandidate;
 
-        public Pose Origin
+        public virtual Pose Origin
         {
             get
             {
@@ -79,7 +79,7 @@ namespace Oculus.Interaction
         }
 
 
-        public TInteractable ComputeCandidate(
+        public virtual TInteractable ComputeCandidate(
             InteractableRegistry<TInteractor, TInteractable> registry,
             TInteractor interactor,
              out Vector3 bestHitPoint)

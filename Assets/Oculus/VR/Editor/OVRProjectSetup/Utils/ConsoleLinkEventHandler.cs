@@ -32,7 +32,7 @@ internal static class ConsoleLinkEventHandler
     // Much simpler code in 2021 as the API became public
     static ConsoleLinkEventHandler()
     {
-		EditorGUI.hyperLinkClicked += OnConsoleLinkInternal;
+        EditorGUI.hyperLinkClicked += OnConsoleLinkInternal;
     }
 
     private static void OnConsoleLinkInternal(EditorWindow window, HyperLinkClickedEventArgs arguments)
@@ -48,11 +48,12 @@ internal static class ConsoleLinkEventHandler
         var evt = typeof(EditorGUI).GetEvent("hyperLinkClicked", BindingFlags.Static | BindingFlags.NonPublic);
         if (evt != null)
         {
-            var method = typeof(ConsoleLinkEventHandler).GetMethod("OnConsoleLinkInternal", BindingFlags.Static | BindingFlags.NonPublic);
+            var method = typeof(ConsoleLinkEventHandler).GetMethod("OnConsoleLinkInternal",
+                BindingFlags.Static | BindingFlags.NonPublic);
             if (method != null)
             {
                 var handler = Delegate.CreateDelegate(evt.EventHandlerType, method);
-                evt.AddMethod.Invoke(null, new object[] {handler});
+                evt.AddMethod.Invoke(null, new object[] { handler });
             }
         }
     }
@@ -61,7 +62,8 @@ internal static class ConsoleLinkEventHandler
     {
         if (_parametersProperty == null)
         {
-            _parametersProperty = arguments.GetType().GetProperty("hyperlinkInfos", BindingFlags.Instance | BindingFlags.Public);
+            _parametersProperty = arguments.GetType()
+                .GetProperty("hyperlinkInfos", BindingFlags.Instance | BindingFlags.Public);
         }
 
         return _parametersProperty != null;

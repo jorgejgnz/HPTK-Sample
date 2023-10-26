@@ -28,11 +28,11 @@ namespace Oculus.Interaction.Locomotion
         , ILocomotionEventHandler
     {
         [SerializeField, Interface(typeof(ILocomotionEventBroadcaster))]
-        private List<MonoBehaviour> _broadcasters;
+        private List<UnityEngine.Object> _broadcasters;
         private IEnumerable<ILocomotionEventBroadcaster> Broadcasters { get; set; }
 
         [SerializeField, Interface(typeof(ILocomotionEventHandler))]
-        private MonoBehaviour _handler;
+        private UnityEngine.Object _handler;
         private ILocomotionEventHandler Handler { get; set; }
 
         private bool _started;
@@ -106,7 +106,7 @@ namespace Oculus.Interaction.Locomotion
 
         public void InjectHandler(ILocomotionEventHandler handler)
         {
-            _handler = handler as MonoBehaviour;
+            _handler = handler as UnityEngine.Object;
             Handler = handler;
         }
 

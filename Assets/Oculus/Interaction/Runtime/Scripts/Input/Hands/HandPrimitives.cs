@@ -64,6 +64,22 @@ namespace Oculus.Interaction.Input
         All = (1 << 5) - 1
     }
 
+
+    public enum PinchGrabParam
+    {
+        PinchDistanceStart = 0,
+        PinchDistanceStopMax,
+        PinchDistanceStopOffset,
+        PinchHqDistanceStart,
+        PinchHqDistanceStopMax,
+        PinchHqDistanceStopOffset,
+        PinchHqViewAngleThreshold,
+        ThumbDistanceStart,
+        ThumbDistanceStopMax,
+        ThumbDistanceStopOffset,
+        ThumbMaxDot,
+    }
+
     [Flags]
     public enum HandFingerJointFlags
     {

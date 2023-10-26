@@ -17,6 +17,7 @@ namespace Meta.WitAi.Windows
 
         protected virtual Texture2D HeaderIcon => WitTexts.HeaderIcon;
         protected virtual string HeaderUrl => WitTexts.WitUrl;
+        protected virtual string DocsUrl => WitTexts.Texts.WitDocsUrl;
 
         protected abstract GUIContent Title { get; }
         protected abstract string ButtonLabel { get; }
@@ -37,7 +38,7 @@ namespace Meta.WitAi.Windows
 
             // Layout window
             Vector2 size = Vector2.zero;
-            WitEditorUI.LayoutWindow(ContentHeaderLabel, HeaderIcon, HeaderUrl, LayoutContent, ref scrollOffset, out size);
+            WitEditorUI.LayoutWindow(ContentHeaderLabel, HeaderIcon, HeaderUrl, DocsUrl, LayoutContent, ref scrollOffset, out size);
 
             // Set wizard to max width
             size.x = WitStyles.WindowMaxWidth;

@@ -1,14 +1,14 @@
 Shader "MixedReality/PassthroughLine" {
   Properties{
-	  _LineLength("Line Length", float) = 1
+      _LineLength("Line Length", float) = 1
 
   } SubShader {
     Tags{"RenderType" = "Transparent"} LOD 100
 
         Pass {
       ZWrite Off
-	  BlendOp RevSub, Min
-	  Blend Zero One, One One
+      BlendOp RevSub, Min
+      Blend Zero One, One One
 
               CGPROGRAM
       // Upgrade NOTE: excluded shader from DX11; has structs without semantics (struct v2f members

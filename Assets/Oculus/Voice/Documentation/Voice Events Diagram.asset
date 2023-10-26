@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a249c5c9df69431f935e9e49b478eab4, type: 3}
+  m_Name: Voice Events Diagram
+  m_EditorClassIdentifier: 
+  _displayName: Voice Events Diagram
+  _prefix: Documentation/
+  _context: {fileID: 11400000, guid: f2e797de12b196c40ad409b92d6394fc, type: 2}
+  _priority: 0
+  _image: {fileID: 2800000, guid: f9d0f3319db97e04181db42930d90a4f, type: 3}

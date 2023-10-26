@@ -27,7 +27,7 @@ namespace Oculus.Interaction.PoseDetection
     public class HmdOffset : MonoBehaviour
     {
         [SerializeField, Interface(typeof(IHmd))]
-        private MonoBehaviour _hmd;
+        private UnityEngine.Object _hmd;
         private IHmd Hmd;
 
         [SerializeField]
@@ -116,7 +116,7 @@ namespace Oculus.Interaction.PoseDetection
 
         public void InjectHmd(IHmd hmd)
         {
-            _hmd = hmd as MonoBehaviour;
+            _hmd = hmd as UnityEngine.Object;
             Hmd = hmd;
         }
 

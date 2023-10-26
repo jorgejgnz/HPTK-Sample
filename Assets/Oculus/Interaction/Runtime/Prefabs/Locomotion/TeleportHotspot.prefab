@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 5079371321587524429}
   - component: {fileID: 5079371321587524425}
   - component: {fileID: 6465837952062539826}
+  - component: {fileID: 1749376170637230063}
   m_Layer: 0
   m_Name: TeleportHotspot
   m_TagString: Untagged
@@ -152,8 +153,26 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _snapPoint: {fileID: 4946735294245968510}
-  _renderer: {fileID: 359980686780065265}
+  _materialBlock: {fileID: 1749376170637230063}
   _reticleMode: 0
+--- !u!114 &1749376170637230063
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5385430629427633694}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5e48d93b64a9ae4f9fd5a728c8f51af, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _renderers:
+  - {fileID: 359980686780065265}
+  _vectorProperties: []
+  _colorProperties: []
+  _floatProperties: []
+  _updateEveryFrame: 0
 --- !u!1 &6130012036251125358
 GameObject:
   m_ObjectHideFlags: 0

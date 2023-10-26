@@ -48,96 +48,107 @@ using UnityEngine.Experimental.XR;
 /// platform.
 /// In general, this behavior should be disabled when not debugging.
 /// </summary>
+[HelpURL("https://developer.oculus.com/reference/unity/latest/class_o_v_r_debug_head_controller")]
 public class OVRDebugHeadController : MonoBehaviour
 {
-	[SerializeField]
-	public bool AllowPitchLook = false;
-	[SerializeField]
-	public bool AllowYawLook = true;
-	[SerializeField]
-	public bool InvertPitch = false;
-	[SerializeField]
-	public float GamePad_PitchDegreesPerSec = 90.0f;
-	[SerializeField]
-	public float GamePad_YawDegreesPerSec = 90.0f;
-	[SerializeField]
-	public bool AllowMovement = false;
-	[SerializeField]
-	public float ForwardSpeed = 2.0f;
-	[SerializeField]
-	public float StrafeSpeed = 2.0f;
+    [SerializeField]
+    public bool AllowPitchLook = false;
 
-	protected OVRCameraRig CameraRig = null;
+    [SerializeField]
+    public bool AllowYawLook = true;
 
-	void Awake()
-	{
-		// locate the camera rig so we can use it to get the current camera transform each frame
-		OVRCameraRig[] CameraRigs = gameObject.GetComponentsInChildren<OVRCameraRig>();
+    [SerializeField]
+    public bool InvertPitch = false;
 
-		if( CameraRigs.Length == 0 )
-			Debug.LogWarning("OVRCamParent: No OVRCameraRig attached.");
-		else if (CameraRigs.Length > 1)
-			Debug.LogWarning("OVRCamParent: More then 1 OVRCameraRig attached.");
-		else
-			CameraRig = CameraRigs[0];
-	}
+    [SerializeField]
+    public float GamePad_PitchDegreesPerSec = 90.0f;
 
-	// Use this for initialization
-	void Start ()
-	{
+    [SerializeField]
+    public float GamePad_YawDegreesPerSec = 90.0f;
 
-	}
+    [SerializeField]
+    public bool AllowMovement = false;
 
-	// Update is called once per frame
-	void Update ()
-	{
-		if ( AllowMovement )
-		{
-			float gamePad_FwdAxis = OVRInput.Get(OVRInput.RawAxis2D.LThumbstick).y;
-			float gamePad_StrafeAxis = OVRInput.Get(OVRInput.RawAxis2D.LThumbstick).x;
+    [SerializeField]
+    public float ForwardSpeed = 2.0f;
 
-			Vector3 fwdMove = ( CameraRig.centerEyeAnchor.rotation * Vector3.forward ) * gamePad_FwdAxis * Time.deltaTime * ForwardSpeed;
-			Vector3 strafeMove = ( CameraRig.centerEyeAnchor.rotation * Vector3.right ) * gamePad_StrafeAxis * Time.deltaTime * StrafeSpeed;
-			transform.position += fwdMove + strafeMove;
-		}
+    [SerializeField]
+    public float StrafeSpeed = 2.0f;
 
-		bool hasDevice = false;
+    protected OVRCameraRig CameraRig = null;
+
+    void Awake()
+    {
+        // locate the camera rig so we can use it to get the current camera transform each frame
+        OVRCameraRig[] CameraRigs = gameObject.GetComponentsInChildren<OVRCameraRig>();
+
+        if (CameraRigs.Length == 0)
+            Debug.LogWarning("OVRCamParent: No OVRCameraRig attached.");
+        else if (CameraRigs.Length > 1)
+            Debug.LogWarning("OVRCamParent: More then 1 OVRCameraRig attached.");
+        else
+            CameraRig = CameraRigs[0];
+    }
+
+    // Use this for initialization
+    void Start()
+    {
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        if (AllowMovement)
+        {
+            float gamePad_FwdAxis = OVRInput.Get(OVRInput.RawAxis2D.LThumbstick).y;
+            float gamePad_StrafeAxis = OVRInput.Get(OVRInput.RawAxis2D.LThumbstick).x;
+
+            Vector3 fwdMove = (CameraRig.centerEyeAnchor.rotation * Vector3.forward) * gamePad_FwdAxis *
+                              Time.deltaTime * ForwardSpeed;
+            Vector3 strafeMove = (CameraRig.centerEyeAnchor.rotation * Vector3.right) * gamePad_StrafeAxis *
+                                 Time.deltaTime * StrafeSpeed;
+            transform.position += fwdMove + strafeMove;
+        }
+
+        bool hasDevice = false;
 #if USING_XR_SDK
-		XRDisplaySubsystem currentDisplaySubsystem = OVRManager.GetCurrentDisplaySubsystem();
-		if (currentDisplaySubsystem != null)
-			hasDevice = currentDisplaySubsystem.running;
+        XRDisplaySubsystem currentDisplaySubsystem = OVRManager.GetCurrentDisplaySubsystem();
+        if (currentDisplaySubsystem != null)
+            hasDevice = currentDisplaySubsystem.running;
 #elif REQUIRES_XR_SDK
-		hasDevice = false;
+        hasDevice = false;
 #else
-		hasDevice = UnityEngine.XR.XRDevice.isPresent;
+        hasDevice = UnityEngine.XR.XRDevice.isPresent;
 #endif
 
-		if ( !hasDevice && ( AllowYawLook || AllowPitchLook ) )
-		{
-			Quaternion r = transform.rotation;
-			if ( AllowYawLook )
-			{
-				float gamePadYaw = OVRInput.Get(OVRInput.RawAxis2D.RThumbstick).x;
-				float yawAmount = gamePadYaw * Time.deltaTime * GamePad_YawDegreesPerSec;
-				Quaternion yawRot = Quaternion.AngleAxis( yawAmount, Vector3.up );
-				r = yawRot * r;
-			}
-			if ( AllowPitchLook )
-			{
-				float gamePadPitch = OVRInput.Get(OVRInput.RawAxis2D.RThumbstick).y;
-				if ( Mathf.Abs( gamePadPitch ) > 0.0001f )
-				{
-					if ( InvertPitch )
-					{
-						gamePadPitch *= -1.0f;
-					}
-					float pitchAmount = gamePadPitch * Time.deltaTime * GamePad_PitchDegreesPerSec;
-					Quaternion pitchRot = Quaternion.AngleAxis( pitchAmount, Vector3.left );
-					r = r * pitchRot;
-				}
-			}
+        if (!hasDevice && (AllowYawLook || AllowPitchLook))
+        {
+            Quaternion r = transform.rotation;
+            if (AllowYawLook)
+            {
+                float gamePadYaw = OVRInput.Get(OVRInput.RawAxis2D.RThumbstick).x;
+                float yawAmount = gamePadYaw * Time.deltaTime * GamePad_YawDegreesPerSec;
+                Quaternion yawRot = Quaternion.AngleAxis(yawAmount, Vector3.up);
+                r = yawRot * r;
+            }
 
-			transform.rotation = r;
-		}
-	}
+            if (AllowPitchLook)
+            {
+                float gamePadPitch = OVRInput.Get(OVRInput.RawAxis2D.RThumbstick).y;
+                if (Mathf.Abs(gamePadPitch) > 0.0001f)
+                {
+                    if (InvertPitch)
+                    {
+                        gamePadPitch *= -1.0f;
+                    }
+
+                    float pitchAmount = gamePadPitch * Time.deltaTime * GamePad_PitchDegreesPerSec;
+                    Quaternion pitchRot = Quaternion.AngleAxis(pitchAmount, Vector3.left);
+                    r = r * pitchRot;
+                }
+            }
+
+            transform.rotation = r;
+        }
+    }
 }

@@ -21,9 +21,7 @@
 using Oculus.Interaction.GrabAPI;
 using Oculus.Interaction.Input;
 using System;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Assertions;
 
 namespace Oculus.Interaction.HandGrab
 {
@@ -38,14 +36,13 @@ namespace Oculus.Interaction.HandGrab
         , IHandGrabState
     {
         [SerializeField, Optional, Interface(typeof(IHand))]
-        private MonoBehaviour _hand;
+        private UnityEngine.Object _hand;
         public IHand Hand { get; private set; }
 
         [SerializeField, Interface(typeof(IFingerUseAPI))]
-        private MonoBehaviour _useAPI;
+        private UnityEngine.Object _useAPI;
         public IFingerUseAPI UseAPI { get; private set; }
 
-        private HandGrabTarget _currentTarget = new HandGrabTarget();
         private HandPose _relaxedHandPose = new HandPose();
         private HandPose _tightHandPose = new HandPose();
 
@@ -58,7 +55,7 @@ namespace Oculus.Interaction.HandGrab
         private bool _handUseShouldSelect;
         private bool _handUseShouldUnselect;
 
-        public HandGrabTarget HandGrabTarget => _currentTarget;
+        public HandGrabTarget HandGrabTarget { get; } = new HandGrabTarget();
         public bool IsGrabbing => SelectedInteractable != null;
         public float WristStrength => 0f;
         public float FingersStrength => IsGrabbing ? 1f : 0f;
@@ -101,7 +98,6 @@ namespace Oculus.Interaction.HandGrab
         {
             base.InteractableUnselected(interactable);
 
-            _currentTarget.Clear();
             _fingersInUse = HandFingerFlags.None;
         }
 
@@ -113,7 +109,7 @@ namespace Oculus.Interaction.HandGrab
                 HandPose = _relaxedHandPose
             };
 
-            _currentTarget.Set(SelectedInteractable.transform,
+            HandGrabTarget.Set(SelectedInteractable.transform,
                 HandAlignType.AlignOnGrab, HandGrabTarget.GrabAnchor.Wrist, result);
         }
 
@@ -215,7 +211,7 @@ namespace Oculus.Interaction.HandGrab
 
                 LerpFingerRotation(_relaxedHandPose.JointRotations,
                   _tightHandPose.JointRotations,
-                  _currentTarget.HandPose.JointRotations,
+                  HandGrabTarget.HandPose.JointRotations,
                   finger, progress);
             }
         }
@@ -280,13 +276,13 @@ namespace Oculus.Interaction.HandGrab
 
         public void InjectUseApi(IFingerUseAPI useApi)
         {
-            _useAPI = useApi as MonoBehaviour;
+            _useAPI = useApi as UnityEngine.Object;
             UseAPI = useApi;
         }
 
         public void InjectOptionalHand(IHand hand)
         {
-            _hand = hand as MonoBehaviour;
+            _hand = hand as UnityEngine.Object;
             Hand = hand;
         }
 

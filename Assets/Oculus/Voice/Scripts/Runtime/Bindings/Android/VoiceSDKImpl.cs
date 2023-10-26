@@ -19,10 +19,13 @@
  */
 
 using System;
+using System.Collections.Generic;
+using Meta.Voice;
 using Meta.WitAi;
 using Meta.WitAi.Configuration;
 using Meta.WitAi.Events;
 using Meta.WitAi.Interfaces;
+using Meta.WitAi.Requests;
 using Oculus.Voice.Core.Bindings.Android;
 using Oculus.Voice.Interfaces;
 using Debug = UnityEngine.Debug;
@@ -44,6 +47,12 @@ namespace Oculus.Voice.Bindings.Android
             _baseVoiceService = baseVoiceService;
         }
 
+        public bool UsePlatformIntegrations
+        {
+            get => true;
+            set => throw new NotImplementedException();
+        }
+
         public bool PlatformSupportsWit => service.PlatformSupportsWit && _isServiceAvailable;
 
         public bool Active => service.Active && _isActive;
@@ -56,7 +65,18 @@ namespace Oculus.Voice.Bindings.Android
 
         private VoiceSDKListenerBinding eventBinding;
 
+        public HashSet<VoiceServiceRequest> Requests { get; } = new HashSet<VoiceServiceRequest>();
+
         public ITranscriptionProvider TranscriptionProvider { get; set; }
+        public bool CanActivateAudio()
+        {
+            return true;
+        }
+
+        public bool CanSend()
+        {
+            return true;
+        }
 
         public override void Connect(string version)
         {
@@ -83,40 +103,81 @@ namespace Oculus.Voice.Bindings.Android
             _isActive = false;
         }
 
-        public void Activate(string text, WitRequestOptions requestOptions)
+        public VoiceServiceRequest Activate(string text, WitRequestOptions requestOptions,
+            VoiceServiceRequestEvents requestEvents)
         {
+            if (requestOptions == null)
+            {
+                requestOptions = new WitRequestOptions();
+            }
+            requestOptions.Text = text;
             eventBinding.VoiceEvents.OnRequestOptionSetup?.Invoke(requestOptions);
-            service.Activate(text, requestOptions);
+            VoiceServiceRequest request = GetRequest(requestOptions, requestEvents, NLPRequestInputType.Text);
+            request.Send();
+            return request;
         }
 
-        public void Activate(WitRequestOptions requestOptions)
+        public VoiceServiceRequest Activate(WitRequestOptions requestOptions,
+            VoiceServiceRequestEvents requestEvents)
         {
-            if (_isActive) return;
-
+            if (_isActive) return null;
             _isActive = true;
+            if (requestOptions == null)
+            {
+                requestOptions = new WitRequestOptions();
+            }
             eventBinding.VoiceEvents.OnRequestOptionSetup?.Invoke(requestOptions);
-            service.Activate(requestOptions);
+            VoiceServiceRequest request = GetRequest(requestOptions, requestEvents, NLPRequestInputType.Audio);
+            request.ActivateAudio();
+            return request;
         }
 
-        public void ActivateImmediately(WitRequestOptions requestOptions)
+        public VoiceServiceRequest ActivateImmediately(WitRequestOptions requestOptions,
+            VoiceServiceRequestEvents requestEvents)
         {
-            if (_isActive) return;
-
+            if (_isActive) return null;
             _isActive = true;
+            if (requestOptions == null)
+            {
+                requestOptions = new WitRequestOptions();
+            }
             eventBinding.VoiceEvents.OnRequestOptionSetup?.Invoke(requestOptions);
-            service.ActivateImmediately(requestOptions);
+            VoiceServiceRequest request = GetRequest(requestOptions, requestEvents, NLPRequestInputType.Audio, true);
+            request.ActivateAudio();
+            return request;
         }
 
         public void Deactivate()
         {
             _isActive = false;
-            service.Deactivate();
+            foreach (var request in Requests)
+            {
+                if (request.InputType == NLPRequestInputType.Audio)
+                {
+                    request.DeactivateAudio();
+                }
+            }
         }
 
         public void DeactivateAndAbortRequest()
         {
             _isActive = false;
-            service.Deactivate();
+            foreach (var request in Requests)
+            {
+                if (request.InputType == NLPRequestInputType.Audio)
+                {
+                    request.Cancel();
+                }
+            }
+        }
+
+        public void DeactivateAndAbortRequest(VoiceServiceRequest request)
+        {
+            if (!Requests.Contains(request))
+            {
+                return;
+            }
+            request.Cancel();
         }
 
         public void OnServiceNotAvailable(string error, string message)
@@ -130,6 +191,96 @@ namespace Oculus.Voice.Bindings.Android
         {
             get => _baseVoiceService.VoiceEvents;
             set => _baseVoiceService.VoiceEvents = value;
+        }
+
+        public TelemetryEvents TelemetryEvents
+        {
+            get => _baseVoiceService.TelemetryEvents;
+            set => _baseVoiceService.TelemetryEvents = value;
+        }
+
+        // Obtains a VoiceSDKImplRequest with specified parameters
+        private VoiceServiceRequest GetRequest(WitRequestOptions requestOptions,
+            VoiceServiceRequestEvents requestEvents,
+            NLPRequestInputType inputType,
+            bool audioImmediate = false)
+        {
+            VoiceSDKImplRequest request = new VoiceSDKImplRequest(service, inputType, audioImmediate, requestOptions, requestEvents);
+            Requests.Add(request);
+            request.Events.OnCancel.AddListener(OnRequestCanceled);
+            request.Events.OnFailed.AddListener(OnRequestFailed);
+            request.Events.OnSuccess.AddListener(OnRequestSuccess);
+            request.Events.OnComplete.AddListener(OnRequestComplete);
+            VoiceEvents?.OnRequestInitialized?.Invoke(request);
+            return request;
+        }
+
+        // Cancelation callback
+        private void OnRequestCanceled(VoiceServiceRequest request)
+        {
+            // Ignore if missing
+            if (!Requests.Contains(request))
+            {
+                return;
+            }
+
+            // Canceled
+            VLog.D($"Request Canceled\nReason: {request.Results.Message}");
+            VoiceEvents?.OnCanceled?.Invoke(request.Results.Message);
+            if (!string.Equals(request.Results.Message, WitConstants.CANCEL_MESSAGE_PRE_SEND))
+            {
+                VoiceEvents?.OnAborted?.Invoke();
+            }
+        }
+
+        // Failure callback
+        private void OnRequestFailed(VoiceServiceRequest request)
+        {
+            // Ignore if missing
+            if (!Requests.Contains(request))
+            {
+                return;
+            }
+
+            // Failed
+            VLog.D($"Request Failed\nError: {request.Results.Message}");
+            VoiceEvents?.OnError?.Invoke("HTTP Error " + request.Results.StatusCode, request.Results.Message);
+            VoiceEvents?.OnRequestCompleted?.Invoke();
+        }
+
+        // Success callback
+        private void OnRequestSuccess(VoiceServiceRequest request)
+        {
+            // Ignore if missing
+            if (!Requests.Contains(request))
+            {
+                return;
+            }
+
+            // Success
+            VLog.D("Request Success");
+            VoiceEvents?.OnResponse?.Invoke(request.Results.ResponseData);
+            VoiceEvents?.OnRequestCompleted?.Invoke();
+        }
+
+        // Request completed
+        private void OnRequestComplete(VoiceServiceRequest request)
+        {
+            // Ignore if missing
+            if (!Requests.Contains(request))
+            {
+                return;
+            }
+
+            // Remove listeners
+            request.Events.OnCancel.RemoveListener(OnRequestCanceled);
+            request.Events.OnFailed.RemoveListener(OnRequestFailed);
+            request.Events.OnSuccess.RemoveListener(OnRequestSuccess);
+            request.Events.OnComplete.RemoveListener(OnRequestComplete);
+
+            // Remove request
+            Requests.Remove(request);
+            VoiceEvents?.OnComplete?.Invoke(request);
         }
     }
 }

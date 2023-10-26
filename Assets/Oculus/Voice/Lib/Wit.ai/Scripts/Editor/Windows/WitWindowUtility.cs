@@ -7,7 +7,7 @@
  */
 
 using System;
-using System.Reflection;
+using System.Collections.Generic;
 using UnityEditor;
 using Meta.WitAi.Data.Configuration;
 
@@ -16,29 +16,31 @@ namespace Meta.WitAi.Windows
     public static class WitWindowUtility
     {
         // Window types
-        public static Type SetupWindowType => FindChildClass(typeof(WitWelcomeWizard));
-        public static Type ConfigurationWindowType => FindChildClass(typeof(WitWindow));
-        public static Type UnderstandingWindowType => FindChildClass(typeof(WitUnderstandingViewer));
+        public static Type SetupWindowType => FindChildClass<WitWelcomeWizard>();
+        public static Type ConfigurationWindowType => FindChildClass<WitWindow>();
+        public static Type UnderstandingWindowType => FindChildClass<WitUnderstandingViewer>();
+
         // Finds a child class if possible
-        private static Type FindChildClass(Type baseType)
+        private static Type FindChildClass<T>()
         {
-            Type result = baseType;
-            Assembly currentAssembly = baseType.Assembly;
-            Array.Find(AppDomain.CurrentDomain.GetAssemblies(), (assembly) =>
+            // Find all subclasses & return the first
+            List<Type> results = typeof(T).GetSubclassTypes(true);
+            if (results != null && results.Count > 0)
             {
-                if (assembly != currentAssembly)
-                {
-                    Type[] types = assembly.GetTypes();
-                    int index = Array.FindIndex(types, (assemblyType) => { return assemblyType.BaseType == baseType; });
-                    if (index != -1)
-                    {
-                        result = types[index];
-                        return true;
-                    }
-                }
-                return false;
-            });
-            return result;
+                return results[0];
+            }
+
+            // Return type passed in
+            return typeof(T);
+        }
+
+        // Opens Setup Window
+        public static void OpenGettingStarted(Action<WitConfiguration> onSetupComplete)
+        {
+            // Get wizard (Title is overwritten)
+            WitWelcomeWizard wizard = (WitWelcomeWizard)ScriptableWizard.DisplayWizard(WitTexts.Texts.SetupTitleLabel, SetupWindowType, WitTexts.Texts.SetupSubmitButtonLabel);
+            // Set success callback
+            wizard.successAction = onSetupComplete;
         }
 
         // Opens Setup Window

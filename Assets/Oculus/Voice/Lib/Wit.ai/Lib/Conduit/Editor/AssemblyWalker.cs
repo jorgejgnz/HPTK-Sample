@@ -35,7 +35,7 @@ namespace Meta.Conduit.Editor
         public HashSet<string> AssembliesToIgnore { get; set; } = new HashSet<string>();
 
         // The simple names of the assemblies to use in matching against compilation assemblies.
-        private HashSet<string> _shortAssemblyNamesToIgnore = new HashSet<string>();
+        private readonly HashSet<string> _shortAssemblyNamesToIgnore = new HashSet<string>();
 
         private IEnumerable<IConduitAssembly> ConduitAssemblies => _assemblies.Values;
 

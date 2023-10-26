@@ -14,6 +14,10 @@ namespace Oculus.Platform.Models
     public readonly string CurrentName;
     public readonly int LatestCode;
     public readonly string LatestName;
+    /// Seconds since epoch when the latest app update was released
+    public readonly long ReleaseDate;
+    /// Size of the app update in bytes
+    public readonly string Size;
 
 
     public ApplicationVersion(IntPtr o)
@@ -22,6 +26,8 @@ namespace Oculus.Platform.Models
       CurrentName = CAPI.ovr_ApplicationVersion_GetCurrentName(o);
       LatestCode = CAPI.ovr_ApplicationVersion_GetLatestCode(o);
       LatestName = CAPI.ovr_ApplicationVersion_GetLatestName(o);
+      ReleaseDate = CAPI.ovr_ApplicationVersion_GetReleaseDate(o);
+      Size = CAPI.ovr_ApplicationVersion_GetSize(o);
     }
   }
 

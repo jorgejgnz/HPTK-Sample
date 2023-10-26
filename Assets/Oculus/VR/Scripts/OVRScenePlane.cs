@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
  *
@@ -28,6 +28,7 @@ using UnityEngine;
 /// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(OVRSceneAnchor))]
+[HelpURL("https://developer.oculus.com/reference/unity/latest/class_o_v_r_scene_plane")]
 public class OVRScenePlane : MonoBehaviour, IOVRSceneComponent
 {
     /// <summary>
@@ -39,6 +40,18 @@ public class OVRScenePlane : MonoBehaviour, IOVRSceneComponent
     /// The plane's height (in the local Y-direction), in meters.
     /// </summary>
     public float Height { get; private set; }
+
+    /// <summary>
+    /// The offset of the plane with respect to the anchor's pivot.
+    /// </summary>
+    /// <remarks>
+    /// The offset is mostly zero, as objects have the anchor's pivot
+    /// aligned with centroid of the plane.
+    ///
+    /// The Offset is provided in the local coordinate space of the
+    /// children. See <seealso cref="OVRSceneAnchor"/> to see the
+    /// transformation of Unity and OpenXR coordinate systems.
+    public Vector2 Offset { get; private set; }
 
     /// <summary>
     /// The dimensions of the plane.
@@ -64,22 +77,52 @@ public class OVRScenePlane : MonoBehaviour, IOVRSceneComponent
     /// </summary>
     /// <remarks>If set to True, all the child transforms will be scaled to the dimensions of this plane immediately.
     /// And, if it's set to False, dimensions of this plane will no longer affect the child transforms, and child
-    /// transforms will retain their current scale.</remarks>
+    /// transforms will retain their current scale. This can be controlled further by using a
+    /// <seealso cref="OVRSceneObjectTransformType"/>. Note: if the current game object also contains
+    /// a <seealso cref="OVRSceneVolume"/>, then the volume's scale will take precedence.</remarks>
     public bool ScaleChildren
     {
         get => _scaleChildren;
-        set {
+        set
+        {
             _scaleChildren = value;
-            if(_scaleChildren && _sceneAnchor.Space.Valid)
+            if (_scaleChildren && _sceneAnchor.Space.Valid)
             {
-                SetChildScale(transform, Width, Height);
+                SetChildScale();
             }
         }
     }
 
-    [Tooltip("When enabled, scales the child transforms according to the dimensions of this plane")]
+    /// <summary>
+    /// Whether the child transforms will be offset according to the offset of this plane.
+    /// </summary>
+    /// <remarks>If set to True, all the child transforms will be offset to the offset of this plane immediately.
+    /// And, if it's set to False, offsets of this plane will no longer affect the child transforms, and child
+    /// transforms will retain their current offset. This can be controlled further by using a
+    /// <seealso cref="OVRSceneObjectTransformType"/>. Note: if the current game object also contains
+    /// a <seealso cref="OVRSceneVolume"/>, then the volume's offset will take precedence.</remarks>
+    public bool OffsetChildren
+    {
+        get => _offsetChildren;
+        set
+        {
+            _offsetChildren = value;
+            if (_offsetChildren && _sceneAnchor.Space.Valid)
+            {
+                SetChildOffset();
+            }
+        }
+    }
+
+    [Tooltip("When enabled, scales the child transforms according to the dimensions of this plane. " +
+        "If both Volume and Plane components exist on the game object, the volume takes precedence.")]
     [SerializeField]
-    private bool _scaleChildren = true;
+    internal bool _scaleChildren = true;
+
+    [Tooltip("When enabled, offsets the child transforms according to the offset of this plane. " +
+        "If both Volume and Plane components exist on the game object, the volume takes precedence.")]
+    [SerializeField]
+    internal bool _offsetChildren = true;
 
     internal JobHandle? _jobHandle;
 
@@ -95,13 +138,84 @@ public class OVRScenePlane : MonoBehaviour, IOVRSceneComponent
 
     private readonly List<Vector2> _boundary = new List<Vector2>();
 
-    private static void SetChildScale(Transform parentTransform, float width, float height)
+    private void SetChildScale()
     {
-        for (var i = 0; i < parentTransform.childCount; i++)
+        var hasVolume = TryGetComponent<OVRSceneVolume>(out var volume);
+
+        // we scale the child if we have the TransformType.Plane
+        // or if the sibling volume component will not scale
+        for (var i = 0; i < transform.childCount; i++)
         {
-            var child = parentTransform.GetChild(i);
-            var scale = new Vector3(width, height, child.localScale.z);
-            child.localScale = scale;
+            var child = transform.GetChild(i);
+            if (child.TryGetComponent<OVRSceneObjectTransformType>(out var transformType))
+            {
+                if (transformType.TransformType != OVRSceneObjectTransformType.Transformation.Plane)
+                    continue;
+            }
+            else
+            {
+                // if there's no TransformType, then we only don't apply transform
+                // if the volume will take care of it instead
+                if (hasVolume && volume.ScaleChildren)
+                    continue;
+            }
+
+            child.localScale = new Vector3(Width, Height, child.localScale.z);
+        }
+    }
+
+    private void SetChildOffset()
+    {
+        var hasVolume = TryGetComponent<OVRSceneVolume>(out var volume);
+
+        // we offset the child if we have the TransformType.Plane
+        // or if the sibling volume component will not offset
+        for (var i = 0; i < transform.childCount; i++)
+        {
+            var child = transform.GetChild(i);
+            if (child.TryGetComponent<OVRSceneObjectTransformType>(out var transformType))
+            {
+                if (transformType.TransformType != OVRSceneObjectTransformType.Transformation.Plane)
+                    continue;
+            }
+            else
+            {
+                // if there's no TransformType, then we only don't apply transform
+                // if the volume will take care of it instead
+                if (hasVolume && volume.OffsetChildren)
+                    continue;
+            }
+
+            child.localPosition = new Vector3(Offset.x, Offset.y, 0);
+        }
+    }
+
+    internal void UpdateTransform()
+    {
+        if (OVRPlugin.GetSpaceBoundingBox2D(GetComponent<OVRSceneAnchor>().Space, out var rect))
+        {
+            Width = rect.Size.w;
+            Height = rect.Size.h;
+
+            Vector2 planePivot = transform.TransformPoint(
+                rect.Pos.FromVector2f() + (rect.Size.FromSizef() / 2));
+            var anchorPivot = new Vector2(transform.position.x, transform.position.y);
+            Offset = planePivot - anchorPivot;
+
+            OVRSceneManager.Development.Log(nameof(OVRScenePlane),
+                $"[{_sceneAnchor.Uuid}] Plane has dimensions {Dimensions} " +
+                $"and offset {Offset}.", gameObject);
+
+            if (ScaleChildren)
+                SetChildScale();
+            if (OffsetChildren)
+                SetChildOffset();
+        }
+        else
+        {
+            OVRSceneManager.Development.LogError(nameof(OVRScenePlane),
+                $"[{GetComponent<OVRSceneAnchor>().Uuid}] Failed to retrieve plane's information.",
+                gameObject);
         }
     }
 
@@ -121,22 +235,7 @@ public class OVRScenePlane : MonoBehaviour, IOVRSceneComponent
 
     void IOVRSceneComponent.Initialize()
     {
-        if (OVRPlugin.GetSpaceBoundingBox2D(GetComponent<OVRSceneAnchor>().Space, out var rect))
-        {
-            Width = rect.Size.w;
-            Height = rect.Size.h;
-
-            // The volume component will also set the scale
-            if (!GetComponent<OVRSceneVolume>() && ScaleChildren)
-            {
-                SetChildScale(transform, Width, Height);
-            }
-        }
-        else
-        {
-            OVRSceneManager.Development.LogError(nameof(OVRScenePlane),
-                $"[{GetComponent<OVRSceneAnchor>().Uuid}] Could not obtain 2D bounds.");
-        }
+        UpdateTransform();
     }
 
     internal void ScheduleGetLengthJob()
@@ -145,7 +244,7 @@ public class OVRScenePlane : MonoBehaviour, IOVRSceneComponent
         if (_jobHandle != null) return;
 
         if (!OVRPlugin.GetSpaceComponentStatus(_sceneAnchor.Space,
-            OVRPlugin.SpaceComponentType.Bounded2D, out var isEnabled, out var isChangePending))
+                OVRPlugin.SpaceComponentType.Bounded2D, out var isEnabled, out var isChangePending))
         {
             return;
         }
@@ -205,6 +304,7 @@ public class OVRScenePlane : MonoBehaviour, IOVRSceneComponent
                 {
                     _previousBoundary = new NativeArray<Vector2>(length, Allocator.Persistent);
                 }
+
                 _jobHandle = new GetBoundaryJob
                 {
                     Space = _sceneAnchor.Space,

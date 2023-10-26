@@ -24,10 +24,10 @@ using UnityEditor;
 [InitializeOnLoadAttribute]
 public class OculusSampleFrameworkUtil
 {
-  static OculusSampleFrameworkUtil()
-  {
+    static OculusSampleFrameworkUtil()
+    {
 #if UNITY_2017_2_OR_NEWER
-    EditorApplication.playModeStateChanged += HandlePlayModeState;
+        EditorApplication.playModeStateChanged += HandlePlayModeState;
 #else
     EditorApplication.playmodeStateChanged += () =>
     {
@@ -37,16 +37,16 @@ public class OculusSampleFrameworkUtil
       }
     };
 #endif
-	}
+    }
 
 #if UNITY_2017_2_OR_NEWER
-	private static void HandlePlayModeState(PlayModeStateChange state)
-  {
-    if (state == PlayModeStateChange.EnteredPlayMode)
+    private static void HandlePlayModeState(PlayModeStateChange state)
     {
-      OVRPlugin.SendEvent("load", OVRPlugin.wrapperVersion.ToString(), "sample_framework");
+        if (state == PlayModeStateChange.EnteredPlayMode)
+        {
+            OVRPlugin.SendEvent("load", OVRPlugin.wrapperVersion.ToString(), "sample_framework");
+        }
     }
-  }
 #endif
 }
 

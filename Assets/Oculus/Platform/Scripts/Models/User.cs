@@ -15,8 +15,6 @@ namespace Oculus.Platform.Models
     public readonly string DisplayName;
     public readonly UInt64 ID;
     public readonly string ImageURL;
-    /// DEPRECATED. Will be removed from headers at version v51.
-    public readonly string InviteToken;
     public readonly string OculusID;
     /// Human readable string of what the user is currently doing. Not intended to
     /// be parsed as it might change at anytime or be translated
@@ -39,7 +37,6 @@ namespace Oculus.Platform.Models
       DisplayName = CAPI.ovr_User_GetDisplayName(o);
       ID = CAPI.ovr_User_GetID(o);
       ImageURL = CAPI.ovr_User_GetImageUrl(o);
-      InviteToken = CAPI.ovr_User_GetInviteToken(o);
       OculusID = CAPI.ovr_User_GetOculusID(o);
       Presence = CAPI.ovr_User_GetPresence(o);
       PresenceDeeplinkMessage = CAPI.ovr_User_GetPresenceDeeplinkMessage(o);

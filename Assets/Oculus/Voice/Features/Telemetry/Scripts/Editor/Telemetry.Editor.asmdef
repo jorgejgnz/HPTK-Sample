@@ -1,0 +1,19 @@
+{
+    "name": "VoiceSDK.Telemetry",
+    "rootNamespace": "",
+    "references": [
+        "GUID:a32f21e557428c84e845c18e46d9284f",
+        "GUID:a7c32ded21d3b9b42a71cdf39f2ed8da"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -32,7 +32,7 @@ namespace Meta.WitAi.Windows
         /// <returns>True if the parameter type is supported. False otherwise.</returns>
         public bool IsSupportedParameterType(Type type)
         {
-            return type.IsEnum || _builtInTypes.Contains(type) || type == typeof(WitResponseNode) || type == typeof(VoiceSession);
+            return type.IsEnum || _builtInTypes.Contains(type) || type == typeof(WitResponseNode) || type == typeof(VoiceSession) || type == typeof(Exception);
         }
     }
 }

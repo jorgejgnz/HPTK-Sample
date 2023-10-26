@@ -60,7 +60,7 @@ namespace Oculus.Interaction.Locomotion
 
         protected virtual void HandleInteractorPostProcessed()
         {
-            int pointsCount = _interactor.TeleportArc.ArcPointsCount;
+            int pointsCount = _interactor.TeleportArc.PointsCount;
             if (_positions == null
                 || _positions.Length != pointsCount)
             {
@@ -70,7 +70,7 @@ namespace Oculus.Interaction.Locomotion
 
             for (int i = 0; i < pointsCount; i++)
             {
-                _positions[i] = _interactor.TeleportArc.PointAtIndex(_interactor.ArcOrigin, i);
+                _positions[i] = _interactor.TeleportArc.PointAtIndex(i);
             }
 
             _arcRenderer.SetPositions(_positions);

@@ -7,7 +7,8 @@
         "GUID:f02292e638368584080af0193f81ff5c",
         "GUID:70c988d11fbc4814db519eecb47cca75",
         "GUID:5c61c7ae4b0c6f94299e51352f802670",
-        "GUID:3e75c68ea2ce130409f7b96ae2110237"
+        "GUID:3e75c68ea2ce130409f7b96ae2110237",
+        "GUID:4c3436cc699cb25459568e9fa95b7fd7"
     ],
     "includePlatforms": [
         "Editor"
@@ -18,6 +19,12 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.meta.xr.sdk.voice.telemetry",
+            "expression": "",
+            "define": "VSDK_TELEMETRY_AVAILABLE"
+        }
+    ],
     "noEngineReferences": false
 }

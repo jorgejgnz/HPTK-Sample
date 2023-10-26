@@ -9,7 +9,7 @@
 using System;
 using UnityEngine;
 
-namespace Meta.WitAi.TTS.Editor.Preload
+namespace Meta.WitAi.TTS.Preload
 {
     [Serializable]
     public class TTSPreloadPhraseData

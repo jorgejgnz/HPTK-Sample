@@ -33,27 +33,31 @@ namespace Oculus.Interaction.Grab.GrabSurfaces
         /// Finds the Pose at the surface that is the closest to the given pose.
         /// </summary>
         /// <param name="targetPose">The pose to find the nearest to.</param>
-        /// <param name="reference">The reference  point to use for measuring at the surface.</param>
         /// <param name="bestPose">The best found pose at the surface.<</param>
+        /// <param name="scoringModifier">Weight used to decide which target pose to select</param>
+        /// <param name="relativeTo">Reference transform to measure the poses against</param>
         /// <returns>The score indicating how good the found pose was, -1 for invalid result.</returns>
-        GrabPoseScore CalculateBestPoseAtSurface(in Pose targetPose, in Pose reference, out Pose bestPose, in PoseMeasureParameters scoringModifier);
+        GrabPoseScore CalculateBestPoseAtSurface(in Pose targetPose, out Pose bestPose,
+            in PoseMeasureParameters scoringModifier, Transform relativeTo);
 
         /// <summary>
         /// Finds the Pose at the surface that is the closest to the given ray.
         /// </summary>
         /// <param name="targetRay">Ray searching for the nearest snap pose</param>
-        /// <param name="reference">The reference point to use for measuring at the surface.</param>
         /// <param name="bestPose">The best found pose at the surface.</param>
+        /// <param name="relativeTo">Reference transform to measure the poses against</param>
         /// <returns>True if the pose was found</returns>
-        bool CalculateBestPoseAtSurface(Ray targetRay, in Pose reference, out Pose bestPose);
+        bool CalculateBestPoseAtSurface(Ray targetRay, out Pose bestPose,
+            Transform relativeTo);
 
         /// <summary>
         /// Method for mirroring a Pose around the surface.
         /// Different surfaces will prefer mirroring along different axis.
         /// </summary>
         /// <param name="gripPose">The Pose to be mirrored.</param>
+        /// <param name="relativeTo">Reference transform to mirror the pose around</param>
         /// <returns>A new pose mirrored at this surface.</returns>
-        Pose MirrorPose(in Pose gripPose);
+        Pose MirrorPose(in Pose gripPose, Transform relativeTo);
 
         /// <summary>
         /// Creates a new IGrabSurface under the selected gameobject

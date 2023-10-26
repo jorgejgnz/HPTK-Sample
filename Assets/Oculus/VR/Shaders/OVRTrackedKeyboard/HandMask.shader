@@ -2,23 +2,23 @@
 {
     Properties
     {
-		_Color("Color", Color) = (1, 1, 1, 1)
+        _Color("Color", Color) = (1, 1, 1, 1)
         _MainTex ("Texture", 2D) = "white" {}
     }
     SubShader
     {
         Tags { "Queue" = "Transparent" "RenderType"="Transparent" }
         LOD 200
-		Blend One Zero, One Zero
+        Blend One Zero, One Zero
 
         CGPROGRAM
-		#pragma surface surf NoLighting keepalpha
+        #pragma surface surf NoLighting keepalpha
 
-		#pragma target 3.0
+        #pragma target 3.0
 
-		sampler2D _MainTex;
+        sampler2D _MainTex;
 
-		fixed4 LightingNoLighting(SurfaceOutput s, fixed3 lightDir, fixed atten) {
+        fixed4 LightingNoLighting(SurfaceOutput s, fixed3 lightDir, fixed atten) {
           return fixed4(s.Albedo, s.Alpha);
         }
 

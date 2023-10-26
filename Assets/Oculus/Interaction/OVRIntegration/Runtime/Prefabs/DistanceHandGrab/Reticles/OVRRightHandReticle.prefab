@@ -45,9 +45,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0c6aa09f2d128af4d93fb9fc29ecec33, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _handGrabSource: {fileID: 0}
+  _visibleDuringSelect: 0
+  _handGrabber: {fileID: 0}
   _syntheticHand: {fileID: 8352625307792070587}
-  _visualHand: {fileID: 0}
+  _handVisual: {fileID: 0}
 --- !u!114 &6682429639214924993
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -73,6 +74,11 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 6682429639214924999}
     m_Modifications:
+    - target: {fileID: 642930805460571361, guid: 94313e563929cb3499e3989be338a213,
+        type: 3}
+      propertyPath: _updateMode
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 642930805460571361, guid: 94313e563929cb3499e3989be338a213,
         type: 3}
       propertyPath: _iModifyDataFromSourceMono

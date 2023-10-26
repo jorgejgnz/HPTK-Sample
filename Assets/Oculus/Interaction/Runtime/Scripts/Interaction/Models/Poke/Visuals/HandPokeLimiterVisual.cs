@@ -31,7 +31,7 @@ namespace Oculus.Interaction
     public class HandPokeLimiterVisual : MonoBehaviour
     {
         [SerializeField, Interface(typeof(IHand))]
-        private MonoBehaviour _hand;
+        private UnityEngine.Object _hand;
         private IHand Hand;
 
         [SerializeField]
@@ -110,7 +110,16 @@ namespace Oculus.Interaction
 
         private void LockWrist()
         {
+            bool wasTouching = _isTouching;
+
             _isTouching = true;
+
+            if (!wasTouching && _isTouching)
+            {
+                // Activate native component
+                int result = NativeMethods.isdk_NativeComponent_Activate(0x506f6b654c696d74);
+                this.AssertIsTrue(result == NativeMethods.IsdkSuccess, "Unable to Activate native poke limit!");
+            }
         }
 
         private void UnlockWrist()
@@ -150,7 +159,7 @@ namespace Oculus.Interaction
 
         public void InjectHand(IHand hand)
         {
-            _hand = hand as MonoBehaviour;
+            _hand = hand as UnityEngine.Object;
             Hand = hand;
         }
 

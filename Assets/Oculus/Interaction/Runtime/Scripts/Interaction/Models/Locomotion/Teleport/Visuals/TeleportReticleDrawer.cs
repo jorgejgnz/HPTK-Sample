@@ -21,7 +21,6 @@
 using Oculus.Interaction.Input;
 using Oculus.Interaction.Locomotion;
 using UnityEngine;
-using UnityEngine.Events;
 
 namespace Oculus.Interaction.DistanceReticles
 {
@@ -36,15 +35,12 @@ namespace Oculus.Interaction.DistanceReticles
         private Renderer _invalidTargetRenderer;
 
         [SerializeField, Optional, Interface(typeof(IAxis1D))]
-        private MonoBehaviour _progress;
+        private UnityEngine.Object _progress;
         private IAxis1D Progress;
 
         [SerializeField, Optional, Interface(typeof(IActiveState))]
-        private MonoBehaviour _highlightState;
+        private UnityEngine.Object _highlightState;
         private IActiveState HighlightState;
-
-        public UnityEvent WhenPerformLocomotion;
-        public UnityEvent WhenDenyLocomotion;
 
         protected override IInteractorView Interactor { get; set; }
 
@@ -71,37 +67,6 @@ namespace Oculus.Interaction.DistanceReticles
             this.EndStart(ref _started);
         }
 
-
-        protected override void OnEnable()
-        {
-            base.OnEnable();
-            if (_started)
-            {
-                _interactor.WhenLocomotionPerformed += HandleLocomotionPerformed;
-                _interactor.WhenLocomotionDenied += HandleLocomotionDenied;
-            }
-        }
-
-        protected override void OnDisable()
-        {
-            if (_started)
-            {
-                _interactor.WhenLocomotionPerformed -= HandleLocomotionPerformed;
-                _interactor.WhenLocomotionDenied -= HandleLocomotionDenied;
-            }
-            base.OnDisable();
-        }
-
-        private void HandleLocomotionPerformed(LocomotionEvent obj)
-        {
-            WhenPerformLocomotion.Invoke();
-        }
-
-        private void HandleLocomotionDenied()
-        {
-            WhenDenyLocomotion.Invoke();
-        }
-
         protected override void Align(ReticleDataTeleport data)
         {
             bool highlight = HighlightState != null && HighlightState.Active;
@@ -126,12 +91,12 @@ namespace Oculus.Interaction.DistanceReticles
                 reticle = _invalidTargetRenderer;
             }
 
-
             if (reticle == null)
             {
                 return;
             }
 
+            UpdateReticle(data.ReticleMode);
             SetReticleProgress(reticle, progress);
             if (HighlightState != null)
             {
@@ -139,27 +104,9 @@ namespace Oculus.Interaction.DistanceReticles
             }
         }
 
-
-        private void SetReticleProgress(Renderer reticle, float progress)
-        {
-            reticle.material.SetFloat(_progressKey, progress);
-        }
-
-        private void SetReticleHighlight(Renderer reticle, bool highlight)
-        {
-            reticle.material.SetFloat(_highlightKey, highlight ? 1f : 0f);
-        }
-
         protected override void Draw(ReticleDataTeleport data)
         {
-            if (_validTargetRenderer != null)
-            {
-                _validTargetRenderer.enabled = data.ReticleMode == ReticleDataTeleport.TeleportReticleMode.ValidTarget;
-            }
-            if (_invalidTargetRenderer != null)
-            {
-                _invalidTargetRenderer.enabled = data.ReticleMode == ReticleDataTeleport.TeleportReticleMode.InvalidTarget;
-            }
+            UpdateReticle(data.ReticleMode);
         }
 
         protected override void Hide()
@@ -177,6 +124,31 @@ namespace Oculus.Interaction.DistanceReticles
                 _targetData.Highlight(false);
             }
         }
+
+        private void SetReticleProgress(Renderer reticle, float progress)
+        {
+            reticle.material.SetFloat(_progressKey, progress);
+        }
+
+        private void SetReticleHighlight(Renderer reticle, bool highlight)
+        {
+            reticle.material.SetFloat(_highlightKey, highlight ? 1f : 0f);
+        }
+
+        private void UpdateReticle(ReticleDataTeleport.TeleportReticleMode reticleMode)
+        {
+            if (_validTargetRenderer != null)
+            {
+                _validTargetRenderer.enabled = reticleMode == ReticleDataTeleport.TeleportReticleMode.ValidTarget;
+            }
+
+            if (_invalidTargetRenderer != null)
+            {
+                _invalidTargetRenderer.enabled = reticleMode == ReticleDataTeleport.TeleportReticleMode.InvalidTarget;
+            }
+        }
+
+
         #region Inject
 
         public void InjectAllTeleportReticleDrawer(TeleportInteractor interactor)
@@ -200,7 +172,7 @@ namespace Oculus.Interaction.DistanceReticles
 
         public void InjectOptionalProgress(IAxis1D progress)
         {
-            _progress = progress as MonoBehaviour;
+            _progress = progress as UnityEngine.Object;
             Progress = progress;
         }
         #endregion

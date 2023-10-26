@@ -34,9 +34,9 @@ namespace Oculus.Interaction.Editor
             UnityObjectAddedBroadcaster.WhenComponentAdded += (component) =>
             {
                 MonoBehaviour monoBehaviour = component as MonoBehaviour;
-                if(monoBehaviour == null) return;
+                if (monoBehaviour == null) return;
 
-                if(!_configs.TryGetValue(component.GetType(), out ComponentWiringStrategyConfig[] configs))
+                if (!_configs.TryGetValue(component.GetType(), out ComponentWiringStrategyConfig[] configs))
                 {
                     return;
                 }
@@ -55,6 +55,11 @@ namespace Oculus.Interaction.Editor
         public static void Register(Type type, ComponentWiringStrategyConfig[] fieldConfigs)
         {
             _configs.Add(type, fieldConfigs);
+        }
+
+        public static void Unregister(Type type)
+        {
+            _configs.Remove(type);
         }
 
         public static bool AutoWireField(MonoBehaviour monoBehaviour,
@@ -77,7 +82,7 @@ namespace Oculus.Interaction.Editor
             var interfaceAttribute = field.GetCustomAttribute<InterfaceAttribute>();
             var wirableTypes = interfaceAttribute != null ?
                 interfaceAttribute.Types :
-                new[] {field.FieldType};
+                new[] { field.FieldType };
 
             if (wirableTypes != null)
             {
@@ -91,16 +96,22 @@ namespace Oculus.Interaction.Editor
                             Debug.Log("Auto-wiring succeeded: " + monoBehaviour.gameObject.name + "::" +
                                       monoBehaviour.GetType().Name + "." + field.Name +
                                       " was linked to " +
-                                      component.gameObject.name + "::" + component.GetType().Name);
+                                      component.gameObject.name + "::" + component.GetType().Name,
+                                      monoBehaviour);
                             return true;
                         }
                     }
                 }
             }
 
-            Debug.LogWarning("Auto-wiring failed: no suitable targets for " +
-                             monoBehaviour.gameObject.name + "::" + monoBehaviour.GetType().Name +
-                             "." + field.Name + " could be found.");
+            if (field.GetCustomAttribute<OptionalAttribute>() == null)
+            {
+                Debug.LogWarning("Auto-wiring failed: no suitable targets for " +
+                                 monoBehaviour.gameObject.name + "::" + monoBehaviour.GetType().Name +
+                                 "." + field.Name + " could be found.",
+                                 monoBehaviour);
+            }
+
             return false;
         }
 

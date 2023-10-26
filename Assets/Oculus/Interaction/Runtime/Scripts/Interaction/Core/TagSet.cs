@@ -30,14 +30,18 @@ namespace Oculus.Interaction
     /// </summary>
     public class TagSet : MonoBehaviour
     {
+        /// <summary>
+        /// The tags that should apply to this GameObject.
+        /// </summary>
+        [Tooltip("The tags that should apply to this GameObject.")]
         [SerializeField]
         private List<string> _tags;
 
-        private HashSet<string> _tagSet;
+        private readonly HashSet<string> _tagSet =
+            new HashSet<string>();
 
         protected virtual void Start()
         {
-            _tagSet = new HashSet<string>();
             foreach (string tag in _tags)
             {
                 _tagSet.Add(tag);

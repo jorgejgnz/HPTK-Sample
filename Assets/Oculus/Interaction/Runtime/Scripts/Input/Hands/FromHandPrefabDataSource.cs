@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
  *
@@ -43,11 +43,11 @@ namespace Oculus.Interaction.Input
         public List<Transform> JointTransforms => _jointTransforms;
 
         [SerializeField, Interface(typeof(IHandSkeletonProvider))]
-        private MonoBehaviour _handSkeletonProvider;
+        private UnityEngine.Object _handSkeletonProvider;
         private IHandSkeletonProvider HandSkeletonProvider;
 
         [SerializeField, Interface(typeof(ITrackingToWorldTransformer)), Optional]
-        private MonoBehaviour _trackingToWorldTransformer;
+        private UnityEngine.Object _trackingToWorldTransformer;
         private ITrackingToWorldTransformer TrackingToWorldTransformer;
 
         protected virtual void Awake()

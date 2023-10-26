@@ -281,7 +281,7 @@ namespace Meta.WitAi.Json
             }
             else
             {
-                Debug.LogWarning($"WitResponseNode - Cast to {typeName} not supported");
+                VLog.W($"WitResponseNode - Cast to {typeName} not supported");
             }
 
             // Return result
@@ -329,6 +329,8 @@ namespace Meta.WitAi.Json
 
         internal static string Escape(string aText)
         {
+            if (string.IsNullOrEmpty(aText)) return aText;
+
             string result = "";
             foreach (char c in aText)
             {
@@ -1042,6 +1044,11 @@ namespace Meta.WitAi.Json
         {
             get { return m_Data; }
             set { m_Data = value; }
+        }
+
+        public WitResponseData()
+        {
+            m_Data = "";
         }
 
         public WitResponseData(string aData)

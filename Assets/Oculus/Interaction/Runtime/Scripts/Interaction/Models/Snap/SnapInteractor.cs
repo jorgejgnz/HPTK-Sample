@@ -32,14 +32,26 @@ namespace Oculus.Interaction
     public class SnapInteractor : Interactor<SnapInteractor, SnapInteractable>,
         IRigidbodyRef
     {
+        /// <summary>
+        /// The object's Grabbable component.
+        /// </summary>
+        [Tooltip("The object's Grabbable component.")]
         [SerializeField]
         private PointableElement _pointableElement;
         public IPointableElement PointableElement => _pointableElement;
 
+        /// <summary>
+        /// The object's RigidBody component.
+        /// </summary>
+        [Tooltip("The object's RigidBody component.")]
         [SerializeField]
         private Rigidbody _rigidbody;
         public Rigidbody Rigidbody => _rigidbody;
 
+        /// <summary>
+        /// Used to determine which object should snap to your hand when there are multiple to choose from. Objects with a lower threshold have a higher priority.
+        /// </summary>
+        [Tooltip("Used to determine which object should snap to your hand when there are multiple to choose from. Objects with a lower threshold have a higher priority.")]
         [SerializeField]
         private float _distanceThreshold = 0.01f;
 
@@ -49,6 +61,10 @@ namespace Oculus.Interaction
         private Transform _snapPoseTransform;
         public Pose SnapPose => _snapPoseTransform.GetPose();
 
+        /// <summary>
+        /// The default Interactable to snap to until you interact with the object.
+        /// </summary>
+        [Tooltip("The default Interactable to snap to until you interact with the object.")]
         [SerializeField, Optional]
         private SnapInteractable _defaultInteractable = null;
 

@@ -38,5 +38,14 @@ namespace Meta.WitAi.TTS.Data
         /// Where the TTS clip should be cached
         /// </summary>
         public TTSDiskCacheLocation DiskCacheLocation = TTSDiskCacheLocation.Stream;
+
+        /// <summary>
+        /// Where the TTS clip should streamed from cache
+        /// </summary>
+        public bool StreamFromDisk = false;
+        /// <summary>
+        /// Length of a streamed clip buffer in seconds
+        /// </summary>
+        public float StreamBufferLength = 5f;
     }
 }

@@ -27,10 +27,10 @@ namespace Oculus.Interaction.Input
     public class TrackingToWorldTransformerOVR : MonoBehaviour, ITrackingToWorldTransformer
     {
         [SerializeField, Interface(typeof(IOVRCameraRigRef))]
-        private MonoBehaviour _cameraRigRef;
+        private UnityEngine.Object _cameraRigRef;
         public IOVRCameraRigRef CameraRigRef { get; private set; }
 
-        public Transform Transform => CameraRigRef.CameraRig.transform;
+        public Transform Transform => CameraRigRef.CameraRig.trackingSpace;
 
         /// <summary>
         /// Converts a tracking space pose to a world space pose (Applies any transform applied to the OVRCameraRig)
@@ -78,7 +78,7 @@ namespace Oculus.Interaction.Input
 
         public void InjectCameraRigRef(IOVRCameraRigRef cameraRigRef)
         {
-            _cameraRigRef = cameraRigRef as MonoBehaviour;
+            _cameraRigRef = cameraRigRef as UnityEngine.Object;
             CameraRigRef = cameraRigRef;
         }
 

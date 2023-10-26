@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44202673, g: 0.4502241, b: 0.47379225, a: 1}
+  m_IndirectSpecularColor: {r: 0.44202876, g: 0.45022064, b: 0.47379425, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -1197,8 +1197,7 @@ MonoBehaviour:
   _updateMode: 8
   _updateAfter: {fileID: 187677956}
   _iModifyDataFromSourceMono: {fileID: 187677956}
-  _applyModifier: 1
-  _aspects: []
+  _applyModifier: 0
   _scale: 1
 --- !u!1 &643672248
 GameObject:
@@ -2582,6 +2581,11 @@ MonoBehaviour:
   _positionPinning:
     Enabled: 0
     MaxPinDistance: 0
+  _recoilAssist:
+    Enabled: 0
+    ExitDistance: 0.02
+    ReEnterDistance: 0.02
+  _closeDistanceThreshold: 0.001
   _tiebreakerScore: 0
 --- !u!4 &1097885917
 Transform:
@@ -4696,8 +4700,7 @@ MonoBehaviour:
   _updateMode: 8
   _updateAfter: {fileID: 1434359322}
   _iModifyDataFromSourceMono: {fileID: 1434359322}
-  _applyModifier: 1
-  _aspects: []
+  _applyModifier: 0
   _scale: 1
 --- !u!1 &1752923794
 GameObject:
@@ -6237,6 +6240,7 @@ MonoBehaviour:
   _forwardElement: {fileID: 0}
   _oneGrabTransformer: {fileID: 0}
   _twoGrabTransformer: {fileID: 0}
+  _targetTransform: {fileID: 0}
   _maxGrabPoints: -1
 --- !u!1001 &1955518730969246596
 PrefabInstance:

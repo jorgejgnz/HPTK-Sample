@@ -150,6 +150,7 @@ namespace Oculus.Interaction.HandGrab
         /// <param name="result">A HandPose positioned/rotated between the base and target.</param>
         public static void Lerp(in HandPose from, in HandPose to, float t, ref HandPose result)
         {
+            t = Mathf.Clamp01(t);
             for (int i = 0; i < FingersMetadata.HAND_JOINT_IDS.Length; i++)
             {
                 result.JointRotations[i] = Quaternion.SlerpUnclamped(from.JointRotations[i], to.JointRotations[i], t);

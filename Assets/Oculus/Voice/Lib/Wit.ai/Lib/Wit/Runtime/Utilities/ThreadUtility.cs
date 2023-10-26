@@ -6,10 +6,16 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#if !UNITY_WEBGL
+#define THREADING_ENABLED
+#endif
+
 using System;
 using UnityEngine;
 using System.Collections;
+#if THREADING_ENABLED
 using System.Threading;
+#endif
 
 namespace Meta.WitAi
 {
@@ -19,13 +25,13 @@ namespace Meta.WitAi
         public const float THREAD_DEFAULT_TIMEOUT = -1f;
 
         // Perform in background & return on complete
-        public static ThreadPerformer PerformInBackground(Func<bool> workerAction, Action<bool> onComplete, float timeout = THREAD_DEFAULT_TIMEOUT)
+        public static ThreadPerformer<T> PerformInBackground<T>(Func<T> workerAction, Action<T, string> onComplete, float timeout = THREAD_DEFAULT_TIMEOUT)
         {
-            return new ThreadPerformer(workerAction, onComplete, timeout);
+            return new ThreadPerformer<T>(workerAction, onComplete, timeout);
         }
 
         // Performer
-        public class ThreadPerformer
+        public class ThreadPerformer<T>
         {
             /// <summary>
             /// Whether thread is running
@@ -33,31 +39,37 @@ namespace Meta.WitAi
             public bool IsRunning { get; private set; }
 
             // Complete callback items
+            #if THREADING_ENABLED
             private Thread _thread;
-            private Func<bool> _worker;
-            private Action<bool> _complete;
+            #endif
+            private Func<T> _worker;
+            private Action<T, string> _complete;
             private float _timeout;
-            private bool _success;
+            private T _result;
+            private string _error;
             private CoroutineUtility.CoroutinePerformer _coroutine;
 
             /// <summary>
             /// Generate thread
             /// </summary>
-            public ThreadPerformer(Func<bool> worker, Action<bool> onComplete, float timeout)
+            public ThreadPerformer(Func<T> worker, Action<T, string> onComplete, float timeout)
             {
                 // Begin
                 IsRunning = true;
 
                 // Wait for thread completion
-                _success = true;
+                _result = default(T);
+                _error = string.Empty;
                 _worker = worker;
                 _complete = onComplete;
                 _timeout = timeout;
                 _coroutine = CoroutineUtility.StartCoroutine(WaitForCompletion(), true);
 
                 // Start thread
+                #if THREADING_ENABLED
                 _thread = new Thread(Work);
                 _thread.Start();
+                #endif
             }
 
             // Work
@@ -66,13 +78,12 @@ namespace Meta.WitAi
                 // Perform action
                 try
                 {
-                    _success = _worker.Invoke();
+                    _result = _worker.Invoke();
                 }
                 // Catch exceptions
                 catch (Exception e)
                 {
-                    VLog.E($"Background thread error thrown\n{e}");
-                    _success = false;
+                    _error = $"Background thread error thrown\n{e}";
                 }
 
                 // Complete
@@ -82,6 +93,11 @@ namespace Meta.WitAi
             // Wait for completion
             private IEnumerator WaitForCompletion()
             {
+                #if !THREADING_ENABLED
+                yield return null;
+                Work();
+                #endif
+
                 // Wait while running
                 DateTime start = DateTime.Now;
                 while (IsRunning && !IsTimedOut(start))
@@ -92,11 +108,11 @@ namespace Meta.WitAi
                 // Timed out
                 if (IsTimedOut(start))
                 {
-                    _success = false;
+                    _error = "Timed out";
                 }
 
                 // Complete
-                _complete?.Invoke(_success);
+                _complete?.Invoke(_result, _error);
 
                 // Quit
                 Quit();
@@ -121,12 +137,20 @@ namespace Meta.WitAi
                     GameObject.DestroyImmediate(_coroutine);
                     _coroutine = null;
                 }
+                #if THREADING_ENABLED
+                if (_thread != null)
+                {
+                    if (IsRunning)
+                    {
+                        _thread.Join();
+                    }
+                    _thread = null;
+                }
+                #endif
                 if (IsRunning)
                 {
                     IsRunning = false;
-                    _thread.Join();
                 }
-                _thread = null;
             }
         }
     }

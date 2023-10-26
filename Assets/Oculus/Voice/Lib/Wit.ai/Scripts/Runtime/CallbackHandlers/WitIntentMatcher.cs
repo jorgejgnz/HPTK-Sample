@@ -7,6 +7,7 @@
  */
 
 using System;
+using Meta.Conduit;
 using Meta.WitAi.Json;
 using Meta.WitAi.Data.Intents;
 using UnityEngine;
@@ -63,6 +64,18 @@ namespace Meta.WitAi.CallbackHandlers
                 return $"Required intent '{intent}' confidence too low: {found.confidence:0.000}\nRequired: {confidenceThreshold:0.000}";
             }
             return string.Empty;
+        }
+
+        protected override void OnEnable()
+        {
+            Manifest.WitResponseMatcherIntents.Add(intent);
+            base.OnEnable();
+        }
+
+        protected override void OnDisable()
+        {
+            Manifest.WitResponseMatcherIntents.Remove(intent);
+            base.OnDisable();
         }
     }
 }

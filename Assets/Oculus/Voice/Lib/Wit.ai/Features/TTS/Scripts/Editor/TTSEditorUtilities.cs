@@ -6,17 +6,18 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Meta.WitAi.Data.Configuration;
-using Meta.WitAi.TTS.Data;
-using Meta.WitAi.TTS.Editor.Voices;
 using Meta.WitAi.TTS.Integrations;
 using Meta.WitAi.TTS.Utilities;
-using Meta.WitAi;
 using Meta.WitAi.Data.Info;
+using Meta.WitAi.Lib;
 using UnityEditor;
 using UnityEngine;
 
-namespace Meta.WitAi.TTS.Editor
+namespace Meta.WitAi.TTS
 {
     public static class TTSEditorUtilities
     {
@@ -56,7 +57,7 @@ namespace Meta.WitAi.TTS.Editor
                 // Log
                 if (!ignoreErrors)
                 {
-                    Debug.LogWarning($"TTS Service - A TTSService is already in scene\nGameObject: {instance.gameObject.name}");
+                    VLog.W($"TTS Service - A TTSService is already in scene\nGameObject: {instance.gameObject.name}");
                 }
 
                 // Move into parent
@@ -136,7 +137,7 @@ namespace Meta.WitAi.TTS.Editor
         }
 
         // Refresh available voices
-        private static void RefreshAvailableVoices(TTSWit ttsWit)
+        internal static void RefreshAvailableVoices(TTSWit ttsWit, Action<WitAppInfo> onUpdateComplete = null)
         {
             // Fail without configuration
             if (ttsWit == null)
@@ -151,49 +152,67 @@ namespace Meta.WitAi.TTS.Editor
                 return;
             }
 
-            // Get application info
-            WitAppInfo appInfo = configuration.GetApplicationInfo();
+            // Update app info
+            WitAppInfoUtility.Update(ttsWit.RequestSettings.configuration, (newInfo, r) =>
+            {
+                configuration.SetApplicationInfo(newInfo);
+                UpdatePresets(ttsWit, newInfo);
+                onUpdateComplete?.Invoke(newInfo);
+            });
+        }
+
+        // Add all presets
+        private static void UpdatePresets(TTSWit ttsWit, WitAppInfo appInfo)
+        {
+            // Cannot update presets without voices
             if (appInfo.voices == null || appInfo.voices.Length == 0)
             {
-                VLog.W($"TTS Service - No voices found");
-                if (ttsWit.PresetVoiceSettings == null || ttsWit.PresetVoiceSettings.Length == 0)
-                {
-                    WitVoiceInfo voiceInfo = new WitVoiceInfo()
-                    {
-                        name = TTSWitVoiceSettings.DEFAULT_VOICE,
-                    };
-                    TTSWitVoiceSettings placeholder = GetDefaultVoiceSetting(voiceInfo);
-                    ttsWit.SetVoiceSettings(new TTSWitVoiceSettings[] { placeholder });
-                }
-            }
-            // Reset list of voices
-            else
-            {
-                WitVoiceInfo[] voices = appInfo.voices;
-                TTSWitVoiceSettings[] newSettings = new TTSWitVoiceSettings[voices.Length];
-                for (int i = 0; i < voices.Length; i++)
-                {
-                    newSettings[i] = GetDefaultVoiceSetting(voices[i]);
-                }
-                ttsWit.SetVoiceSettings(newSettings);
-                VLog.D($"TTS Service - Successfully applied {voices.Length} voices to {ttsWit.gameObject.name}");
+                VLog.W("TTS Refresh failed to find voices");
+                return;
             }
 
-            // Refresh
+            // Add all voices to preset voice list
+            if (ttsWit.PresetWitVoiceSettings == null || ttsWit.PresetWitVoiceSettings.Length == 0)
+            {
+                AddPresetsForInfo(ttsWit, appInfo.voices);
+            }
+
+            // Refresh speakers
             RefreshEmptySpeakers(ttsWit);
         }
 
-        // Set all blank IDs to default voice id
-        private static void RefreshEmptySpeakers(TTSService service)
+        // Adds a list of voice infos
+        internal static void AddPresetsForInfo(TTSWit ttsWit, WitVoiceInfo[] voiceInfos)
         {
-            string defaultVoiceID = service.VoiceProvider.VoiceDefaultSettings.settingsID;
-            foreach (var speaker in GameObject.FindObjectsOfType<TTSSpeaker>())
+            // Ignore without infos
+            if (voiceInfos == null || voiceInfos.Length == 0)
             {
-                if (string.IsNullOrEmpty(speaker.presetVoiceID) || string.Equals(speaker.presetVoiceID, TTSVoiceSettings.DEFAULT_ID))
-                {
-                    speaker.presetVoiceID = defaultVoiceID;
-                }
+                return;
             }
+
+            // Add all voices to preset voice list
+            List<TTSWitVoiceSettings> voices = new List<TTSWitVoiceSettings>();
+            if (ttsWit.PresetWitVoiceSettings != null)
+            {
+                voices.AddRange(ttsWit.PresetWitVoiceSettings);
+            }
+            foreach (var voiceData in voiceInfos)
+            {
+                voices.Add(GetDefaultVoiceSetting(voiceData));
+            }
+            ttsWit.SetVoiceSettings(voices.ToArray());
+        }
+
+        // Adds a preset for a specific voice
+        internal static void AddPresetForInfo(TTSWit ttsWit, WitVoiceInfo voiceData)
+        {
+            List<TTSWitVoiceSettings> voices = new List<TTSWitVoiceSettings>();
+            if (ttsWit.PresetWitVoiceSettings != null)
+            {
+                voices.AddRange(ttsWit.PresetWitVoiceSettings);
+            }
+            voices.Add(GetDefaultVoiceSetting(voiceData));
+            ttsWit.SetVoiceSettings(voices.ToArray());
         }
 
         // Get default voice settings
@@ -201,7 +220,7 @@ namespace Meta.WitAi.TTS.Editor
         {
             TTSWitVoiceSettings result = new TTSWitVoiceSettings()
             {
-                settingsID = voiceData.name.ToUpper(),
+                SettingsId = voiceData.name.ToUpper(),
                 voice = voiceData.name
             };
             // Use first style provided
@@ -210,6 +229,18 @@ namespace Meta.WitAi.TTS.Editor
                 result.style = voiceData.styles[0];
             }
             return result;
+        }
+        // Set all blank IDs to default voice id
+        private static void RefreshEmptySpeakers(TTSService service)
+        {
+            string defaultVoiceID = service.VoiceProvider.VoiceDefaultSettings?.SettingsId;
+            foreach (var speaker in GameObject.FindObjectsOfType<TTSSpeaker>())
+            {
+                if (string.IsNullOrEmpty(speaker.presetVoiceID))
+                {
+                    speaker.presetVoiceID = defaultVoiceID;
+                }
+            }
         }
 
         // Default TTS Speaker
@@ -240,7 +271,6 @@ namespace Meta.WitAi.TTS.Editor
             audio.playOnAwake = false;
             audio.loop = false;
             audio.spatialBlend = 0f; // Default to 2D
-            speaker.AudioSource = audio;
 
             // Return speaker
             VLog.D($"TTS Service - Instantiated Speaker {speaker.gameObject.name}");

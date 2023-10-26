@@ -123,14 +123,20 @@ namespace Oculus.Interaction.UnityCanvas
 
         #region Inject
 
-        public void InjectAllCanvasMesh(CanvasRenderTexture canvasRenderTexture)
+        public void InjectAllCanvasMesh(CanvasRenderTexture canvasRenderTexture, MeshFilter meshFilter)
         {
             InjectCanvasRenderTexture(canvasRenderTexture);
+            InjectMeshFilter(meshFilter);
         }
 
         public void InjectCanvasRenderTexture(CanvasRenderTexture canvasRenderTexture)
         {
             _canvasRenderTexture = canvasRenderTexture;
+        }
+
+        public void InjectMeshFilter(MeshFilter meshFilter)
+        {
+            _meshFilter = meshFilter;
         }
 
         public void InjectOptionalMeshCollider(MeshCollider meshCollider)

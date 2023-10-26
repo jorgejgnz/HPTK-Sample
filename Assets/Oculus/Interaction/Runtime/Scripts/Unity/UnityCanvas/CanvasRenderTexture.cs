@@ -341,15 +341,22 @@ namespace Oculus.Interaction.UnityCanvas
 
         #region Inject
 
-        public void InjectAllCanvasRenderTexture(int pixelsPerUnit,
-                                                 int renderScale,
-                                                 LayerMask renderingLayers,
-                                                 bool generateMipMaps)
+        public void InjectAllCanvasRenderTexture(Canvas canvas,
+            int pixelsPerUnit,
+            int renderScale,
+            LayerMask renderingLayers,
+            bool generateMipMaps)
         {
+            InjectCanvas(canvas);
             InjectPixelsPerUnit(pixelsPerUnit);
             InjectRenderScale(renderScale);
             InjectRenderingLayers(renderingLayers);
             InjectGenerateMipMaps(generateMipMaps);
+        }
+
+        public void InjectCanvas(Canvas canvas)
+        {
+            _canvas = canvas;
         }
 
         public void InjectPixelsPerUnit(int pixelsPerUnit)

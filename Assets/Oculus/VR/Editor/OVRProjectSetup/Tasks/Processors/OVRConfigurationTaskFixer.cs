@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  * All rights reserved.
  *
@@ -26,62 +26,64 @@ using UnityEngine;
 
 internal class OVRConfigurationTaskFixer : OVRConfigurationTaskProcessor
 {
-	public override int AllocatedTimeInMs => 10;
-	public override ProcessorType Type => ProcessorType.Fixer;
-	protected override Func<IEnumerable<OVRConfigurationTask>, List<OVRConfigurationTask>> OpenTasksFilter =>
-		(Func<IEnumerable<OVRConfigurationTask>, List<OVRConfigurationTask>>)(tasksToFilter => tasksToFilter
-		.Where(task => task.FixAction != null
-		               && !task.IsDone(BuildTargetGroup)
-		               && !task.IsIgnored(BuildTargetGroup))
-		.ToList());
+    public override int AllocatedTimeInMs => 10;
+    public override ProcessorType Type => ProcessorType.Fixer;
 
-	private const int LoopExitCount = 4;
+    protected override Func<IEnumerable<OVRConfigurationTask>, List<OVRConfigurationTask>> OpenTasksFilter =>
+        (Func<IEnumerable<OVRConfigurationTask>, List<OVRConfigurationTask>>)(tasksToFilter => tasksToFilter
+            .Where(task => task.FixAction != null
+                           && !task.IsDone(BuildTargetGroup)
+                           && !task.IsIgnored(BuildTargetGroup))
+            .ToList());
 
-	private bool _hasFixedSome = false;
-	private int _counter = LoopExitCount;
+    private const int LoopExitCount = 4;
 
-	public OVRConfigurationTaskFixer(
-		OVRConfigurationTaskRegistry registry,
-		BuildTargetGroup buildTargetGroup,
-		Func<IEnumerable<OVRConfigurationTask>, List<OVRConfigurationTask>> filter,
-		OVRProjectSetup.LogMessages logMessages,
-		bool blocking,
-		Action<OVRConfigurationTaskProcessor> onCompleted)
-		: base(registry, buildTargetGroup, filter, logMessages, blocking, onCompleted)
-	{
-	}
+    private bool _hasFixedSome = false;
+    private int _counter = LoopExitCount;
 
-	protected override void ProcessTask(OVRConfigurationTask task)
-	{
-		_hasFixedSome |= task.Fix(BuildTargetGroup);
-	}
+    public OVRConfigurationTaskFixer(
+        OVRConfigurationTaskRegistry registry,
+        BuildTargetGroup buildTargetGroup,
+        Func<IEnumerable<OVRConfigurationTask>, List<OVRConfigurationTask>> filter,
+        OVRProjectSetup.LogMessages logMessages,
+        bool blocking,
+        Action<OVRConfigurationTaskProcessor> onCompleted)
+        : base(registry, buildTargetGroup, filter, logMessages, blocking, onCompleted)
+    {
+    }
 
-	protected override void PrepareTasks()
-	{
-		_hasFixedSome = false;
-		base.PrepareTasks();
-	}
+    protected override void ProcessTask(OVRConfigurationTask task)
+    {
+        _hasFixedSome |= task.Fix(BuildTargetGroup);
+    }
 
-	protected override void Validate()
-	{
-		_counter--;
+    protected override void PrepareTasks()
+    {
+        _hasFixedSome = false;
+        base.PrepareTasks();
+    }
 
-		if (_counter <= 0)
-		{
-			Debug.LogWarning("[Oculus Settings] Fixing Tasks has exited after too many iterations. (There might be some contradictory rules leading to a loop)");
-			return;
-		}
+    protected override void Validate()
+    {
+        _counter--;
 
-		if (!_hasFixedSome)
-		{
-			return;
-		}
+        if (_counter <= 0)
+        {
+            Debug.LogWarning("[Oculus Settings] Fixing Tasks has exited after too many iterations. " +
+                             "(There might be some contradictory rules leading to a loop)");
+            return;
+        }
 
-		// Preparing a new Run
-		PrepareTasks();
-		if (Blocking)
-		{
-			Update();
-		}
-	}
+        if (!_hasFixedSome)
+        {
+            return;
+        }
+
+        // Preparing a new Run
+        PrepareTasks();
+        if (Blocking)
+        {
+            Update();
+        }
+    }
 }

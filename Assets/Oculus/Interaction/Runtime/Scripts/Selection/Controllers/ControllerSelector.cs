@@ -35,7 +35,7 @@ namespace Oculus.Interaction
         }
 
         [SerializeField, Interface(typeof(IController))]
-        private MonoBehaviour _controller;
+        private UnityEngine.Object _controller;
 
         [SerializeField]
         private ControllerButtonUsage _controllerButtonUsage;
@@ -116,7 +116,7 @@ namespace Oculus.Interaction
 
         public void InjectController(IController controller)
         {
-            _controller  = controller as MonoBehaviour;;
+            _controller = controller as UnityEngine.Object;
             Controller = controller;
         }
 

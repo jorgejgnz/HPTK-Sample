@@ -21,6 +21,7 @@ namespace Meta.WitAi.Windows
         protected abstract GUIContent Title { get; }
         protected virtual Texture2D HeaderIcon => WitTexts.HeaderIcon;
         protected virtual string HeaderUrl => WitTexts.WitUrl;
+        protected virtual string DocsUrl => WitTexts.Texts.WitDocsUrl;
 
         // Window open
         protected virtual void OnEnable()
@@ -37,7 +38,7 @@ namespace Meta.WitAi.Windows
         protected virtual void OnGUI()
         {
             Vector2 size;
-            WitEditorUI.LayoutWindow(titleContent.text, HeaderIcon, HeaderUrl, LayoutContent, ref ScrollOffset, out size);
+            WitEditorUI.LayoutWindow(Title.text, HeaderIcon, HeaderUrl, DocsUrl, LayoutContent, ref ScrollOffset, out size);
         }
         // Draw content of window
         protected abstract void LayoutContent();

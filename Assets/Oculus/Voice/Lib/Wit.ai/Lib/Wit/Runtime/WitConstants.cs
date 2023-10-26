@@ -11,8 +11,8 @@ namespace Meta.WitAi
     public static class WitConstants
     {
         // Wit service version info
-        public const string API_VERSION = "20220728";
-        public const string SDK_VERSION = "49.0.50";
+        public const string API_VERSION = "20230613";
+        public const string SDK_VERSION = "57.0.0";
         public const string CLIENT_NAME = "wit-unity";
 
         // Wit service endpoint info
@@ -23,7 +23,6 @@ namespace Meta.WitAi
         public const string HEADER_REQUEST_ID = "X-Wit-Client-Request-Id";
         public const string HEADER_AUTH = "Authorization";
         public const string HEADER_USERAGENT = "User-Agent";
-        public const string HEADER_USERAGENT_PREFIX = "";
         public const string HEADER_USERAGENT_CONFID_MISSING = "not-yet-configured";
         public const string HEADER_POST_CONTENT = "Content-Type";
         public const string HEADER_GET_CONTENT = "Accept";
@@ -33,14 +32,17 @@ namespace Meta.WitAi
         public const string ENDPOINT_MESSAGE = "message";
         public const string ENDPOINT_MESSAGE_PARAM = "q";
         public const string ENDPOINT_JSON_DELIMITER = "\r\n";
+        public const string ENDPOINT_ERROR_PARAM = "error";
 
         // TTS Endpoint
         public const string ENDPOINT_TTS = "synthesize";
         public const string ENDPOINT_TTS_PARAM = "q";
-        public const string ENDPOINT_TTS_CLIP = "WitTTSClip";
         public const string ENDPOINT_TTS_NO_TEXT = "No text provided";
+        public const int ENDPOINT_TTS_CHANNELS = 1;
+        public const int ENDPOINT_TTS_SAMPLE_RATE = 24000;
         public const int ENDPOINT_TTS_TIMEOUT = 10000; // In ms
-        public const int ENDPOINT_TTS_MAX_TEXT_LENGTH = 140;
+        public const int ENDPOINT_TTS_MAX_TEXT_LENGTH = 280;
+        public const string ERROR_TTS_CACHE_DOWNLOAD = "File is not Preloaded";
 
         // Dictation Endpoint
         public const string ENDPOINT_DICTATION = "dictation";
@@ -48,11 +50,41 @@ namespace Meta.WitAi
         // Composer Endpoints
         public const string ENDPOINT_COMPOSER_SPEECH = "converse";
         public const string ENDPOINT_COMPOSER_MESSAGE = "event";
-        public const string ENDPOINT_COMPOSER_PARAM_SESSION = "session_id";
-        public const string ENDPOINT_COMPOSER_PARAM_CONTEXT_MAP = "context_map";
 
-        // Runtime Sync Endpoints
-        public const string ENDPOINT_IMPORT = "import";
-        public const string ENDPOINT_INTENTS = "intents";
+        // Reusable constants
+        public const string CANCEL_ERROR = "Cancelled";
+        public const string CANCEL_MESSAGE_DEFAULT = "Request was cancelled.";
+        public const string CANCEL_MESSAGE_PRE_SEND = "Request cancelled prior to transmission";
+
+        /// <summary>
+        /// Error code thrown when an exception is caught during processing or
+        /// some other general error happens that is not an error from the server
+        /// </summary>
+        public const int ERROR_CODE_GENERAL = -1;
+        /// <summary>
+        /// Error code returned when no configuration is defined
+        /// </summary>
+        public const int ERROR_CODE_NO_CONFIGURATION = -2;
+        /// <summary>
+        /// Error code returned when the client token has not been set in the
+        /// Wit configuration.
+        /// </summary>
+        public const int ERROR_CODE_NO_CLIENT_TOKEN = -3;
+        /// <summary>
+        /// No data was returned from the server.
+        /// </summary>
+        public const int ERROR_CODE_NO_DATA_FROM_SERVER = -4;
+        /// <summary>
+        /// Invalid data was returned from the server.
+        /// </summary>
+        public const int ERROR_CODE_INVALID_DATA_FROM_SERVER = -5;
+        /// <summary>
+        /// Request was aborted
+        /// </summary>
+        public const int ERROR_CODE_ABORTED = -6;
+        /// <summary>
+        /// Request to the server timed out
+        /// </summary>
+        public const int ERROR_CODE_TIMEOUT = 14;
     }
 }

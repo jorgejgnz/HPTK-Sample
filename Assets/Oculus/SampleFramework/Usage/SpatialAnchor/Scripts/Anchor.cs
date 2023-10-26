@@ -1,11 +1,13 @@
 // (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
 
+using System;
 using System.Collections;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using UnityEngine.Serialization;
+using System.Text;
 
 /// <summary>
 /// Specific functionality for spawned anchors
@@ -76,6 +78,23 @@ public class Anchor : MonoBehaviour
         _icon = GetComponent<Transform>().FindChildRecursive("Sphere").gameObject;
     }
 
+    static string ConvertUuidToString(System.Guid guid)
+    {
+        var value = guid.ToByteArray();
+        StringBuilder hex = new StringBuilder(value.Length * 2 + 4);
+        for (int ii = 0; ii < value.Length; ++ii)
+        {
+            if (3 < ii && ii < 11 && ii % 2 == 0)
+            {
+                hex.Append("-");
+            }
+
+            hex.AppendFormat("{0:x2}", value[ii]);
+        }
+
+        return hex.ToString();
+    }
+
     private IEnumerator Start()
     {
         while (_spatialAnchor && !_spatialAnchor.Created)
@@ -85,7 +104,7 @@ public class Anchor : MonoBehaviour
 
         if (_spatialAnchor)
         {
-            _anchorName.text = _spatialAnchor.Uuid.ToString("D");
+            _anchorName.text = ConvertUuidToString(_spatialAnchor.Uuid);
         }
         else
         {
@@ -126,16 +145,21 @@ public class Anchor : MonoBehaviour
             // Enables save icon on the menu
             ShowSaveIcon = true;
 
-            // Write uuid of saved anchor to file
-            if (!PlayerPrefs.HasKey(NumUuidsPlayerPref))
-            {
-                PlayerPrefs.SetInt(NumUuidsPlayerPref, 0);
-            }
-
-            int playerNumUuids = PlayerPrefs.GetInt(NumUuidsPlayerPref);
-            PlayerPrefs.SetString("uuid" + playerNumUuids, anchor.Uuid.ToString());
-            PlayerPrefs.SetInt(NumUuidsPlayerPref, ++playerNumUuids);
+            SaveUuidToPlayerPrefs(anchor.Uuid);
         });
+    }
+
+    void SaveUuidToPlayerPrefs(Guid uuid)
+    {
+        // Write uuid of saved anchor to file
+        if (!PlayerPrefs.HasKey(NumUuidsPlayerPref))
+        {
+            PlayerPrefs.SetInt(NumUuidsPlayerPref, 0);
+        }
+
+        int playerNumUuids = PlayerPrefs.GetInt(NumUuidsPlayerPref);
+        PlayerPrefs.SetString("uuid" + playerNumUuids, uuid.ToString());
+        PlayerPrefs.SetInt(NumUuidsPlayerPref, ++playerNumUuids);
     }
 
     /// <summary>
@@ -180,6 +204,7 @@ public class Anchor : MonoBehaviour
         {
             return;
         }
+
         _isHovered = true;
 
         // Yellow highlight
@@ -187,6 +212,7 @@ public class Anchor : MonoBehaviour
         {
             renderer.material.SetColor("_EmissionColor", Color.yellow);
         }
+
         _labelImage.color = _labelHighlightColor;
     }
 
@@ -199,6 +225,7 @@ public class Anchor : MonoBehaviour
         {
             return;
         }
+
         _isHovered = false;
 
         // Go back to normal
@@ -262,7 +289,10 @@ public class Anchor : MonoBehaviour
     private void BillboardPanel(Transform panel)
     {
         // The z axis of the panel faces away from the side that is rendered, therefore this code is actually looking away from the camera
-        panel.LookAt(new Vector3(panel.position.x * 2 - Camera.main.transform.position.x, panel.position.y * 2 - Camera.main.transform.position.y, panel.position.z * 2 - Camera.main.transform.position.z), Vector3.up);
+        panel.LookAt(
+            new Vector3(panel.position.x * 2 - Camera.main.transform.position.x,
+                panel.position.y * 2 - Camera.main.transform.position.y,
+                panel.position.z * 2 - Camera.main.transform.position.z), Vector3.up);
     }
 
     private void HandleMenuNavigation()
@@ -271,14 +301,17 @@ public class Anchor : MonoBehaviour
         {
             return;
         }
+
         if (OVRInput.GetDown(OVRInput.RawButton.RThumbstickUp))
         {
             NavigateToIndexInMenu(false);
         }
+
         if (OVRInput.GetDown(OVRInput.RawButton.RThumbstickDown))
         {
             NavigateToIndexInMenu(true);
         }
+
         if (OVRInput.GetDown(OVRInput.RawButton.RIndexTrigger))
         {
             _selectedButton.OnSubmit(null);
@@ -303,10 +336,12 @@ public class Anchor : MonoBehaviour
                 _menuIndex = _buttonList.Count - 1;
             }
         }
+
         if (_selectedButton)
         {
             _selectedButton.OnDeselect(null);
         }
+
         _selectedButton = _buttonList[_menuIndex];
         _selectedButton.OnSelect(null);
     }

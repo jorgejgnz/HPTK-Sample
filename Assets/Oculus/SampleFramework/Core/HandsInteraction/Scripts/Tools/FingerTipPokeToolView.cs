@@ -27,37 +27,31 @@ using UnityEngine.Assertions;
 /// </summary>
 namespace OculusSampleFramework
 {
-	public class FingerTipPokeToolView : MonoBehaviour, InteractableToolView
-	{
-		[SerializeField] private MeshRenderer _sphereMeshRenderer = null;
+    public class FingerTipPokeToolView : MonoBehaviour, InteractableToolView
+    {
+        [SerializeField] private MeshRenderer _sphereMeshRenderer = null;
 
-		public InteractableTool InteractableTool { get; set; }
+        public InteractableTool InteractableTool { get; set; }
 
-		public bool EnableState
-		{
-			get
-			{
-				return _sphereMeshRenderer.enabled;
-			}
-			set
-			{
-				_sphereMeshRenderer.enabled = value;
-			}
-		}
+        public bool EnableState
+        {
+            get { return _sphereMeshRenderer.enabled; }
+            set { _sphereMeshRenderer.enabled = value; }
+        }
 
-		public bool ToolActivateState { get; set; }
+        public bool ToolActivateState { get; set; }
 
-		public float SphereRadius { get; private set; }
+        public float SphereRadius { get; private set; }
 
-		private void Awake()
-		{
-			Assert.IsNotNull(_sphereMeshRenderer);
-			SphereRadius = _sphereMeshRenderer.transform.localScale.z * 0.5f;
-		}
+        private void Awake()
+        {
+            Assert.IsNotNull(_sphereMeshRenderer);
+            SphereRadius = _sphereMeshRenderer.transform.localScale.z * 0.5f;
+        }
 
-		public void SetFocusedInteractable(Interactable interactable)
-		{
-			// nothing to see here
-		}
-	}
+        public void SetFocusedInteractable(Interactable interactable)
+        {
+            // nothing to see here
+        }
+    }
 }

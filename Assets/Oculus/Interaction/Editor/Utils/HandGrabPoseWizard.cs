@@ -200,7 +200,7 @@ namespace Oculus.Interaction.HandGrab.Editor
                 return;
             }
 
-            Pose gripPoint = _item.transform.Delta(handRoot);
+            Pose gripPoint = PoseUtils.DeltaScaled(_item.transform, handRoot);
             HandGrabPose point = AddHandGrabPose(trackedHandPose, gripPoint);
             AttachGhost(point);
         }
@@ -244,7 +244,7 @@ namespace Oculus.Interaction.HandGrab.Editor
             var pointData = new HandGrabUtils.HandGrabPoseData()
             {
                 handPose = rawPose,
-                scale = 1f,
+                scale = Hand.Scale / interactable.RelativeTo.lossyScale.x,
                 gripPose = snapPoint,
             };
             return HandGrabUtils.LoadHandGrabPose(interactable, pointData);

@@ -31,7 +31,7 @@ namespace Oculus.Interaction
     public class FingerFeatureStateProviderRef : MonoBehaviour, IFingerFeatureStateProvider
     {
         [SerializeField, Interface(typeof(IFingerFeatureStateProvider))]
-        private MonoBehaviour _fingerFeatureStateProvider;
+        private UnityEngine.Object _fingerFeatureStateProvider;
 
         public IFingerFeatureStateProvider FingerFeatureStateProvider { get; private set; }
 
@@ -69,7 +69,7 @@ namespace Oculus.Interaction
 
         public void InjectFingerFeatureStateProvider(IFingerFeatureStateProvider fingerFeatureStateProvider)
         {
-            _fingerFeatureStateProvider = fingerFeatureStateProvider as MonoBehaviour;
+            _fingerFeatureStateProvider = fingerFeatureStateProvider as UnityEngine.Object;
             FingerFeatureStateProvider = fingerFeatureStateProvider;
         }
         #endregion

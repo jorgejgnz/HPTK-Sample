@@ -28,7 +28,7 @@ namespace Oculus.Interaction.Input
     public class HandPhysicsCapsules : MonoBehaviour
     {
         [SerializeField, Interface(typeof(IHandVisual))]
-        private MonoBehaviour _handVisual;
+        private UnityEngine.Object _handVisual;
         private IHandVisual HandVisual;
 
         [SerializeField]
@@ -306,7 +306,7 @@ namespace Oculus.Interaction.Input
 
         public void InjectHandVisual(IHandVisual handVisual)
         {
-            _handVisual = handVisual as MonoBehaviour;
+            _handVisual = handVisual as UnityEngine.Object;
             HandVisual = handVisual;
         }
 

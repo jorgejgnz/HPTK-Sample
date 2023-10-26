@@ -24,8 +24,11 @@ using UnityEditor;
 [InitializeOnLoad]
 internal static class OVRProjectSetupCompatibilityTasks
 {
-	public static bool IsTargetingARM64 => (PlayerSettings.Android.targetArchitectures & AndroidArchitecture.ARM64) != 0;
-	public static readonly Action<BuildTargetGroup> SetARM64Target = (buildTargetGroup) => PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
+    public static bool IsTargetingARM64 =>
+        (PlayerSettings.Android.targetArchitectures & AndroidArchitecture.ARM64) != 0;
+
+    public static readonly Action<BuildTargetGroup> SetARM64Target = (buildTargetGroup) =>
+        PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
 
     static OVRProjectSetupCompatibilityTasks()
     {
@@ -37,9 +40,9 @@ internal static class OVRProjectSetupCompatibilityTasks
             group: compatibilityTaskGroup,
             isDone: OVRProjectSetup.IsPlatformSupported,
             conditionalMessage: buildTargetGroup =>
-                OVRProjectSetup.IsPlatformSupported(buildTargetGroup) ?
-                    $"Build Target ({buildTargetGroup}) is supported" :
-                    $"Build Target ({buildTargetGroup}) is not supported"
+                OVRProjectSetup.IsPlatformSupported(buildTargetGroup)
+                    ? $"Build Target ({buildTargetGroup}) is supported"
+                    : $"Build Target ({buildTargetGroup}) is not supported"
         );
 
         // [Required] Android minimum level API
@@ -58,7 +61,9 @@ internal static class OVRProjectSetupCompatibilityTasks
             level: OVRProjectSetup.TaskLevel.Recommended,
             group: compatibilityTaskGroup,
             platform: BuildTargetGroup.Android,
-            isDone: buildTargetGroup => PlayerSettings.Android.targetSdkVersion == AndroidSdkVersions.AndroidApiLevelAuto || PlayerSettings.Android.targetSdkVersion >= AndroidSdkVersions.AndroidApiLevel29,
+            isDone: buildTargetGroup =>
+                PlayerSettings.Android.targetSdkVersion == AndroidSdkVersions.AndroidApiLevelAuto ||
+                PlayerSettings.Android.targetSdkVersion >= AndroidSdkVersions.AndroidApiLevel29,
             message: "Target API should be set to \"Automatic\" as to ensure latest version",
             fix: buildTargetGroup => PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevelAuto,
             fixMessage: "PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevelAuto"
@@ -69,9 +74,11 @@ internal static class OVRProjectSetupCompatibilityTasks
             level: OVRProjectSetup.TaskLevel.Recommended,
             group: compatibilityTaskGroup,
             platform: BuildTargetGroup.Android,
-            isDone: buildTargetGroup => PlayerSettings.Android.preferredInstallLocation == AndroidPreferredInstallLocation.Auto,
+            isDone: buildTargetGroup =>
+                PlayerSettings.Android.preferredInstallLocation == AndroidPreferredInstallLocation.Auto,
             message: "Install Location should be set to \"Automatic\"",
-            fix: buildTargetGroup => PlayerSettings.Android.preferredInstallLocation = AndroidPreferredInstallLocation.Auto,
+            fix: buildTargetGroup =>
+                PlayerSettings.Android.preferredInstallLocation = AndroidPreferredInstallLocation.Auto,
             fixMessage: "PlayerSettings.Android.preferredInstallLocation = AndroidPreferredInstallLocation.Auto"
         );
 
@@ -88,16 +95,18 @@ internal static class OVRProjectSetupCompatibilityTasks
 
         // ConfigurationTask : IL2CPP when ARM64
         OVRProjectSetup.AddTask(
-            conditionalLevel: buildTargetGroup => IsTargetingARM64 ?
-                OVRProjectSetup.TaskLevel.Required :
-                OVRProjectSetup.TaskLevel.Recommended,
+            conditionalLevel: buildTargetGroup =>
+                IsTargetingARM64 ? OVRProjectSetup.TaskLevel.Required : OVRProjectSetup.TaskLevel.Recommended,
             group: compatibilityTaskGroup,
             platform: BuildTargetGroup.Android,
-            isDone: buildTargetGroup => PlayerSettings.GetScriptingBackend(buildTargetGroup) == ScriptingImplementation.IL2CPP,
-            conditionalMessage: buildTargetGroup => IsTargetingARM64 ?
-                "Building the ARM64 architecture requires using IL2CPP as the scripting backend" :
-                "Using IL2CPP as the scripting backend is recommended",
-            fix: buildTargetGroup => PlayerSettings.SetScriptingBackend(buildTargetGroup, ScriptingImplementation.IL2CPP),
+            isDone: buildTargetGroup =>
+                PlayerSettings.GetScriptingBackend(buildTargetGroup) == ScriptingImplementation.IL2CPP,
+            conditionalMessage: buildTargetGroup =>
+                IsTargetingARM64
+                    ? "Building the ARM64 architecture requires using IL2CPP as the scripting backend"
+                    : "Using IL2CPP as the scripting backend is recommended",
+            fix: buildTargetGroup =>
+                PlayerSettings.SetScriptingBackend(buildTargetGroup, ScriptingImplementation.IL2CPP),
             fixMessage: "PlayerSettings.SetScriptingBackend(buildTargetGroup, ScriptingImplementation.IL2CPP)"
         );
 
@@ -115,11 +124,11 @@ internal static class OVRProjectSetupCompatibilityTasks
         // ConfigurationTask : No Alpha or Beta for production
         // This is a task that CANNOT BE FIXED
         OVRProjectSetup.AddTask(
-	        level: OVRProjectSetup.TaskLevel.Recommended,
-	        group: compatibilityTaskGroup,
-	        isDone: group => !OVRManager.IsUnityAlphaOrBetaVersion(),
-	        message: "We recommend using a stable version for Oculus Development"
-	    );
+            level: OVRProjectSetup.TaskLevel.Recommended,
+            group: compatibilityTaskGroup,
+            isDone: group => !OVRManager.IsUnityAlphaOrBetaVersion(),
+            message: "We recommend using a stable version for Oculus Development"
+        );
 
         // ConfigurationTask : Check that Android TV Compatibility is disabled
         OVRProjectSetup.AddTask(
