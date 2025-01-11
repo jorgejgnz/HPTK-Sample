@@ -3,6 +3,9 @@ This is a ready-to-go project using [HPTK](https://github.com/jorgejgnz/HPTK). U
 
 ![Screenshot](https://imgur.com/iH35YoZ.jpg)
 
+> # ⚠️ Project Status: No longer maintained
+> This project is no longer actively maintained or supported. If you want to continue the development, feel free to make a fork. Thanks to everyone who contributed, used or supported this project!
+
 # Getting started
 Clone this repository. To do this, open a command line terminal, rooted on the Assets folder of your Unity project. 
 (Hold shift + right click -> Select "Open Powershell Window Here")
